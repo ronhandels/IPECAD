@@ -1,4 +1,4 @@
-######################################## README ########################################
+# README
 
 This is a new modeling framework as compared to version 1.x.
 The model is based on a reconstruction of an existing model often named 'SveDem' described here: https://www.doi.org/10.3233/JAD-191055
@@ -7,14 +7,14 @@ This version 2.0.0 is not open-source available.
 
 
 
-#################### version history
+## version history
 
 2.0
 
-# Miscellaneous
+### Miscellaneous
 
 . This a beta version for a new modeling framework, which is a different model from version 1.x.
 
-# Bug fixes
+### Bug fixes
 
 . not applicable
