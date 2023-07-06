@@ -48,28 +48,6 @@ Other naming:
 
 ## VERSION HISTORY
 
-### 2.0.0-alpha
-
-. Reconstruction of original model, see details in 'RECONSTRUCTION OF ORIGINAL MODEL'. 
-. Not publicly available. 
-. Details: 
-First, the original model (https://www.doi.org/10.3233/JAD-191055) was reconstructed with support of the original developers and use of original non-rounded input estimates available in TreeAge and Excel. The reconstructed model produced the same model outcomes mean person-years per person per state and alive (table 1 and table 4 from publication), except for a relatively small deviation due to rounding (largest absolute deviation was 0.006; relative deviation 0.6%). We considered this sufficient internal validity. 
-Second, we replaced any (non-rounded input) estimates or information not in the public domain with (rounded) input estimates or information available in the public domain. Specifically, this refers to the following aspects: 
-- The original model used a Swedish life table, for which the Swedish mortality rate was based on the weighted mean for men and women (weights based on sex prevalence in the Swedish population). This was changed by using an updated life table and sex-specific mortality rate. 
-- The original model multiplied the transition probability from MCI to mild dementia and from mild dementia to moderate dementia with the treatment effect expressed as a ratio. This was changed by first transforming the transition probability to a rate, then multiplying it with the treatment effect expressed as a ratio, then transformed back to a transition probability. 
-- The original model used non-rounded input estimates for transition probabilities and mortality hazard ratios. This was changed to only using estimates as publicly available in the publication (supplemental material). 
-. This version has been developed by: 
-Ron Handels
-Anders Wimo
-Linh Nguyen
-Daphne Silvertand
-
-
-### 2.0.1-beta
-
-. Update using public domain information only. 
-. Not publicly available. 
-
 ### 2.1.0
 
 . Version build for abstract ISPOR Europe 2023
@@ -86,3 +64,25 @@ Sabine Grimm
 Sandar Aye
 Will Herring
 
+
+### 2.0.1-beta
+
+. Update using public domain information only. 
+. Not publicly available. 
+
+
+### 2.0.0-alpha
+
+. Reconstruction of original model, see details in 'RECONSTRUCTION OF ORIGINAL MODEL'. 
+. Not publicly available. 
+. Details: 
+First, the original model (https://www.doi.org/10.3233/JAD-191055) was reconstructed with support of the original developers and use of original non-rounded input estimates available in TreeAge and Excel. The reconstructed model produced the same model outcomes mean person-years per person per state and alive (table 1 and table 4 from publication), except for a relatively small deviation due to rounding (largest absolute deviation was 0.006; relative deviation 0.6%). We considered this sufficient internal validity. 
+Second, we replaced any (non-rounded input) estimates or information not in the public domain with (rounded) input estimates or information available in the public domain. Specifically, this refers to the following aspects: 
+- The original model used a Swedish life table, for which the Swedish mortality rate was based on the weighted mean for men and women (weights based on sex prevalence in the Swedish population). This was changed by using an updated life table and sex-specific mortality rate. 
+- The original model multiplied the transition probability from MCI to mild dementia and from mild dementia to moderate dementia with the treatment effect expressed as a ratio. This was changed by first transforming the transition probability to a rate, then multiplying it with the treatment effect expressed as a ratio, then transformed back to a transition probability. 
+- The original model used non-rounded input estimates for transition probabilities and mortality hazard ratios. This was changed to only using estimates as publicly available in the publication (supplemental material). 
+. This version has been developed by: 
+Ron Handels
+Anders Wimo
+Linh Nguyen
+Daphne Silvertand
