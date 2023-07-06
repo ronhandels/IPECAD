@@ -1,1 +1,0 @@
-see www.ipecad.org/open-source-model for details
