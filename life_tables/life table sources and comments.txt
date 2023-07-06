@@ -1,0 +1,79 @@
+
+# ES (Spain)
+
+## obtained from
+https://www.ine.es/jaxiT3/Tabla.htm?t=27153&L=0
+
+# retrieved on
+2023-06-27
+
+## notes
+https://www.ine.es/ > INEbase > Demography and population > demographic phenomena > life tables. results > series since 1991: population mortality tables for Spain by year, sex, age and functions > function=mortality rate
+
+rate per 1000 was divided by 1000 and converted to probability (1-exp(-rate))
+
+
+# NL (The Netherlands)
+
+## obtained from
+https://opendata.cbs.nl/statline/#/CBS/nl/dataset/37360ned/table?ts=1687880432573
+
+## retrieved on
+2023-06-27
+
+## notes
+https://opendata.cbs.nl/#/CBS/en/ > open data portal > select theme > population > population development > death > mortality; key figures > original data > topcs = deaths per 1,000 inhabitants; gender = male,female; 
+
+
+# PL (Poland)
+
+## obtained from
+https://stat.gov.pl/download/gfx/portalinformacyjny/en/defaultaktualnosci/3288/2/15/1/life_expentancy_tables_of_poland_2021.pdf
+
+## retrieved on
+2023-06-27
+
+## notes
+https://stat.gov.pl/en/topics/population/life-expectancy/life-expectancy-tables-of-poland-2021,2,15.html
+
+PDF page 44
+
+Probability of dying used. 
+
+
+# SE (Sweden)
+
+## obtained from
+https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/table/tableViewLayout1/
+
+## retrieved on
+2023-06-27
+
+## notes
+https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021
+
+
+# UK (United Kingdom)
+
+## obtained from
+https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesunitedkingdomreferencetables
+
+## retrieved on
+2023-06-27
+
+## notes
+office for national statistics > people, population and community > births, deaths and marriages > life expectancies > Datasets related to life expectancies: National life tables: UK
+
+
+# US (United States)
+
+## obtained from
+https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table02.xlsx
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.xlsx
+
+## retrieved on
+2023-06-29
+
+## notes
+
