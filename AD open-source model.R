@@ -12,7 +12,8 @@
 cat("\014") # clear console
 rm(list = ls()) # clear environment
 library(dampack) # load package
-setwd("D:/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/") # set working directory; change to your own directory
+#setwd("D:/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
+setwd("C:/users/Ron/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
 
 
 
@@ -41,16 +42,16 @@ m.mortality_rate <- -log(1-(m.lifetable)) # convert probability to rate
 # temp.r.dem12month <- temp.r.dem18month/1.5 # divide by 1.5 to convert 18 month interval to 12 month interval
 # temp.p.dem12month <- 1-exp(-temp.r.dem12month) # convert rate to probability
 
-# costs (Euro) in EU regions (source: __________)
+# costs (Euro) in EU regions (source: Jonsson, 2023 https://doi.org/10.1007/s40273-022-01212-z table 4 consumer price index is 2021)
 m.c_region <- matrix(data=c(
   NA, NA, NA, NA, NA, 
   19909, 7616, 20876, 20420, 31984, 
   34223, 9670, 37540, 40953, 47934, 
   61958, 11236, 58198, 61906, 56104
-  ), 
-  nrow=5, 
-  ncol=4, 
-  dimnames = list(c("britishisles","eastbaltics","north","south","west"),c("mci","mil","mod","sev"))
+), 
+nrow=5, 
+ncol=4, 
+dimnames = list(c("britishisles","eastbaltics","north","south","west"),c("mci","mil","mod","sev"))
 ); m.c_region
 # add costs for MCI (assumed ratio between m.mil and m.mci from base case inputs)
 m.c_region[,"mci"] <- m.c_region[,"mil"] * (17712/26380.51)
@@ -94,6 +95,7 @@ l.inputs <- list(
   c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, 
   c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, 
   c.Tx = 10000, # treatment costs set to 0 according to www.ipecad.org/workshop 2023 benchmark scenario
+  c.Tx_diagnostics1 = 2000, # costs diagnostics cycle 1 (not half-cycle corrected)
   discount_QALY = 0.035, # discount rate set according to www.ipecad.org/workshop 2023 benchmark scenario
   discount_COST = 0.035, # # discount rate set according to www.ipecad.org/workshop 2023 benchmark scenario
   wtp = 40000
@@ -117,8 +119,8 @@ l.inputs <- list(
 # G4: starting state
 # G5: markov multiplication by looping over cycles
 # G6: multiply states with utility and cost estimates
-# G7: apply discounting
-# G8: apply half-cycle correction
+# G7: apply half-cycle correction
+# G8: apply discounting
 # G9: store outcomes to be wrapped up by the 'run scenario' function
 # H: store strategy results
 # I: add strategy results to scenario outcomes
@@ -142,7 +144,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["mod","dth",] <- 1-exp(-(v.r.dth * hr.mort_mod * hr.mort_verymilddem))
     a.TP["sev","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev * hr.mort_verymilddem))
     a.TP["dth","dth",] <- 1
-
+    
     # TP matrix state: from mci-on
     a.TP["mcion","mcion",] <- v.p.mcion_mci * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
     a.TP["mcion","milon",] <- v.p.mcion_mil * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
@@ -163,7 +165,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["milof","milof",] <- v.p.mil_mil                           * (1-a.TP["milof","dth",])
     a.TP["milof","mod",]   <- v.p.mil_mod                           * (1-a.TP["milof","dth",])
     a.TP["milof","sev",]   <- v.p.mil_sev                           * (1-a.TP["milof","dth",])
-
+    
     # TP matrix state: from moderate
     a.TP["mod","milof",] <- v.p.mod_mil * (1-a.TP["mod","dth",])
     a.TP["mod","mod",]   <- v.p.mod_mod * (1-a.TP["mod","dth",])
@@ -188,7 +190,7 @@ f.run_strategy <- function(l.inputs) {
     
     # set starting state distribution (STEP G4: starting state)
     m.trace[1,] <- m.trace1
-
+    
     # markov multiplication (STEP G5: markov multiplication by looping over cycles)
     for(t in 1:(n.cycle-1)) {
       m.trace[t+1,] <- m.trace[t,] %*% a.TP[,,t]
@@ -198,14 +200,22 @@ f.run_strategy <- function(l.inputs) {
     m.out[,"ly"] <- m.trace %*% c(1,1,1,1,1,1,0)
     m.out[,"qaly"] <- m.trace %*% c(u.mci, u.mci       , u.mil, u.mil       , u.mod, u.sev, 0)
     m.out[,"cost"] <- m.trace %*% c(c.mci, c.mci + c.Tx, c.mil, c.mil + c.Tx, c.mod, c.sev, 0)
-    m.out[,"nhb"] <- m.out[,"qaly"] - (m.out[,"cost"] / wtp)
     
-    # add additional $1000 costs for adverse events (double as this will be half-cycle corrected)
+    # half-cycle correction (STEP G7: apply half-cycle correction)
+    for (i in 1:(n.cycle-1)) {
+      m.out[i,"ly"]   <- (m.out[i,"ly"]   + m.out[i+1,"ly"])   * 0.5
+      m.out[i,"qaly"] <- (m.out[i,"qaly"] + m.out[i+1,"qaly"]) * 0.5
+      m.out[i,"cost"] <- (m.out[i,"cost"] + m.out[i+1,"cost"]) * 0.5
+      m.out[i,"nhb"]  <- (m.out[i,"nhb"]  + m.out[i+1,"nhb"])  * 0.5
+    }
+    m.out[n.cycle,] <- 0
+    
+    # add additional diagnostics costs
     if(strat=="int") {
-      m.out[,"cost"][1] <- m.out[,"cost"][1] + 2000
+      m.out[,"cost"][1] <- m.out[,"cost"][1] + c.Tx_diagnostics1
     }
     
-    # define vector for discounting QALYs and costs (STEP G7: apply discounting)
+    # define vector for discounting QALYs and costs (STEP G8: apply discounting)
     v.discount_QALY <- 1 / (( 1 + (discount_QALY)) ^ (0 : (age_end-age_start-1)))
     v.discount_COST <- 1 / (( 1 + (discount_COST)) ^ (0 : (age_end-age_start-1)))
     
@@ -213,13 +223,8 @@ f.run_strategy <- function(l.inputs) {
     m.out[,"qaly"] <- m.out[,"qaly"]*v.discount_QALY
     m.out[,"cost"] <- m.out[,"cost"]*v.discount_COST
     
-    # half-cycle correction (STEP G8: apply half-cycle correction)
-    for (i in 1:(n.cycle-1)) {
-      m.out[i,"ly"]   <- (m.out[i,"ly"]   + m.out[i+1,"ly"])   * 0.5
-      m.out[i,"qaly"] <- (m.out[i,"qaly"] + m.out[i+1,"qaly"]) * 0.5
-      m.out[i,"cost"] <- (m.out[i,"cost"] + m.out[i+1,"cost"]) * 0.5
-      m.out[i,"nhb"]  <- (m.out[i,"nhb"]  + m.out[i+1,"nhb"])  * 0.5
-    }
+    # calculate net health benefit
+    m.out[,"nhb"] <- m.out[,"qaly"] - (m.out[,"cost"] / wtp)
     
     # store strategy-specific output (STEP G9: store outcomes to be wrapped up by the 'run scenario' function)
     return(list(
@@ -283,7 +288,11 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       v.p.milon_mil <- v.p.mil_mil
       
       # discontinuation
-      v.p.discontinuation <- rep(x=0, times=n.cycle)
+      v.p.discontinuation <- rep(x=0, times=n.cycle) # initialize vector
+      v.p.discontinuation[1] <- 0
+      v.p.discontinuation[2] <- p.discontinuation1
+      v.p.discontinuation[3:n.cycle] <- p.discontinuation_x
+      v.p.discontinuation[tx_duration:n.cycle] <- 1
       
       # death (subset mortality table to obtain age- and sex-specific mortality)
       v.r.dth <- m.r.mortality[age_start:(age_end-1), sex]
@@ -295,7 +304,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       m.trace1 <- matrix(data=0, nrow=1, ncol=n.state, dimnames=list(NULL,v.names_state))
       m.trace1[,"mciof"] <- p.starting_state_mci
       m.trace1[,"milof"] <- 1-p.starting_state_mci
-
+      
       # strategy-specific inputs (STEP E: run preparations specific for the intervention strategy)
       if(strat=="int") {
         
@@ -304,16 +313,10 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         temp.rr.tx_mci_mil <- rr.tx_mci_mil^temp.waning
         temp.rr.tx_mil_mod <- rr.tx_mil_mod^temp.waning
         
-        # discontinuation
-        v.p.discontinuation[1] <- 0
-        v.p.discontinuation[2] <- p.discontinuation1
-        v.p.discontinuation[3:n.cycle] <- p.discontinuation_x
-        v.p.discontinuation[tx_duration:n.cycle] <- 1
-        
         # update transition probabilities
         v.p.mcion_mil <- 1-exp(-(-log(1-p.mci_mil) * temp.rr.tx_mci_mil)) # convert probability to rate, then multiply with treatment relative risk, then convert to probability
         v.p.milon_mod <- 1-exp(-(-log(1-p.mil_mod) * temp.rr.tx_mil_mod)) # idem
-
+        
         # update transition probabilities of remaining in the same state
         v.p.mcion_mci <- 1-v.p.mcion_mil
         v.p.milon_mil <- 1-v.p.milon_mod - v.p.mil_sev
@@ -330,29 +333,29 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       
       # list inputs for running each strategy (STEP F: store newly created or updated inputs to be used for the function to run a single strategy)
       l.inputs_strategy <- c(l.inputs, list(
-          strat = strat, 
-          n.state = n.state, 
-          n.strat = n.strat, 
-          n.cycle = n.cycle, 
-          v.p.mci_mil = v.p.mci_mil, 
-          v.p.mil_mod = v.p.mil_mod, 
-          v.p.mil_sev = v.p.mil_sev, 
-          v.p.mod_mil = v.p.mod_mil, 
-          v.p.mod_sev = v.p.mod_sev, 
-          v.p.sev_mil = v.p.sev_mil, 
-          v.p.sev_mod = v.p.sev_mod, 
-          v.p.mci_mci = v.p.mci_mci, 
-          v.p.mil_mil = v.p.mil_mil, 
-          v.p.mod_mod = v.p.mod_mod, 
-          v.p.sev_sev = v.p.sev_sev, 
-          v.p.mcion_mil = v.p.mcion_mil, 
-          v.p.milon_mod = v.p.milon_mod, 
-          v.p.mcion_mci = v.p.mcion_mci, 
-          v.p.milon_mil = v.p.milon_mil, 
-          v.p.discontinuation = v.p.discontinuation, 
-          v.r.dth = v.r.dth, 
-          c.Tx = c.Tx, 
-          m.trace1 = m.trace1
+        strat = strat, 
+        n.state = n.state, 
+        n.strat = n.strat, 
+        n.cycle = n.cycle, 
+        v.p.mci_mil = v.p.mci_mil, 
+        v.p.mil_mod = v.p.mil_mod, 
+        v.p.mil_sev = v.p.mil_sev, 
+        v.p.mod_mil = v.p.mod_mil, 
+        v.p.mod_sev = v.p.mod_sev, 
+        v.p.sev_mil = v.p.sev_mil, 
+        v.p.sev_mod = v.p.sev_mod, 
+        v.p.mci_mci = v.p.mci_mci, 
+        v.p.mil_mil = v.p.mil_mil, 
+        v.p.mod_mod = v.p.mod_mod, 
+        v.p.sev_sev = v.p.sev_sev, 
+        v.p.mcion_mil = v.p.mcion_mil, 
+        v.p.milon_mod = v.p.milon_mod, 
+        v.p.mcion_mci = v.p.mcion_mci, 
+        v.p.milon_mil = v.p.milon_mil, 
+        v.p.discontinuation = v.p.discontinuation, 
+        v.r.dth = v.r.dth, 
+        c.Tx = c.Tx, 
+        m.trace1 = m.trace1
       ))
       
       # run strategy (STEP G: run the strategy)
@@ -379,7 +382,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       ))
     }
   }
-)
+  )
 }
 
 
@@ -460,50 +463,50 @@ if(T) {
   )
   
   # sample transition probabilities based on oprobit
-    ## function to produce transition probability matrix using ordered probit regression coefficients
-    f.oprobit_TP <- function(b_mod, b_sev, cut1, cut2) {
-      p.mil_mil <- pnorm(cut1 - 0) - pnorm(-999 - 0) # mil>mil
-      p.mil_mod <- pnorm(cut2 - 0) - pnorm(cut1 - 0) # mil>mod
-      p.mil_sev <- pnorm(999 - 0) - pnorm(cut2 - 0) # mil>mod
-      p.mod_mil <- pnorm(cut1 - b_mod) - pnorm(-999 - b_mod) # mod>mil
-      p.mod_mod <- pnorm(cut2 - b_mod) - pnorm(cut1 - b_mod) # mod>mod
-      p.mod_sev <- pnorm(999 - b_mod) - pnorm(cut2 - b_mod) # mod>mod
-      p.sev_mil <- pnorm(cut1 - b_sev) - pnorm(-999 - b_sev) # sev>mil
-      p.sev_mod <- pnorm(cut2 - b_sev) - pnorm(cut1 - b_sev) # sev>mod
-      p.sev_sev <- pnorm(9999 - b_sev) - pnorm(cut2 - b_sev) # sev>mod
-      return(cbind(p.mil_mil, p.mil_mod, p.mil_sev, p.mod_mil, p.mod_mod, p.mod_sev, p.sev_mil, p.sev_mod, p.sev_sev))
-    }
-    
-    # ## general base case transition probability matrix
-    # round(f.oprobit_TP(b_mod=1.8984, b_sev=3.9837, cut1=0.542, cut2=3.129), 3)
-    
-    ## sample ordered probit parameter values (using 'rnorm') and convert ordered probit parameters to transition probabilities (using 'f.oprobit_TP')
-    m.TP_psa <- f.oprobit_TP(
-      b_mod = rnorm(n=n.psa, mean=1.8984, sd=(1.949-1.8479)/(1.96*4)), # 95% confidence interval upper bound minus lower bound, then divide by 4 times standard deviation
-      b_sev = rnorm(n=n.psa, mean=3.9837, sd=(4.233-3.7343)/(1.96*4)),
-      cut1 = rnorm(n=n.psa, mean=0.542, sd=(0.574-0.510)/(1.96*4)),
-      cut2 = rnorm(n=n.psa, mean=3.129, sd=(3.206-3.052)/(1.96*4))
-    ) # m.TP_psa # hist(m.TP_psa[,2])
-    
-    # distribution parameters (seems that weights must add up to 1 to be sampled from their explicit values rather than be seen as a distribution to be sampled from, see help)
-    psa_dists_params <- list(
-      data.frame(value=c(60,65,70,75,80), weight=c(0.1,0.2,0.4,0.2,0.1)), # data.frame(value=c(60,65,70,75,80), weight=c(0.5,0.75,1,0.75,0.5))
-      c(l.inputs[["hr.mort_verymilddem"]], (2.14  - 1.55 )/(qnorm(0.975)*2)), # 'qnorm(0.975)*2' represents 95%CI interval (i.e., 4 times standard deviation)
-      c(l.inputs[["hr.mort_mil"]]        , (1.507 - 1.153)/(qnorm(0.975)*2)),
-      c(l.inputs[["hr.mort_mod"]]        , (2.757 - 2.122)/(qnorm(0.975)*2)),
-      c(l.inputs[["hr.mort_sev"]]        , (5.043 - 3.610)/(qnorm(0.975)*2)),
-      c(l.inputs[["p.mci_mil"]], 0.05, 0, 1),
-      data.frame(value=m.TP_psa[,"p.mil_mod"], weight=rep(1,n.psa)),
-      data.frame(value=m.TP_psa[,"p.mil_sev"], weight=rep(1,n.psa)),
-      data.frame(value=m.TP_psa[,"p.mod_mil"], weight=rep(1,n.psa)),
-      data.frame(value=m.TP_psa[,"p.mod_sev"], weight=rep(1,n.psa)),
-      data.frame(value=m.TP_psa[,"p.sev_mil"], weight=rep(1,n.psa)),
-      data.frame(value=m.TP_psa[,"p.sev_mod"], weight=rep(1,n.psa)),
-      c(l.inputs[["rr.tx_mci_mil"]], 0.10, 0, 1),
-      c(l.inputs[["rr.tx_mci_mil"]], 0.10, 0, 1),
-      data.frame(value=c(7,10,15), weight=c(0.2,0.6,0.2)),
-      data.frame(value=c(1000,5000,10000,20000,25000), weight=c(0.1,0.2,0.4,0.2,0.1))
-    )
+  ## function to produce transition probability matrix using ordered probit regression coefficients
+  f.oprobit_TP <- function(b_mod, b_sev, cut1, cut2) {
+    p.mil_mil <- pnorm(cut1 - 0) - pnorm(-999 - 0) # mil>mil
+    p.mil_mod <- pnorm(cut2 - 0) - pnorm(cut1 - 0) # mil>mod
+    p.mil_sev <- pnorm(999 - 0) - pnorm(cut2 - 0) # mil>mod
+    p.mod_mil <- pnorm(cut1 - b_mod) - pnorm(-999 - b_mod) # mod>mil
+    p.mod_mod <- pnorm(cut2 - b_mod) - pnorm(cut1 - b_mod) # mod>mod
+    p.mod_sev <- pnorm(999 - b_mod) - pnorm(cut2 - b_mod) # mod>mod
+    p.sev_mil <- pnorm(cut1 - b_sev) - pnorm(-999 - b_sev) # sev>mil
+    p.sev_mod <- pnorm(cut2 - b_sev) - pnorm(cut1 - b_sev) # sev>mod
+    p.sev_sev <- pnorm(9999 - b_sev) - pnorm(cut2 - b_sev) # sev>mod
+    return(cbind(p.mil_mil, p.mil_mod, p.mil_sev, p.mod_mil, p.mod_mod, p.mod_sev, p.sev_mil, p.sev_mod, p.sev_sev))
+  }
+  
+  # ## general base case transition probability matrix
+  # round(f.oprobit_TP(b_mod=1.8984, b_sev=3.9837, cut1=0.542, cut2=3.129), 3)
+  
+  ## sample ordered probit parameter values (using 'rnorm') and convert ordered probit parameters to transition probabilities (using 'f.oprobit_TP')
+  m.TP_psa <- f.oprobit_TP(
+    b_mod = rnorm(n=n.psa, mean=1.8984, sd=(1.949-1.8479)/(1.96*4)), # 95% confidence interval upper bound minus lower bound, then divide by 4 times standard deviation
+    b_sev = rnorm(n=n.psa, mean=3.9837, sd=(4.233-3.7343)/(1.96*4)),
+    cut1 = rnorm(n=n.psa, mean=0.542, sd=(0.574-0.510)/(1.96*4)),
+    cut2 = rnorm(n=n.psa, mean=3.129, sd=(3.206-3.052)/(1.96*4))
+  ) # m.TP_psa # hist(m.TP_psa[,2])
+  
+  # distribution parameters (seems that weights must add up to 1 to be sampled from their explicit values rather than be seen as a distribution to be sampled from, see help)
+  psa_dists_params <- list(
+    data.frame(value=c(60,65,70,75,80), weight=c(0.1,0.2,0.4,0.2,0.1)), # data.frame(value=c(60,65,70,75,80), weight=c(0.5,0.75,1,0.75,0.5))
+    c(l.inputs[["hr.mort_verymilddem"]], (2.14  - 1.55 )/(qnorm(0.975)*2)), # 'qnorm(0.975)*2' represents 95%CI interval (i.e., 4 times standard deviation)
+    c(l.inputs[["hr.mort_mil"]]        , (1.507 - 1.153)/(qnorm(0.975)*2)),
+    c(l.inputs[["hr.mort_mod"]]        , (2.757 - 2.122)/(qnorm(0.975)*2)),
+    c(l.inputs[["hr.mort_sev"]]        , (5.043 - 3.610)/(qnorm(0.975)*2)),
+    c(l.inputs[["p.mci_mil"]], 0.05, 0, 1),
+    data.frame(value=m.TP_psa[,"p.mil_mod"], weight=rep(1,n.psa)),
+    data.frame(value=m.TP_psa[,"p.mil_sev"], weight=rep(1,n.psa)),
+    data.frame(value=m.TP_psa[,"p.mod_mil"], weight=rep(1,n.psa)),
+    data.frame(value=m.TP_psa[,"p.mod_sev"], weight=rep(1,n.psa)),
+    data.frame(value=m.TP_psa[,"p.sev_mil"], weight=rep(1,n.psa)),
+    data.frame(value=m.TP_psa[,"p.sev_mod"], weight=rep(1,n.psa)),
+    c(l.inputs[["rr.tx_mci_mil"]], 0.10, 0, 1),
+    c(l.inputs[["rr.tx_mci_mil"]], 0.10, 0, 1),
+    data.frame(value=c(7,10,15), weight=c(0.2,0.6,0.2)),
+    data.frame(value=c(1000,5000,10000,20000,25000), weight=c(0.1,0.2,0.4,0.2,0.1))
+  )
   
   # sample parameter values based on underlying distributions independently
   out_psa_samp <- gen_psa_samp(
@@ -541,14 +544,14 @@ if(T) {
   plot(obj_ceac, frontier = TRUE, points = TRUE)
   
   # OWSA
-  owsa_psa <- owsa(sa_obj=obj_psa, outcome="nhb", wtp=40000) # create owsa on all parameters (see dampack vignette for details)
-  owsa_tornado(owsa_psa, n_y_ticks = 2) # plot tornado graph
   owsa_psa <- owsa(sa_obj=obj_psa, outcome="eff") # create owsa on all parameters (see dampack vignette for details)
   owsa_tornado(owsa_psa, n_y_ticks = 2) # plot tornado graph
   owsa_psa <- owsa(sa_obj=obj_psa, outcome="cost") # create owsa on all parameters (see dampack vignette for details)
   owsa_tornado(owsa_psa, n_y_ticks = 2) # plot tornado graph
-
+  
 }
+
+
 
 ######################################## 5.2. DETERMINISTIC ########################################
 
@@ -573,16 +576,16 @@ out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
 
 # selected outcomes
 ## state trace
-temp.trace_soc <- round(out_base[["l.out_strategy"]][["soc"]][["m.trace"]],2); temp.trace_soc
-write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = TRUE)
-temp.trace_int <- round(out_base[["l.out_strategy"]][["int"]][["m.trace"]],2); temp.trace_int
-write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = TRUE)
+temp.trace_soc <- out_base[["l.out_strategy"]][["soc"]][["m.trace"]]; temp.trace_soc
+write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = FALSE)
+temp.trace_int <- out_base[["l.out_strategy"]][["int"]][["m.trace"]]; temp.trace_int
+write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = FALSE)
 
 # QALYs and costs over time
 temp.out_soc <- out_base[["l.out_strategy"]][["soc"]][["m.out"]]; temp.out_soc
-write.table(x = temp.out_soc, file = "clipboard", sep = "\t", row.names = TRUE)
+write.table(x = temp.out_soc, file = "clipboard", sep = "\t", row.names = FALSE)
 temp.out_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]]; temp.out_int
-write.table(x = temp.out_int, file = "clipboard", sep = "\t", row.names = TRUE)
+write.table(x = temp.out_int, file = "clipboard", sep = "\t", row.names = FALSE)
 
 # totals
 out_base[["df.out_sum"]]
@@ -594,24 +597,14 @@ icer <- calculate_icers(
   effect = out_base[["df.out_sum"]][,"QALY"],
   strategies = out_base[["df.out_sum"]][,"strategy"]
 )
-icer
+print(icer)
 
 # icer plot
 # plot(icer, label="all")
 
-# # compare to excel
-# round(out_base[["l.out_strategy"]][["soc"]][["m.trace"]],4)
-# round(out_base[["l.out_strategy"]][["int"]][["m.trace"]],4)
-# out_base[["l.out_strategy"]][["int"]][["a.TP"]]
-# # internal validity check
-# round(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,"cost"])
-# round(out_base[["l.out_strategy"]][["int"]][["m.out"]][,"cost"])
-# cbind(round(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,"cost"]), round(out_base[["l.out_strategy"]][["int"]][["m.out"]][,"cost"]))
 
 
-
-
-######################################## 5.2.3 HEADROOM ########################################
+######################################## 5.2.3 HEADROOM (EU ISPOR abstract 2023 submitted) ########################################
 
 if(T) {
   
@@ -672,16 +665,10 @@ if(T) {
   headroom_N <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_N, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_N
   headroom_S <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_S, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_S
   headroom_W <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_W, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_W
+  
+  # result
   round(c(headroom_UK, headroom_E, headroom_N, headroom_S, headroom_W))
   
-  # temp1 <- cbind(m.c_region, headroom=c(headroom_UK, headroom_E, headroom_N, headroom_S, headroom_W))
-  # temp1 <- temp1[,"mod"] - temp1[,"mil"]
-  # temp1
-  
-  # # quick check of the result
-  # range <- seq(0,100000,1000)
-  # cbind(range, iNHB=sapply(X=range, FUN=f.headroom))
-
 }
 
 ######################################## 5.2.2 DETERMINISTIC SENSITIVITY ANALYSIS ########################################
@@ -759,9 +746,7 @@ if(T) {
     strategies = NULL, # all strategies
     progress = TRUE
   )
-  #str(out_owsa_det)
-  #out_owsa_det
-  
+
   # OWSA: plot tornado graph of DSA outcome 'NHB' (only 1 outcome is possible; possibly can't work with negative (NHB) data?)
   owsa_tornado(out_owsa_det$owsa_QALY)
   
@@ -774,64 +759,6 @@ if(T) {
   out_owsa_det_iNHB[,"outcome_val"] <- NA
   out_owsa_det_iNHB[,"outcome_val"] <- out_owsa_det_NHB_int[,"outcome_val"] - out_owsa_det_NHB_soc[,"outcome_val"] + 2
   owsa_tornado(out_owsa_det_iNHB, n_y_ticks=4)
-
-}
-
-######################################## 5.3. VALUE OF INFORMATION ########################################
-
-if(F) {
-  
-  # EVPI
-  obj_evpi <- calc_evpi(
-    psa = obj_psa,
-    wtp = c(20000,40000,60000,80000,100000,120000),
-    pop = 1
-  )
-  
-  # EVPPI
-  out_evppi <- calc_evppi(
-    psa = obj_psa,
-    wtp = c(20000,40000,60000,80000,100000,120000),
-    params = c("p.mci_mil"),
-    outcome = "nhb",
-    type = "poly",
-    poly.order = 3,
-    pop = 1,
-    progress = TRUE
-  )
-  head(out_evppi[[1]])
   
 }
-
-
-######################################## OTHER ########################################
-
-# # simple manual test for sensitivity analysis
-# l.inputs_s1 <- l.inputs
-# l.inputs_s1[["c.Tx"]] <- 10000
-# f.run_scenario(l.inputs = l.inputs_s1, detailed = FALSE)
-
-# owsa_tornado(out_owsa_det$owsa_QALY)
-# temp.l.inputs <- l.inputs
-# temp.l.inputs[["rr.tx_mci_mil"]] <- 1
-# temp.l.inputs[["rr.tx_mil_mod"]] <- 1
-# out_base <- f.run_scenario(l.inputs = temp.l.inputs, detailed = TRUE)
-# out_base[["df.out_sum"]]
-
-# l.inputs_sa1 <- l.inputs
-# l.inputs_sa1[["p.mci_mil"]] <- 0.10
-# out_sa1 <- f.run_scenario(l.inputs = temp.l.inputs, detailed = TRUE)
-# out_sa1[["df.out_sum"]]
-# out_sa1[["df.out_sum"]][2,"NHB"] - out_base[["df.out_sum"]][1,"NHB"]
-
-# # test case
-# mn <- 0.2; mn
-# sd <- (0.3 - 0.1)/(2*1.96); sd
-# sd_log <- (log(0.3) - log(0.1))/(2*1.96); sd_log
-# seq <- seq(0.001,0.999,0.001)
-# hist(qlnorm(p=seq, mean=log(mn), sd=sd_log)) # correct, possible within dampack
-# hist(exp(qnorm(p=seq, mean=log(mn), sd=sd_log))) # correct, not possible within dampack
-# hist(qnorm(p=seq, mean=mn, sd=sd)) # incorrect
-
-
 
