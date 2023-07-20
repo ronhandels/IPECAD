@@ -3,9 +3,14 @@
 title: "New open-source model"
 author: "Ron Handels"
 date: "`r Sys.Date()`"
-output: html_document
-
+output:
+  md_document:
+    variant: markdown_github
 ---
+<!-- output: html_document -->
+
+<!-- word_document: default -->
+
 <!-- output:  -->
   <!-- md_document: -->
   <!--   variant: markdown_github -->
