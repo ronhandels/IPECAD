@@ -11,6 +11,7 @@
 
 cat("\014") # clear console
 rm(list = ls()) # clear environment
+# install.packages("dampack") # remove # and run once to install package
 library(dampack) # load package
 setwd("~/GitHub/IPECAD")
 #setwd("D:/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
@@ -32,9 +33,9 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 l.inputs <- list(
   v.names_state = c("mcion","mciof","milon","milof","mod","sev","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
-  age_start = 70, # start age (dicated by the benchmark scenario)
-  age_end = 100, # end age (set at max)
-  sex = "female", # sex of starting population (dependent is mortality table)
+  age_start = 70, # age of starting population
+  age_end = 100, # age up to which model is run (reflecting time horizon)
+  sex = "female", # sex of starting population
   p.mci_mil = 0.206, # p.x_x: transition probability between states [Wimo, 2020: https://doi.org/10.3233/jad-191055]
   p.mci_mod = 0, # idem
   p.mci_sev = 0, # idem
