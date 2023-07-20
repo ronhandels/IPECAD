@@ -603,9 +603,6 @@ m.plot2 <- m.plot2[c("mci","mil","mod","sev"),]
 # m.plot2_neg[m.plot2_neg>=0] <- 0
 # m.plot2_pos[m.plot2_pos<0 ] <- 0
 
-## plot: ICE-plane
-plot3 <- temp.table1
-
 ## plot: icer
 icer <- calculate_icers(
   cost = out_base[["df.out_sum"]][,"COST"],
@@ -674,12 +671,11 @@ legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRU
 text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), pos=4)
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
-## table: icer
-print(icer)
 ## plot: icer
 par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
 plot(icer, label="all")
-
+## table: icer
+print(as.data.frame(t(icer)))
 
 # # optional functions: copy outcomes to clipboard
 # 
