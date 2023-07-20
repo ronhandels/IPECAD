@@ -12,9 +12,9 @@
 cat("\014") # clear console
 rm(list = ls()) # clear environment
 library(dampack) # load package
-setwd("D:/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
+setwd("~/GitHub/IPECAD")
+#setwd("D:/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
 #setwd("C:/users/Ron/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
-
 
 
 ######################################## 1. INPUTS ########################################
@@ -390,7 +390,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 5.1. PROBABILISTIC ########################################
 
-if(T) {
+if(F) {
   
   # set number of PSA replications
   n.psa <- 1000
@@ -553,7 +553,7 @@ if(T) {
 # run the model
 out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
 
-# show output
+# possible output to choose from
 # str(out_base) # show structure of output
 # out_base # all output
 # out_base[["l.out_strategy"]] # strategy details
@@ -567,39 +567,138 @@ out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
 # out_base[["l.out_strategy"]][["int"]][["m.out"]]
 # out_base[["df.out_sum"]] # scenario results
 
-# selected outcomes
-## state trace
-temp.trace_soc <- out_base[["l.out_strategy"]][["soc"]][["m.trace"]]; temp.trace_soc
-write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = FALSE)
-temp.trace_int <- out_base[["l.out_strategy"]][["int"]][["m.trace"]]; temp.trace_int
-write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = FALSE)
+# prepare data for tables/plots
 
-# QALYs and costs over time
-temp.out_soc <- out_base[["l.out_strategy"]][["soc"]][["m.out"]]; temp.out_soc
-write.table(x = temp.out_soc, file = "clipboard", sep = "\t", row.names = FALSE)
-temp.out_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]]; temp.out_int
-write.table(x = temp.out_int, file = "clipboard", sep = "\t", row.names = FALSE)
+## table: summary outcomes
+temp.table1 <- rbind(
+  out_base[["df.out_sum"]][,-1], 
+  incremental=out_base[["df.out_sum"]]["int",-1] - out_base[["df.out_sum"]]["soc",-1] # calculate difference between 'soc' and 'int' strategies
+)
+df.table1 <- temp.table1
+df.table1 <- format(temp.table1, digits=2, scientific=FALSE, big.mark=",") # format 
 
-# totals
-print(out_base[["df.out_sum"]])
-print(round(out_base[["df.out_sum"]][2,-1] - out_base[["df.out_sum"]][1,-1],4))
+## plot: state trace
+m.plot1_soc <- cbind(
+  mci=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
+  mil=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
+  mod=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
+  sev=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+  dth=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
+)
+m.plot1_int <- cbind(
+  mci=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
+  mil=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
+  mod=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
+  sev=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+  dth=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
+)
+a.plot1 <- array(data=c(m.plot1_soc,m.plot1_int), dim=c(nrow(m.plot1_soc),5,2), dimnames=list(NULL,colnames(m.plot1_soc),c("soc","int")))
 
-# icer
+## plot: mean time in state
+m.plot2 <- cbind(soc=colSums(m.plot1_soc), int=colSums(m.plot1_int))
+m.plot2 <- m.plot2[c("mci","mil","mod","sev"),]
+# temp.dif <- t(t(m.plot2[,"int"] - m.plot2[,"soc"])) # difference in time in state (as column)
+# m.plot2_neg <- m.plot2_pos <- temp.dif # split positive and negative differences
+# m.plot2_neg[m.plot2_neg>=0] <- 0
+# m.plot2_pos[m.plot2_pos<0 ] <- 0
+
+## plot: ICE-plane
+plot3 <- temp.table1
+
+## plot: icer
 icer <- calculate_icers(
   cost = out_base[["df.out_sum"]][,"COST"],
   effect = out_base[["df.out_sum"]][,"QALY"],
   strategies = out_base[["df.out_sum"]][,"strategy"]
 )
-print(icer)
 
-# icer plot
-# plot(icer, label="all")
+
+# print tables/plots
+
+## table: summary outcomes
+print(df.table1)
+
+# plot: state trace
+v.age_range <- c(l.inputs[["age_start"]]:(l.inputs[["age_end"]]-1)) # store age range
+xx <- c(v.age_range, rev(v.age_range)) # prepare polygon x-values
+yy_mci <- c(a.plot1[,"mci","soc"], rev(a.plot1[,"mci","int"])) # polygon y-values
+yy_mil <- c(a.plot1[,"mil","soc"], rev(a.plot1[,"mil","int"])) # idem
+yy_mod <- c(a.plot1[,"mod","soc"], rev(a.plot1[,"mod","int"])) # idem
+yy_sev <- c(a.plot1[,"sev","soc"], rev(a.plot1[,"sev","int"])) # idem
+yy_dth <- c(a.plot1[,"dth","soc"], rev(a.plot1[,"dth","int"])) # idem
+par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
+matplot(
+  x = v.age_range, 
+  y = a.plot1[,,"soc"], 
+  type = "n", 
+  xlab = "age", 
+  ylab = "proportion in state", 
+  ylim = c(0,1), 
+  main = "state trace"
+)
+polygon(xx, yy_mci, col = "gray95", border = FALSE)
+polygon(xx, yy_mil, col = "gray95", border = FALSE)
+polygon(xx, yy_mod, col = "gray95", border = FALSE)
+polygon(xx, yy_sev, col = "gray95", border = FALSE)
+polygon(xx, yy_dth, col = "gray95", border = FALSE)
+matlines(
+  x = v.age_range, 
+  y = a.plot1[,,"soc"], 
+  type = "l",
+  lty = 1,
+  col = c("green","yellow","orange","red","black")
+)
+matlines(
+  x = v.age_range, 
+  y = a.plot1[,,"int"], 
+  type = "l",
+  lty = 2,
+  col = c("green","yellow","orange","red","black")
+)
+legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1)
+legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2))
+
+# plot: mean time in state
+par(mar=c(8, 4, 4, 2), xpd=TRUE)
+barplot(
+  height = m.plot2, 
+  horiz = TRUE, 
+  xlab = "time (years)", 
+  ylab = "strategy", 
+  col=c("green","yellow","orange","red"), 
+  space = 0.2, 
+  main = "mean time in state"
+)
+legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","yellow","orange","red"))
+text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), pos=4)
+text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
+
+## table: icer
+print(icer)
+## plot: icer
+par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
+plot(icer, label="all")
+
+
+# # optional functions: copy outcomes to clipboard
+# 
+# ## state trace
+# temp.trace_soc <- out_base[["l.out_strategy"]][["soc"]][["m.trace"]]; temp.trace_soc
+# write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = FALSE)
+# temp.trace_int <- out_base[["l.out_strategy"]][["int"]][["m.trace"]]; temp.trace_int
+# write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = FALSE)
+# 
+# ## QALYs and costs over time
+# temp.out_soc <- out_base[["l.out_strategy"]][["soc"]][["m.out"]]; temp.out_soc
+# write.table(x = temp.out_soc, file = "clipboard", sep = "\t", row.names = FALSE)
+# temp.out_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]]; temp.out_int
+# write.table(x = temp.out_int, file = "clipboard", sep = "\t", row.names = FALSE)
 
 
 
 ######################################## 5.2.2 DETERMINISTIC SENSITIVITY ANALYSIS ########################################
 
-if(T) {
+if(F) {
   
   # list parameters for DSA
   dsa_pars <- c(
@@ -692,7 +791,7 @@ if(T) {
 
 ######################################## 5.2.3 HEADROOM ########################################
 
-if(T) {
+if(F) {
   
   # import all life tables
   a.lifetable <- array(data=NA, dim=c(100,2,6), dimnames=list(NULL,c("male","female"),c("ES","NL","PL","SE","UK","US")))
