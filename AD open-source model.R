@@ -671,6 +671,10 @@ legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRU
 text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), pos=4)
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
+## table: proportion in state
+round(a.plot1[1:10,,"soc"], 2) # state trace standard of care strategy
+round(a.plot1[1:10,,"int"], 2) # state trace intervention strategy
+
 ## plot: icer
 par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
 plot(icer, label="all")

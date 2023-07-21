@@ -40,11 +40,26 @@ ui <- fluidPage(
       a("github.com/ronhandels/ipecad", href="http://github.com/ronhandels/ipecad"),
       p(" "), 
       
+      h2("health-economic outcomes"),
       tableOutput("table_summary"),
+      
+      h2("state trace: plot"),
       plotOutput("trace"),
+      
+      h2("state trace: standard of care strategy"), 
+      tableOutput("trace_soc"), 
+      
+      h2("state trace: intervention strategy"), 
+      tableOutput("trace_int"), 
+      
+      h2("state trace: mean time in state"), 
       plotOutput("plot2", width = "100%"),
-      tableOutput("table_icer"), 
-      plotOutput("icer")
+      
+      h2("incremental cost-effectiveness plane"), 
+      plotOutput("icer"), 
+      
+      h2("incremental cost-effectiveness ratio"), 
+      tableOutput("table_icer")
       
     )
   )
@@ -248,6 +263,23 @@ server <- function(input, output, session) {
     }
   )
   
+  
+  # table: state trace SOC
+  output$trace_soc <- renderTable(
+    {
+      round(result()[["a.trace"]][1:10,,"soc"], 2)
+    } 
+  )
+
+  
+  # table: state trace INT
+  output$trace_int <- renderTable(
+    {
+      round(result()[["a.trace"]][1:10,,"int"], 2)
+    } 
+  )
+  
+  
   # plot: mean time in state
   output$plot2 <- renderPlot(
     {
@@ -269,7 +301,7 @@ server <- function(input, output, session) {
   )
   
   # plot: icer
-  output$plot3 <- renderPlot(
+  output$icer <- renderPlot(
     {
       par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
       plot(result()[["icer"]], label="all")
