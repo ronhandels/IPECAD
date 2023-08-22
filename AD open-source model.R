@@ -58,7 +58,7 @@ l.inputs <- list(
   rr.tx_mil_mod = 0.75, # assumed same effect as for MCI to dementia
   tx_waning = 0.05, # assumed annual waning of treatment
   p.discontinuation1 = 0.1, # discontinuation at year 1
-  p.discontinuation_x = 0.1, # annual proportion discontinuation
+  p.discontinuation_x = 0.1, # annual proportion discontinuation after year 1
   tx_duration = 7, # maximum treatment duration
   p.starting_state_mci = 1, # proportion starting in disease state MCI, remaining from 1 will start in 'mil' (all will start as 'of' in 'soc' and 'on' in 'int')
   u.mci = 0.73, # u.x: utility in state [https://doi.org/10.1016/j.jalz.2019.05.004]
@@ -87,16 +87,16 @@ l.inputs <- list(
 # D: prepare inputs to be used in each strategy
 # E: run preparations specific for the intervention strategy
 # F: store newly created or updated inputs to be used for the function to run a single strategy
-# G: run the strategy
-# G1: prepare transition probability matrix
-# G2: some checks
-# G3: initialize objects to store strategy outcomes
-# G4: starting state
-# G5: markov multiplication by looping over cycles
-# G6: multiply states with utility and cost estimates
-# G7: apply half-cycle correction
-# G8: apply discounting
-# G9: store outcomes to be wrapped up by the 'run scenario' function
+# G: function to run the strategy
+  # G1: prepare transition probability matrix
+  # G2: some checks
+  # G3: initialize objects to store strategy outcomes
+  # G4: starting state
+  # G5: markov multiplication by looping over cycles
+  # G6: multiply states with utility and cost estimates
+  # G7: apply half-cycle correction
+  # G8: apply discounting
+  # G9: store outcomes to be wrapped up by the 'run scenario' function
 # H: store strategy results
 # I: add strategy results to scenario outcomes
 

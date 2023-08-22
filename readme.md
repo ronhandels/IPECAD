@@ -6,6 +6,8 @@
 
 This GitHub repository provides an open-source model for
 cost-effectiveness analysis of Alzheimer’s disease interventions.
+Initial developement consisted of reconstructing an existing model by
+several members of the IPECAD modeling group (see details below).
 
 The model is available in 3 formats under a public license that allows
 obtaining the source code and making changes.
@@ -61,8 +63,12 @@ cost-effectiveness analysis of Alzheimer’s disease interventions.
 
 A cohort state-transition Markov model has been developed. Initial
 developement consisted of reconstructing an existing model in terms of
-its disease progression part. Then, inputs were changed and new features
-were added.
+its disease progression part (see
+<https://www.doi.org/10.3233/JAD-191055>). Then, inputs were changed and
+new features were added. See ‘Version details’ for more information. It
+differs from the IPECAD open-source model released in 2019 (published on
+<https://doi-org.mu.idm.oclc.org/10.1016/j.jalz.2019.05.004> and
+available from www.ipecad.org/open-source-model).
 
 ### Features and assumptions
 
@@ -199,11 +205,38 @@ the code follows these steps:
 -   H: store strategy results
 -   I: add strategy results to scenario outcomes
 
+## Coding reference
+
+Standard naming for objects is ‘x.y.object_name’ with:
+
+x:
+
+v = vector m = matrix a = array df = data frame l = list
+
+y:
+
+p = probability or proportion r = rate rr = relative risk hr = hazard
+ratio n = number u = utility c = cost
+
+Other naming:
+
+f.name = function temp.name = temporary object
+
+This is based on recommendations by
+<https://github.com/DARTH-git/darthpack> (<https://rdcu.be/bRP5h> table
+3).
+
 ## Model code
 
 See file `AD open-source model.R` associated with comments to supports
 its readibility and interpretation.
 
+### transition probability matrix explained
+
+<!-- ... contains TPs between states, also over time -->
+<!-- ... array is matrices stacked... refer to them by ... array[x,y,z] dimensions -->
+<!-- ... video on time dependent TPs can be found here, and example code -->
+<!-- .. explain a.TP... in our model -->
 <!-- !!!TO-DO: @ daphne/linh: i will explain during phone call, but idea is to show simple examples of the difficult parts in the model code. Among which:  -->
 <!-- 1. how the cycle-dependent TP matrix looks like (basically, explain how arrays work in a simple example and refer to details online R book).  -->
 <!-- 2. explain how the 2 functions work with a simple example (so function `scenario` is used to prepare the inputs, then function `strategy` runs a strategy, then `scenario` takes the results and stores it (something along these lines). And refer to the available dampack R vignette and indicate we used that as an example.  -->
@@ -214,23 +247,6 @@ its readibility and interpretation.
 <!-- * disease states within dementia are a function of the history if disease state (only 1 cycle back); indirectly they are a function of time.  -->
 <!-- * death is a function of demographics and disease state.  -->
 <!-- * QALYs & costs are a function of disease state and death.  -->
-<!-- 4. add a paragraph on pre-fixes (and refer to the coding framework by the DARTH group):  -->
-<!-- Standard naming for objects is 'x.y.object_name' with: x: -->
-<!-- v = vector -->
-<!-- m = matrix -->
-<!-- a = array -->
-<!-- df = data frame -->
-<!-- l = list y: -->
-<!-- p = probability or proportion -->
-<!-- r = rate -->
-<!-- rr = relative risk -->
-<!-- hr = hazard ratio -->
-<!-- n = number -->
-<!-- u = utility -->
-<!-- c = cost -->
-<!-- Other naming: -->
-<!-- f.name = function -->
-<!-- temp.name = temporary object -->
 <!-- 5. Debugging basics: explain really quickly how the debuggint function in rstudio works (search for a video and web-page you can refer to). -->
 <!-- 6. explain PSA (and refer to dampack) -->
 <!-- 7. refer to a video on basic principles of markov matrix multiplication (part in the code with the %*%). Refer as much as possible to the video's on youtube "Markov modelling (theory only); Decision analytic modelling in health economics": https://youtube.com/playlist?list=PLIT7NqYN7YT3LNYOoTEFchRXX7crLfYa5  -->
