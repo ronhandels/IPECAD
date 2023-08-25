@@ -31,7 +31,7 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
 l.inputs <- list(
-  v.names_state = c("mcion","mciof","milon","milof","mod","sev","dth","mci_i","mil_i","mod_i","sev_i"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = institutionalized
+  v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = institutionalized (without '_i' = community-living)
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
   age_start = 70, # age of starting population
   age_end = 100, # age up to which model is run (reflecting time horizon)
@@ -46,10 +46,10 @@ l.inputs <- list(
   p.mod_sev = 0.109, # idem
   p.sev_mil = 0.000, # idem
   p.sev_mod = 0.196, # idem
-  p.mci_i = 0, # p.x_i transition probability from homecare to institutionalized setting 
-  p.mil_i = 0, #tba 
-  p.mod_i = 0, #tba 
-  p.sev_i = 0, #tba 
+  p.mci_i = 0, # p.x_i transition probability from community to institutionalized setting 
+  p.mil_i = 0, # idem 
+  p.mod_i = 0, # idem 
+  p.sev_i = 0, # idem 
   m.r.mortality = m.mortality_rate_US, # general population mortality rate
   hr.mort_mci = 1, # hr.mort_x: hazard ratio mortality by disease state (hazard ratio by dementia state compared to very mild dementia [Wimo, 2020: https://doi.org/10.3233/jad-191055] multiplied with HR or very mild compared to no dementia [Andersen, 2010: https://doi.org/10.1159/000265553])
   hr.mort_verymilddem = 1.82, # [Andersen, 2010: https://doi.org/10.1159/000265553]
@@ -74,9 +74,9 @@ l.inputs <- list(
   c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
   c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
   c.mci_i = 1, # c.x_i costs in state (institutionalized setting)
-  c.mil_i = 1, #tba 
-  c.mod_i = 1, #tba 
-  c.sev_i = 1, #tba 
+  c.mil_i = 1, # idem 
+  c.mod_i = 1, # idem 
+  c.sev_i = 1, # idem 
   c.Tx = 10000, # treatment costs
   c.Tx_diagnostics1 = 2000, # costs diagnostics cycle 1 (not half-cycle corrected)
   discount_QALY = 0.035, # discount rate
@@ -127,12 +127,12 @@ f.run_strategy <- function(l.inputs) {
     a.TP["mod","dth",] <- 1-exp(-(v.r.dth * hr.mort_mod * hr.mort_verymilddem))
     a.TP["sev","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev * hr.mort_verymilddem))
     a.TP["dth","dth",] <- 1
-    a.TP["mci_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))                         # same as homecare setting is assumed here 
+    a.TP["mci_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
     a.TP["mil_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil * hr.mort_verymilddem))
     a.TP["mod_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mod * hr.mort_verymilddem))
     a.TP["sev_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev * hr.mort_verymilddem))
     
-    # TP matrix state: from mci-on homecare
+    # TP matrix state: from mci-on community-setting
     a.TP["mcion","mcion",] <- v.p.mcion_mci * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
     a.TP["mcion","mciof",] <- v.p.mcion_mci * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
     a.TP["mcion","milon",] <- v.p.mcion_mil * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
@@ -144,7 +144,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["mcion","mod_i",] <- v.p.mcion_mod *    p.mci_i                            * (1-a.TP["mcion","dth",])
     a.TP["mcion","sev_i",] <- v.p.mcion_sev *    p.mci_i                            * (1-a.TP["mcion","dth",])
 
-    # TP matrix state: from mci-off homecare
+    # TP matrix state: from mci-off community-setting
     a.TP["mciof","mciof",] <- v.p.mci_mci   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
     a.TP["mciof","milof",] <- v.p.mci_mil   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
     a.TP["mciof","mod",]   <- v.p.mci_mod   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
@@ -154,7 +154,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["mciof","mod_i",] <- v.p.mci_mod   *    p.mci_i                            * (1-a.TP["mciof","dth",])
     a.TP["mciof","sev_i",] <- v.p.mci_sev   *    p.mci_i                            * (1-a.TP["mciof","dth",])
     
-    # TP matrix state: from mild-on homecare
+    # TP matrix state: from mild-on community-setting
     a.TP["milon","mcion",] <- v.p.milon_mci * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
     a.TP["milon","mciof",] <- v.p.milon_mci * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
     a.TP["milon","milon",] <- v.p.milon_mil * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
@@ -166,7 +166,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["milon","mod_i",] <- v.p.milon_mod *    p.mil_i                            * (1-a.TP["milon","dth",])
     a.TP["milon","sev_i",] <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milon","dth",])
     
-    # TP matrix state: from mild-off homecare
+    # TP matrix state: from mild-off community-setting
     a.TP["milof","mciof",] <- v.p.mil_mci   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
     a.TP["milof","milof",] <- v.p.mil_mil   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
     a.TP["milof","mod",]   <- v.p.mil_mod   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
@@ -176,7 +176,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["milof","mod_i",] <- v.p.mil_mod   *    p.mil_i                            * (1-a.TP["milof","dth",])
     a.TP["milof","sev_i",] <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milof","dth",])
 
-    # TP matrix state: from moderate homecare
+    # TP matrix state: from moderate community-setting
     a.TP["mod","milof",] <- v.p.mod_mil     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
     a.TP["mod","mod",]   <- v.p.mod_mod     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
     a.TP["mod","sev",]   <- v.p.mod_sev     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
@@ -184,7 +184,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["mod","mod_i",] <- v.p.mod_mod     *    p.mod_i                            * (1-a.TP["mod","dth",])
     a.TP["mod","sev_i",] <- v.p.mod_sev     *    p.mod_i                            * (1-a.TP["mod","dth",])
     
-    # TP matrix state: from severe homecare
+    # TP matrix state: from severe community-setting
     a.TP["sev","milof",] <- v.p.sev_mil     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
     a.TP["sev","mod",]   <- v.p.sev_mod     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
     a.TP["sev","sev",]   <- v.p.sev_sev     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
@@ -192,25 +192,24 @@ f.run_strategy <- function(l.inputs) {
     a.TP["sev","mod_i",] <- v.p.sev_mod     *    p.sev_i                            * (1-a.TP["sev","dth",])
     a.TP["sev","sev_i",] <- v.p.sev_sev     *    p.sev_i                            * (1-a.TP["sev","dth",])
 
-    # TP matrix state: from mci-institutionalized
+    # TP matrix state: from mci institutionalized-setting
     a.TP["mci_i","mci_i",] <- v.p.mci_mci                                           * (1-a.TP["mci_i","dth",])
     a.TP["mci_i","mil_i",] <- v.p.mci_mil                                           * (1-a.TP["mci_i","dth",])
     a.TP["mci_i","mod_i",] <- v.p.mci_mod                                           * (1-a.TP["mci_i","dth",])
     a.TP["mci_i","sev_i",] <- v.p.mci_sev                                           * (1-a.TP["mci_i","dth",])
   
-    
-    # TP matrix state: from mild-institutionalized
+    # TP matrix state: from mild institutionalized-setting
     a.TP["mil_i","mci_i",] <- v.p.mil_mci                                           * (1-a.TP["mil_i","dth",])
     a.TP["mil_i","mil_i",] <- v.p.mil_mil                                           * (1-a.TP["mil_i","dth",])
     a.TP["mil_i","mod_i",] <- v.p.mil_mod                                           * (1-a.TP["mil_i","dth",])
     a.TP["mil_i","sev_i",] <- v.p.mil_sev                                           * (1-a.TP["mil_i","dth",])
     
-    # TP matrix state: from moderate-institutionalized
+    # TP matrix state: from moderate institutionalized-setting
     a.TP["mod_i","mil_i",] <- v.p.mod_mil                                           * (1-a.TP["mod_i","dth",])
     a.TP["mod_i","mod_i",] <- v.p.mod_mod                                           * (1-a.TP["mod_i","dth",])
     a.TP["mod_i","sev_i",] <- v.p.mod_sev                                           * (1-a.TP["mod_i","dth",])
     
-    # TP matrix state: from severe-institutionalized
+    # TP matrix state: from severe institutionalized-setting
     a.TP["sev_i","mil_i",] <- v.p.sev_mil                                           * (1-a.TP["sev_i","dth",])
     a.TP["sev_i","mod_i",] <- v.p.sev_mod                                           * (1-a.TP["sev_i","dth",])
     a.TP["sev_i","sev_i",] <- v.p.sev_sev                                           * (1-a.TP["sev_i","dth",])  
@@ -236,10 +235,10 @@ f.run_strategy <- function(l.inputs) {
     }
     
     # primary economic outputs (STEP G6: multiply states with utility and cost estimates)
-    m.out[,"ly"]   <- m.trace %*% c(1           , 1    , 1           , 1    , 1    , 1    , 0, 1      , 1      , 1      , 1 ) # must match order of states
-    m.out[,"qaly"] <- m.trace %*% c(u.mci       , u.mci, u.mil       , u.mil, u.mod, u.sev, 0, u.mci  , u.mil  , u.mod  , u.sev) # must match order of states
-    m.out[,"cost"] <- m.trace %*% c(c.mci + c.Tx, c.mci, c.mil + c.Tx, c.mil, c.mod, c.sev, 0, c.mci_i, c.mil_i, c.mod_i, c.sev_i) # must match order of states
-     
+    m.out[,"ly"]   <- m.trace %*% c(1           , 1    , 1           , 1    , 1    , 1    , 1      , 1      , 1      , 1      , 0) # must match order of states
+    m.out[,"qaly"] <- m.trace %*% c(u.mci       , u.mci, u.mil       , u.mil, u.mod, u.sev, u.mci  , u.mil  , u.mod  , u.sev  , 0) # must match order of states
+    m.out[,"cost"] <- m.trace %*% c(c.mci + c.Tx, c.mci, c.mil + c.Tx, c.mil, c.mod, c.sev, c.mci_i, c.mil_i, c.mod_i, c.sev_i, 0) # must match order of states
+    
     # half-cycle correction (STEP G7: apply half-cycle correction)
     for (i in 1:(n.cycle-1)) {
       m.out[i,"qaly"] <- (m.out[i,"qaly"] + m.out[i+1,"qaly"]) * 0.5
@@ -341,9 +340,6 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       
       # death (subset mortality table to obtain age- and sex-specific mortality)
       v.r.dth <- m.r.mortality[age_start:(age_end-1), sex]
-      
-      # treatment costs
-      c.Tx <- 0
       
       # starting states
       m.trace1 <- matrix(data=0, nrow=1, ncol=n.state, dimnames=list(NULL,v.names_state))
@@ -637,17 +633,17 @@ df.table1 <- format(temp.table1, digits=2, scientific=FALSE, big.mark=",") # for
 
 ## plot: state trace
 m.plot1_soc <- cbind(
-  mci=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
-  mil=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
-  mod=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
-  sev=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+  mci=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mci_i"], 
+  mil=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mil_i"], 
+  mod=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod_i"], 
+  sev=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev_i"], 
   dth=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
 )
 m.plot1_int <- cbind(
-  mci=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
-  mil=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
-  mod=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
-  sev=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+  mci=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mci_i"], 
+  mil=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mil_i"], 
+  mod=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod_i"], 
+  sev=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev_i"], 
   dth=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
 )
 a.plot1 <- array(data=c(m.plot1_soc,m.plot1_int), dim=c(nrow(m.plot1_soc),5,2), dimnames=list(NULL,colnames(m.plot1_soc),c("soc","int")))
@@ -729,8 +725,8 @@ text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), po
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
 ## table: proportion in state
-round(a.plot1[1:10,,"soc"], 2) # state trace standard of care strategy
-round(a.plot1[1:10,,"int"], 2) # state trace intervention strategy
+round(a.plot1[1:10,,"soc"], 3) # state trace standard of care strategy
+round(a.plot1[1:10,,"int"], 3) # state trace intervention strategy
 
 ## plot: icer
 par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
