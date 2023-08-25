@@ -20,7 +20,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This GitHub repository provides an open-source model for cost-effectiveness analysis of Alzheimer's disease interventions. Initial developement consisted of reconstructing an existing model by several members of the IPECAD modeling group (see details below). 
+This GitHub repository provides the IPECAD Open-Source Model v2 - Single-Domain for cost-effectiveness analysis of Alzheimer's disease interventions. Initial developement consisted of reconstructing an existing model by several members of the IPECAD modeling group (see details below). It differs from the IPECAD Open-Source Model v1 - Multi-Domain (detailed on www.ipecad.org/open-source-model)
 
 The model is available in 3 formats under a public license that allows obtaining the source code and making changes.  
 
@@ -44,6 +44,11 @@ Generally, the formats are based on the same underlying inputs list and strategy
 * we recommend familiarizing with the general description of the model provided below and the description of its input sources detailed below. 
 
 
+## Cite this work
+
+IPECAD open-source model https://github.com/ronhandels/IPECAD
+
+
 ## Background
 
 Limited health-care resources require choices on how to distribute them. Cost-effectiveness analysis assesses the value an intervention to inform such choice. A decision-analytic model can be used when available empirical health-economic data are limited, for example to extrapolate beyond a randomized controlled trial follow-up period. Transparency and credibility of decision-models are key for their results to be used by decision-makers. 
@@ -62,10 +67,10 @@ A cohort state-transition Markov model has been developed. Initial developement 
 
 The model has the following features and assumptions: 
 
-* The model simulates 2 strategies: standard of care (SOC) and intervention (INT); further referred to as a scenario (e.g., base case scenario). 
-* The markov states include mild cognitive impairment (MCI), mild dementia (MIL), moderate dementia (MOD), severe dementia (SEV) and death (DTH); with MCI and mild dementia split into on- and off-treatment. Dementia health states were defined by the Mini-Mental State Examination (MMSE) categorized into mild (30-21), moderate (20-10) and severe (0-9). 
+* The model simulates 2 strategies: standard of care 'soc' and intervention 'int'; further referred to as a scenario (e.g., base case scenario). 
+* The markov states include mild cognitive impairment 'mci', mild dementia 'mil', moderate dementia 'mod', severe dementia 'sev' and death 'dth'; with MCI and mild dementia split into on- and off-treatment. Dementia health states were defined by the Mini-Mental State Examination (MMSE) categorized into mild (30-21), moderate (20-10) and severe (0-9). 
 * Transitions between health states other than death are simulated time-independent. 
-* Non-death transition are conditional on being alive. Some non-sequential and backtransitions are allowed. On/off treatment conditions are independent of health state and unidirectional (only on to off). 
+* Non-death transition are conditional on being alive. Some non-sequential and backtransitions are allowed. On/off treatment conditions are independent of health state and unidirectional (only on to off). Transitions to institutionalization are unidirectional (only to institutionalization). Institutional setting does not contain treatment effects. 
 * Mortality is implemented by multiplying an age- and sex-specific life table (user-defined) with the relative risk for death by disease severity state. 
 * A cycle length of 1 year is employed with half-cycle correction operationalized as taking the mean of the health-economic outcomes at each 2 subsequent cycles. 
 * The time horizon is variable, up to the age of 99. 
@@ -234,20 +239,23 @@ See file `AD open-source model.R` associated with comments to supports its readi
 
 ## Version details
 
-### v2.0.0-alpha (2023)
+### v2.1.0-beta (2023; released)
 
-An existing model [Wimo et al. 2020: https://www.doi.org/10.3233/JAD-191055] (further referred to as 'original SveDem model') was reconstructed in terms of its disease progression part. 
+This version was build for the abstract submitted to ISPOR Europe 2023. 
 
-This original SveDem model was a cohort-based Markov model and consisted of health states Mild Cognitive Impairment (MCI), mild dementia, moderate dementia, severe dementia and death. Progression between states was modeled with a cycle length of 1 year simulating from age 60 to 100. 
+This version has been developed and/or supported by:
 
-Reconstruction of the original SveDem model was done with support of the original developers Anders Wimo and Ron Handels using original non-rounded input estimates available in the original model format TreeAge and Excel. The reconstructed model produced the same model outcomes in terms of mean person-years per person per state and alive (table 1 and table 4 from earlier mentioned 'SveDem' model publication) when rounded to 2 decimal points, except for person-years in severe dementia after 40 years which had an absolute deviation of 0.01 person-years. Anders Wimo and Ron Handels considered this a sufficient reflection of internal validity. 
-
-This version is not publicly available given the dependency on non-publicly available information and its alpha version status. 
-
-This version has been developed by: 
-
-* Ron Handels
+* Ron Handels (main developer, Maastricht University - Netherlands)
 * Anders Wimo
+* Anders Sköldunger
+* Ashley Tate
+* Bengt Winblad
+* Daphne Silvertand
+* Linh Nguyen
+* Linus Jönsson
+* Sabine Grimm
+* Sandar Aye
+* Will Herring
 
 
 ### v2.0.1-alpha (2023)
@@ -268,34 +276,30 @@ This version has been developed by:
 * Daphne Silvertand
 
 
-### v2.1.0-beta
+### v2.0.0-alpha (2023)
 
-This version was build for the abstract submitted to ISPOR Europe 2023. This version has been developed and/or supported by:
+An existing model [Wimo et al. 2020: https://www.doi.org/10.3233/JAD-191055] (further referred to as 'original SveDem model') was reconstructed in terms of its disease progression part. This original SveDem model was a cohort-based Markov model and consisted of health states Mild Cognitive Impairment (MCI), mild dementia, moderate dementia, severe dementia and death. Progression between states was modeled with a cycle length of 1 year simulating from age 60 to 100. See publication for a detailed acknowledgment of the developers and funders (partly funded by Merck & Co., Inc., Kenilworth, NJ, USA). 
 
-Ron Handels
-Anders Wimo
-Anders Sköldunger
-Ashley Tate
-Bengt Winblad
-Daphne Silvertand
-Linh Nguyen
-Linus Jönsson
-Sabine Grimm
-Sandar Aye
-Will Herring
+Reconstruction of the original SveDem model was done by the original developers Anders Wimo and Ron Handels using original non-rounded input estimates available in the original model format TreeAge and Excel. The reconstructed model produced the same model outcomes in terms of mean person-years per person per state and alive (table 1 and table 4 from earlier mentioned 'SveDem' model publication) when rounded to 2 decimal points, except for person-years in severe dementia after 40 years which had an absolute deviation of 0.01 person-years. Anders Wimo and Ron Handels considered this a sufficient reflection of internal validity. No specific funding was received for this reconstruction. 
+
+This version is not publicly available given the dependency on non-publicly available information and its alpha version status. 
+
+This version has been developed by: 
+
+* Ron Handels
+* Anders Wimo
 
 
+### v1 (2019)
+
+The IPECAD Open-Source Model v1 - Multi-Domain is an open-source model described in a publication [Green et al. 2019: https://doi-org.mu.idm.oclc.org/10.1016/j.jalz.2019.05.004] and available at www.ipecad.org/open-source-model. This v1 is a different model independent from v2.
 
 
 ## Acknowledgment
-
-We acknowledge the developers of the `dampack` [https://github.com/DARTH-git and http://darthworkgroup.com/]. 
 
 We acknowledge all members of the IPECAD group [www.ipecad.org]. 
 
 We acknowledge all (future) contributors to the model. 
 
-For support please use our github repository features: https://github.com/ronhandels/ipecad/. 
-
-
+We acknowledge the developers of the `dampack` [https://github.com/DARTH-git and http://darthworkgroup.com/]. 
 
