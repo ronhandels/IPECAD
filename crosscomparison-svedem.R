@@ -35,7 +35,7 @@ l.inputs <- list(
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
   age_start = 70, # age of starting population
   age_end = 100, # age up to which model is run (reflecting time horizon)
-  sex = "female", # sex of starting population
+  sex = "male", # sex of starting population
   p.mci_mil = 0.144, # observed 18-month probability (136/654=0.208) from control arm in trial, converted to 12-month probability { 1-exp(-((-log(1 -0.208))/1.5)) } # ORIGINAL = 0.206, # p.x_x: transition probability between states [Wimo, 2020: https://doi.org/10.3233/jad-191055]
   p.mci_mod = 0, # idem
   p.mci_sev = 0, # idem
@@ -61,18 +61,18 @@ l.inputs <- list(
   p.discontinuation_x = 0, # annual proportion discontinuation
   tx_duration = 30, # ORIGINAL = 7, # maximum treatment duration
   p.starting_state_mci = 1, # proportion starting in disease state MCI, remaining from 1 will start in 'mil' (all will start as 'of' in 'soc' and 'on' in 'int')
-  u.mci = 0.73, # ORIGINAL = 0.73, # u.x: utility in state [https://doi.org/10.1016/j.jalz.2019.05.004]
-  u.mil = 0.69, # ORIGINAL = 0.69, # idem
-  u.mod = 0.53, # ORIGINAL = 0.53, # idem
-  u.sev = 0.337536946, # ORIGINAL = 0.38, # idem
-  c.mci = 25559, # ORIGINAL = (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
-  c.mil = 44975, # ORIGINAL = (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
-  c.mod = 67747, # ORIGINAL = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
-  c.sev = 103202, # ORIGINAL = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
-  c.Tx = 0, # ORIGINAL = 10000, # treatment costs
-  c.Tx_diagnostics1 = 1000, # ORIGINAL = 2000, # costs diagnostics cycle 1 (not half-cycle corrected)
+  u.mci = 0.73, # u.x: utility in state [https://doi.org/10.1016/j.jalz.2019.05.004]
+  u.mil = 0.69, # idem
+  u.mod = 0.53, # idem
+  u.sev = 0.38, # idem
+  c.mci = 17712   , # (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
+  c.mil = 26380.51, # (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
+  c.mod = 42035.88, # (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
+  c.sev = 63969.04, # (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
+  c.Tx = 0, # treatment costs
+  c.Tx_diagnostics1 = 1000, # costs diagnostics cycle 1 (not half-cycle corrected)
   discount_QALY = 0.035, # discount rate
-  discount_COST = 0.035, # # discount rate
+  discount_COST = 0.035, # discount rate
   wtp = 40000 # willingness to pay
 )
 
@@ -384,168 +384,17 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 ######################################## 3. MODEL CALIBRATION ########################################
 # n/a
 
+
+
 ######################################## 4. VALIDATION ########################################
 # n/a
+
+
 
 ######################################## 5. ANALYSIS ########################################
 
 ######################################## 5.1. PROBABILISTIC ########################################
-
-# if(F) {
-#   
-#   # set number of PSA replications
-#   n.psa <- 1000
-#   
-#   # list parameters for PSA
-#   psa_params <- c(
-#     "age_start",
-#     "hr.mort_verymilddem",
-#     "hr.mort_mil",
-#     "hr.mort_mod",
-#     "hr.mort_sev",
-#     "p.mci_mil",
-#     "p.mil_mod",
-#     "p.mil_sev",
-#     "p.mod_mil",
-#     "p.mod_sev",
-#     "p.sev_mil",
-#     "p.sev_mod",
-#     "rr.tx_mci_mil",
-#     "rr.tx_mil_mod",
-#     "tx_duration",
-#     "c.Tx"
-#   )
-#   
-#   # list distributions
-#   psa_dists <- c(
-#     "bootstrap",
-#     "log-normal",
-#     "log-normal",
-#     "log-normal",
-#     "log-normal",
-#     "truncated-normal",
-#     "bootstrap",
-#     "bootstrap",
-#     "bootstrap",
-#     "bootstrap",
-#     "bootstrap",
-#     "bootstrap",
-#     "truncated-normal",
-#     "truncated-normal",
-#     "bootstrap",
-#     "bootstrap"
-#   )
-#   
-#   # parameterization types
-#   psa_parameterization_types <- c(
-#     "value, weight",
-#     "mean, sd",
-#     "mean, sd",
-#     "mean, sd",
-#     "mean, sd",
-#     "mean, sd, ll, ul",
-#     "value, weight",
-#     "value, weight",
-#     "value, weight",
-#     "value, weight",
-#     "value, weight",
-#     "value, weight",
-#     "mean, sd, ll, ul",
-#     "mean, sd, ll, ul",
-#     "value, weight",
-#     "value, weight"
-#   )
-#   
-#   # sample transition probabilities based on oprobit
-#   ## function to produce transition probability matrix using ordered probit regression coefficients
-#   f.oprobit_TP <- function(b_mod, b_sev, cut1, cut2) {
-#     p.mil_mil <- pnorm(cut1 - 0) - pnorm(-999 - 0) # mil>mil
-#     p.mil_mod <- pnorm(cut2 - 0) - pnorm(cut1 - 0) # mil>mod
-#     p.mil_sev <- pnorm(999 - 0) - pnorm(cut2 - 0) # mil>mod
-#     p.mod_mil <- pnorm(cut1 - b_mod) - pnorm(-999 - b_mod) # mod>mil
-#     p.mod_mod <- pnorm(cut2 - b_mod) - pnorm(cut1 - b_mod) # mod>mod
-#     p.mod_sev <- pnorm(999 - b_mod) - pnorm(cut2 - b_mod) # mod>mod
-#     p.sev_mil <- pnorm(cut1 - b_sev) - pnorm(-999 - b_sev) # sev>mil
-#     p.sev_mod <- pnorm(cut2 - b_sev) - pnorm(cut1 - b_sev) # sev>mod
-#     p.sev_sev <- pnorm(9999 - b_sev) - pnorm(cut2 - b_sev) # sev>mod
-#     return(cbind(p.mil_mil, p.mil_mod, p.mil_sev, p.mod_mil, p.mod_mod, p.mod_sev, p.sev_mil, p.sev_mod, p.sev_sev))
-#   }
-#   
-#   # ## general base case transition probability matrix
-#   # round(f.oprobit_TP(b_mod=1.8984, b_sev=3.9837, cut1=0.542, cut2=3.129), 3)
-#   
-#   ## sample ordered probit parameter values (using 'rnorm') and convert ordered probit parameters to transition probabilities (using 'f.oprobit_TP')
-#   m.TP_psa <- f.oprobit_TP(
-#     b_mod = rnorm(n=n.psa, mean=1.8984, sd=(1.949-1.8479)/(1.96*4)), # 95% confidence interval upper bound minus lower bound, then divide by 4 times standard deviation
-#     b_sev = rnorm(n=n.psa, mean=3.9837, sd=(4.233-3.7343)/(1.96*4)),
-#     cut1 = rnorm(n=n.psa, mean=0.542, sd=(0.574-0.510)/(1.96*4)),
-#     cut2 = rnorm(n=n.psa, mean=3.129, sd=(3.206-3.052)/(1.96*4))
-#   ) # m.TP_psa # hist(m.TP_psa[,2])
-#   
-#   # distribution parameters (seems that weights must add up to 1 to be sampled from their explicit values rather than be seen as a distribution to be sampled from, see help)
-#   psa_dists_params <- list(
-#     data.frame(value=c(60,65,70,75,80), weight=c(0.1,0.2,0.4,0.2,0.1)), # data.frame(value=c(60,65,70,75,80), weight=c(0.5,0.75,1,0.75,0.5))
-#     c(l.inputs[["hr.mort_verymilddem"]], (2.14  - 1.55 )/(qnorm(0.975)*2)), # 'qnorm(0.975)*2' represents 95%CI interval (i.e., 4 times standard deviation)
-#     c(l.inputs[["hr.mort_mil"]]        , (1.507 - 1.153)/(qnorm(0.975)*2)),
-#     c(l.inputs[["hr.mort_mod"]]        , (2.757 - 2.122)/(qnorm(0.975)*2)),
-#     c(l.inputs[["hr.mort_sev"]]        , (5.043 - 3.610)/(qnorm(0.975)*2)),
-#     c(l.inputs[["p.mci_mil"]], 0.05, 0, 1),
-#     data.frame(value=m.TP_psa[,"p.mil_mod"], weight=rep(1,n.psa)),
-#     data.frame(value=m.TP_psa[,"p.mil_sev"], weight=rep(1,n.psa)),
-#     data.frame(value=m.TP_psa[,"p.mod_mil"], weight=rep(1,n.psa)),
-#     data.frame(value=m.TP_psa[,"p.mod_sev"], weight=rep(1,n.psa)),
-#     data.frame(value=m.TP_psa[,"p.sev_mil"], weight=rep(1,n.psa)),
-#     data.frame(value=m.TP_psa[,"p.sev_mod"], weight=rep(1,n.psa)),
-#     c(l.inputs[["rr.tx_mci_mil"]], 0.10, 0, 1),
-#     c(l.inputs[["rr.tx_mci_mil"]], 0.10, 0, 1),
-#     data.frame(value=c(7,10,15), weight=c(0.2,0.6,0.2)),
-#     data.frame(value=c(1000,5000,10000,20000,25000), weight=c(0.1,0.2,0.4,0.2,0.1))
-#   )
-#   
-#   # sample parameter values based on underlying distributions independently
-#   out_psa_samp <- gen_psa_samp(
-#     params = psa_params,
-#     dists = psa_dists,
-#     parameterization_types = psa_parameterization_types,
-#     dists_params = psa_dists_params,
-#     n = n.psa
-#   ) # ; out_psa_samp; hist(out_psa_samp$c.Tx)
-#   
-#   # run model using sampled input parameters
-#   out_psa <- run_psa(
-#     psa_samp = out_psa_samp,
-#     params_basecase = l.inputs,
-#     FUN = f.run_scenario,
-#     outcomes = c("QALY", "COST"),
-#     strategies = c("soc", "int"),
-#     progress = TRUE
-#   )
-#   
-#   # make PSA object
-#   obj_psa <- make_psa_obj(
-#     cost = out_psa$COST$other_outcome,
-#     effect = out_psa$QALY$other_outcome,
-#     parameters = out_psa$COST$parameters,
-#     strategies = out_psa$COST$strategies,
-#     currency = "$"
-#   )
-#   
-#   # ICE-plane
-#   plot(obj_psa)
-#   
-#   # CEAC
-#   obj_ceac <- ceac(wtp = seq(from=0, to=150000, by=10000), psa = obj_psa)
-#   plot(obj_ceac, frontier = TRUE, points = TRUE)
-#   
-#   # OWSA
-#   owsa_psa <- owsa(sa_obj=obj_psa, outcome="eff") # create owsa on all parameters (see dampack vignette for details)
-#   owsa_tornado(owsa_psa, n_y_ticks = 2) # plot tornado graph
-#   owsa_psa <- owsa(sa_obj=obj_psa, outcome="cost") # create owsa on all parameters (see dampack vignette for details)
-#   owsa_tornado(owsa_psa, n_y_ticks = 2) # plot tornado graph
-#   
-# }
-
-
+# n/a
 
 ######################################## 5.2. DETERMINISTIC ########################################
 
@@ -681,6 +530,8 @@ plot(icer, label="all")
 ## table: icer
 print(as.data.frame(t(icer)))
 
+
+
 # optional functions: copy outcomes to clipboard
 
 ## state trace
@@ -695,7 +546,8 @@ write.table(x = temp.out_soc, file = "clipboard", sep = "\t", row.names = FALSE)
 temp.out_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]]; temp.out_int
 write.table(x = temp.out_int, file = "clipboard", sep = "\t", row.names = FALSE)
 
-# cumulative person-years over 10-year time horizon (run model for 10 years)
+
+# cumulative person-years over 10-year time horizon (run model for 10 years: age = 70 to 80, tx_duration = 10)
 # cbind(soc=colSums(m.plot1_soc[1:10,]), int=colSums(m.plot1_int[1:10,]))
 # time on intervention
 sum(out_base[["l.out_strategy"]][["int"]][["m.trace"]][1:10,"mcion"]) + sum(out_base[["l.out_strategy"]][["int"]][["m.trace"]][1:10,"milon"])
@@ -708,7 +560,9 @@ sum(out_base[["l.out_strategy"]][["int"]][["m.out"]][1:10,"qaly"])
   # small change i think due to tree-age half-cycle corrects each seperate state and then adds them
 
 
-# calibration
+
+######################################## 5.2.2 CALIBRATION ########################################
+
 l.inputs_cal_m <- l.inputs_cal_f <- l.inputs
 # male
 l.inputs_cal_m[["sex"]] <- "male"
@@ -722,187 +576,6 @@ out_base_cal_m <- f.run_scenario(l.inputs = l.inputs_cal_m, detailed = TRUE)
 sum(out_base_cal_m[["l.out_strategy"]][["soc"]][["m.trace"]][1:10,c("mcion","mciof")])
 
 
-######################################## 5.2.2 DETERMINISTIC SENSITIVITY ANALYSIS ########################################
-
-# if(F) {
-#   
-#   # list parameters for DSA
-#   dsa_pars <- c(
-#     "age_start",
-#     "hr.mort_verymilddem",
-#     "hr.mort_mil",
-#     "hr.mort_mod",
-#     "hr.mort_sev",
-#     "p.mci_mil",
-#     "p.mil_mod",
-#     "p.mod_mil",
-#     "p.mod_sev",
-#     "p.sev_mod",
-#     "rr.tx_mci_mil",
-#     "rr.tx_mil_mod",
-#     "tx_duration",
-#     "c.Tx"
-#   )
-#   
-#   # list minimum values
-#   dsa_min <- c(
-#     60,
-#     1.55,
-#     1.153,
-#     2.122,
-#     3.610,
-#     l.inputs[["p.mci_mil"]]/2,
-#     quantile(x=m.TP_psa[,"p.mil_mod"], probs=0.025),
-#     quantile(x=m.TP_psa[,"p.mod_mil"], probs=0.025),
-#     quantile(x=m.TP_psa[,"p.mod_sev"], probs=0.025),
-#     quantile(x=m.TP_psa[,"p.sev_mod"], probs=0.025),
-#     l.inputs[["rr.tx_mci_mil"]]^2,
-#     l.inputs[["rr.tx_mil_mod"]]^2,
-#     l.inputs[["tx_duration"]]/2,
-#     l.inputs[["c.Tx"]]/2
-#   )
-#   
-#   # list maximum values
-#   dsa_max <- c(
-#     80,
-#     2.14,
-#     1.507,
-#     2.757,
-#     5.043,
-#     l.inputs[["p.mci_mil"]]*2,
-#     quantile(x=m.TP_psa[,"p.mil_mod"], probs=0.975),
-#     quantile(x=m.TP_psa[,"p.mod_mil"], probs=0.975),
-#     quantile(x=m.TP_psa[,"p.mod_sev"], probs=0.975),
-#     quantile(x=m.TP_psa[,"p.sev_mod"], probs=0.975),
-#     l.inputs[["rr.tx_mci_mil"]]^0.5,
-#     l.inputs[["rr.tx_mil_mod"]]^0.5,
-#     l.inputs[["tx_duration"]]*2,
-#     l.inputs[["c.Tx"]]*2
-#   )
-#   
-#   # define sensitivity analysis range
-#   df.owsa_params_range <- data.frame(
-#     pars = dsa_pars,
-#     min = dsa_min,
-#     max = dsa_max
-#   ); df.owsa_params_range
-#   
-#   # run DSA
-#   out_owsa_det <- run_owsa_det(
-#     params_range = df.owsa_params_range,
-#     params_basecase = l.inputs,
-#     nsamp = 20, # n equally-spaced samples
-#     FUN = f.run_scenario, # make sure the function only returns the aggregated outcomes (not a list of outcomes)
-#     outcomes = NULL, # NULL for all outcomes (which should then be selected when plotting a tornado graph)
-#     strategies = NULL, # all strategies
-#     progress = TRUE
-#   )
-# 
-#   # OWSA: plot tornado graph of DSA outcome 'NHB' (only 1 outcome is possible; possibly can't work with negative (NHB) data?)
-#   owsa_tornado(out_owsa_det$owsa_QALY)
-#   
-#   # OWSA: plot tornado graph of DSA outcome 'iNHB'
-#   out_owsa_det$owsa_NHB
-#   out_owsa_det_NHB_soc <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_soc")
-#   out_owsa_det_NHB_int <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_int")
-#   if(!all(out_owsa_det_NHB_soc[,c("parameter","param_val")]==out_owsa_det_NHB_int[,c("parameter","param_val")])) stop("error")
-#   out_owsa_det_iNHB <- out_owsa_det_NHB_int
-#   out_owsa_det_iNHB[,"outcome_val"] <- NA
-#   out_owsa_det_iNHB[,"outcome_val"] <- out_owsa_det_NHB_int[,"outcome_val"] - out_owsa_det_NHB_soc[,"outcome_val"] + 100 # added 100 because negative values produces an error
-#   owsa_tornado(out_owsa_det_iNHB, n_y_ticks=4)
-#   
-# }
-
-
-
-######################################## 5.2.3 HEADROOM ########################################
-
-# if(F) {
-#   
-#   # import all life tables
-#   a.lifetable <- array(data=NA, dim=c(100,2,6), dimnames=list(NULL,c("male","female"),c("ES","NL","PL","SE","UK","US")))
-#   a.lifetable[,,"ES"] <- as.matrix(read.csv(file="life_tables/lifetable_ES.csv", header=TRUE))[,c("male","female")]
-#   a.lifetable[,,"NL"] <- as.matrix(read.csv(file="life_tables/lifetable_NL.csv", header=TRUE))[,c("male","female")]
-#   a.lifetable[,,"PL"] <- as.matrix(read.csv(file="life_tables/lifetable_PL.csv", header=TRUE))[,c("male","female")]
-#   a.lifetable[,,"SE"] <- as.matrix(read.csv(file="life_tables/lifetable_SE.csv", header=TRUE))[,c("male","female")]
-#   a.lifetable[,,"UK"] <- as.matrix(read.csv(file="life_tables/lifetable_UK.csv", header=TRUE))[,c("male","female")]
-#   a.lifetable[,,"US"] <- as.matrix(read.csv(file="life_tables/lifetable_US.csv", header=TRUE))[,c("male","female")]
-#   matplot(x=a.lifetable[1:99,"male",], type="l", col=rainbow(6))
-#   legend(x="topleft", legend=c("ES","NL","PL","SE","UK","US"), col=rainbow(6), lty=c(1:6))
-#   
-#   # costs (Euro) in EU regions (source: Jonsson, 2023 https://doi.org/10.1007/s40273-022-01212-z table 4 consumer price index is 2021)
-#   m.c_region <- matrix(data=c(
-#     NA, NA, NA, NA, NA, 
-#     19909, 7616, 20876, 20420, 31984, 
-#     34223, 9670, 37540, 40953, 47934, 
-#     61958, 11236, 58198, 61906, 56104
-#   ), 
-#   nrow=5, 
-#   ncol=4, 
-#   dimnames = list(c("britishisles","eastbaltics","north","south","west"),c("mci","mil","mod","sev"))
-#   ); m.c_region
-#   m.c_region[,"mci"] <- m.c_region[,"mil"] * (17712/26380.51) # add costs for MCI (assumed ratio between m.mil and m.mci from base case inputs)
-#   
-#   # quality of life
-#   l.inputs_headroom <- l.inputs
-#   l.inputs_headroom[["u.mci"]] <- mean(c(0.7 ,0.75)) # Landeiro review 2020 studies Jonsson 2006 and Hessman 2016 (as these are EU mixed setting including MCI and dementia stages)
-#   l.inputs_headroom[["u.mil"]] <- mean(c(0.65,0.61))
-#   l.inputs_headroom[["u.mod"]] <- mean(c(0.51,0.41))
-#   l.inputs_headroom[["u.sev"]] <- mean(c(0.40,0.21))
-#   
-#   # costs
-#   l.inputs_UK <- l.inputs_headroom
-#   l.inputs_UK[["c.mci"]] <- m.c_region["britishisles","mci"]
-#   l.inputs_UK[["c.mil"]] <- m.c_region["britishisles","mil"]
-#   l.inputs_UK[["c.mod"]] <- m.c_region["britishisles","mod"]
-#   l.inputs_UK[["c.sev"]] <- m.c_region["britishisles","sev"]
-#   l.inputs_UK[["m.r.mortality"]] <- -log(1-(a.lifetable[,,"UK"]))
-#   l.inputs_E <- l.inputs_headroom
-#   l.inputs_E[["c.mci"]] <- m.c_region["eastbaltics","mci"]
-#   l.inputs_E[["c.mil"]] <- m.c_region["eastbaltics","mil"]
-#   l.inputs_E[["c.mod"]] <- m.c_region["eastbaltics","mod"]
-#   l.inputs_E[["c.sev"]] <- m.c_region["eastbaltics","sev"]
-#   l.inputs_E[["m.r.mortality"]]  <- -log(1-(a.lifetable[,,"PL"]))
-#   l.inputs_N <- l.inputs_headroom
-#   l.inputs_N[["c.mci"]] <- m.c_region["north","mci"]
-#   l.inputs_N[["c.mil"]] <- m.c_region["north","mil"]
-#   l.inputs_N[["c.mod"]] <- m.c_region["north","mod"]
-#   l.inputs_N[["c.sev"]] <- m.c_region["north","sev"]
-#   l.inputs_N[["m.r.mortality"]]  <- -log(1-(a.lifetable[,,"SE"]))
-#   l.inputs_S <- l.inputs_headroom
-#   l.inputs_S[["c.mci"]] <- m.c_region["south","mci"]
-#   l.inputs_S[["c.mil"]] <- m.c_region["south","mil"]
-#   l.inputs_S[["c.mod"]] <- m.c_region["south","mod"]
-#   l.inputs_S[["c.sev"]] <- m.c_region["south","sev"]
-#   l.inputs_S[["m.r.mortality"]]  <- -log(1-(a.lifetable[,,"ES"]))
-#   l.inputs_W <- l.inputs_headroom
-#   l.inputs_W[["c.mci"]] <- m.c_region["west","mci"]
-#   l.inputs_W[["c.mil"]] <- m.c_region["west","mil"]
-#   l.inputs_W[["c.mod"]] <- m.c_region["west","mod"]
-#   l.inputs_W[["c.sev"]] <- m.c_region["west","sev"]
-#   l.inputs_W[["m.r.mortality"]]  <- -log(1-(a.lifetable[,,"NL"]))
-#   l.inputs_US <- l.inputs
-# 
-#   # headroom function
-#   f.headroom <- function(x, l.inputs, parameter) {
-#     l.inputs[[parameter]] <- x
-#     out <- f.run_scenario(l.inputs=l.inputs, detailed=FALSE)
-#     iNHB <- out[2,"NHB"] - out[1,"NHB"]
-#     return(iNHB)
-#   }
-#   
-#   # run headroom
-#   headroom_UK <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_UK, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_UK
-#   headroom_E <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_E, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_E
-#   headroom_N <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_N, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_N
-#   headroom_S <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_S, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_S
-#   headroom_W <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_W, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_W
-#   headroom_US <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_US, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_US
-#   
-#   # result
-#   round(c(headroom_UK, headroom_E, headroom_N, headroom_S, headroom_W, headroom_US)) # difference with ISPOR 2023 abstract due to patch that changed the order of discounting and half-cycle correction
-#   
-# }
 
 
 
