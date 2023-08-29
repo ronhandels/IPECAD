@@ -132,8 +132,16 @@ wtp	 | 	40000	 | 	user-defined	 | 	willingness to pay
 
 Notes on input estimates for the base case scenario: 
 
-* p.mci_mil: transition probability between MCI and dementia was obtained from a rate reflecting AD high likelihood group [Vos et al. 2015: https://doi.org/10.1093/brain/awv029]. Transitions were assumed to mild stage of dementia (not moderate or severe). 
+* p.mci_mil: transition probability between MCI and dementia was obtained from a rate reflecting AD high likelihood group defined as abnormal CSF & tau, or abnormal amyloid PET [Vos et al. 2015: https://doi.org/10.1093/brain/awv029]. Transitions were assumed to mild stage of dementia (not moderate or severe). The 3-year cumulative incidence probability of 61% was converted to a 3-year rate using '-log(1-0.61)=0.94', then converted to a 1-year rate dividing it by 3 '0.94/3=0.31', then converted to a 1-year probability using '1-exp(-0.31)=0.27'. 
 * p.mil_mod, p.mil_sev... etc: transition probabilities between dementia states were obtained from predicted values of an ordered probit model fitted to data from the Swedisch Dementia Registry (SveDem) longitudinal cognitive status after controlling for drop-out [Handels et al. 2020: https://doi.org/10.1002/alz.12050]. Cognitive status was reflected by the Mini-Mental State Examination (MMSE) and categorized as mild dementia (21-30), moderate dementia (10-20) or severe dementia (0-9) health state. 
+
+
+### Alternative input estimates
+
+Alternative input estimates from Vos et al. [2015: https://doi.org/10.1093/brain/awv029] are: 
+
+* Amyloid positive and neuronal loss undetermined. This is reflected by diagnostic criteria NIA-AA groups 'High Alzheimer's disease likelihood group' and 'Conflicting IAP group', with 3-year cumulative incidence probability of 59% (AD dementia) and 4% (non-AD dementia), and 22% (AD dementia) and (4%) of dementia and with prevalence of 353 and 49 respectively. This results into a weighted 3-year cumulative incidence of '1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )=0.57' and corresponding 1-year probability of '1-exp(- -log(1-0.57)/3)=0.24'
+* Amyloid positive and neuronal loss undetermined. This is reflected by diagnostic criteria NIA-AA group 'High Alzheimer's disease likelihood group', with 3-year cumulative incidence probability of 59%, corresponding to a 1-year probability of '1-exp(- -log(1-0.59)/3)=0.26'
 
 
 ## Basic overview of model code (R version)
