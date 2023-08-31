@@ -36,7 +36,7 @@ l.inputs <- list(
   age_start = 70, # age of starting population
   age_end = 100, # age up to which model is run (reflecting time horizon)
   sex = "male", # sex of starting population
-  p.mci_mil = 0.144, # observed 18-month probability (136/654=0.208) from control arm in trial, converted to 12-month probability { 1-exp(-((-log(1 -0.208))/1.5)) } # ORIGINAL = 0.206, # p.x_x: transition probability between states [Wimo, 2020: https://doi.org/10.3233/jad-191055]
+  p.mci_mil = 0.144, # observed 18-month probability (136/654=0.208) from control arm in trial, converted to 12-month probability { 1-exp(-((-log(1 -0.208))/1.5)) }
   p.mci_mod = 0, # idem
   p.mci_sev = 0, # idem
   p.mil_mci = 0, # idem
@@ -52,14 +52,14 @@ l.inputs <- list(
   hr.mort_mil = 1.318, # [Wimo, 2020: https://doi.org/10.3233/jad-191055]
   hr.mort_mod = 2.419, # idem
   hr.mort_sev = 4.267, # idem
-  rr.tx_mci_mil = 0.934, # probability dementia onset intervention arm (127/654=0.194) divided by probability dementia onset control arm (136/654=0.208) # ORIGINAL = 0.75, # treatment effect expressed as hazard ratio on transition rate
+  rr.tx_mci_mil = 0.934, # probability dementia onset intervention arm (127/654=0.194) divided by probability dementia onset control arm (136/654=0.208)
   rr.tx_mci_mod = 1, 
   rr.tx_mci_sev = 1, 
   rr.tx_mil_mod = 0.934, 
   tx_waning = 0.05, # assumed annual waning of treatment
   p.discontinuation1 = 0.1, # discontinuation at year 1
   p.discontinuation_x = 0, # annual proportion discontinuation
-  tx_duration = 30, # ORIGINAL = 7, # maximum treatment duration
+  tx_duration = 30, # maximum treatment duration
   p.starting_state_mci = 1, # proportion starting in disease state MCI, remaining from 1 will start in 'mil' (all will start as 'of' in 'soc' and 'on' in 'int')
   u.mci = 0.73, # u.x: utility in state [https://doi.org/10.1016/j.jalz.2019.05.004]
   u.mil = 0.69, # idem
@@ -398,7 +398,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 5.2. DETERMINISTIC ########################################
 
-######################################## 5.2.1 BASE CASE ########################################
+######################################## 5.2.1. BASE CASE ########################################
 
 # run the model
 out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
@@ -561,7 +561,7 @@ sum(out_base[["l.out_strategy"]][["int"]][["m.out"]][1:10,"qaly"])
 
 
 
-######################################## 5.2.2 CALIBRATION ########################################
+######################################## 5.2.2. CALIBRATION ########################################
 
 l.inputs_cal_m <- l.inputs_cal_f <- l.inputs
 # male
@@ -574,6 +574,112 @@ l.inputs_cal_m[["sex"]] <- "female"
 l.inputs_cal_m[["p.mci_mil"]] <- 0.1830
 out_base_cal_m <- f.run_scenario(l.inputs = l.inputs_cal_m, detailed = TRUE)
 sum(out_base_cal_m[["l.out_strategy"]][["soc"]][["m.trace"]][1:10,c("mcion","mciof")])
+
+
+
+######################################## TEMPORARY AD-HOC SENSITIVITY ANALYSIS ON TREATMENT DURATION ########################################
+
+l.inputs_sa1 <- l.inputs
+
+# initialize outcome
+result_sa1 <- matrix(data=NA, nrow=30, ncol=5, dimnames=list(NULL,c("x","onTx","soc","int","dif")))
+
+for (x in 1:30) {
+  # define input
+  l.inputs_sa1[["tx_duration"]] <- x
+  
+  # run model
+  out_sa1 <- f.run_scenario(l.inputs = l.inputs_sa1, detailed = TRUE)
+  
+  # aggregate outcomes
+  soc <- cbind(
+    mci=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
+    mil=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
+    mod=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
+    sev=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+    dth=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
+  )
+  int <- cbind(
+    mci=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
+    mil=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
+    mod=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
+    sev=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+    dth=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
+  )
+  m.plot2 <- cbind(soc=colSums(soc), int=colSums(int))
+  m.plot2 <- m.plot2[c("mci","mil","mod","sev"),]
+  
+  # output
+  result_sa1[x,"x"] <- x
+  result_sa1[x,"onTx"] <- sum(out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"]) + sum(out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"])
+  result_sa1[x,"soc"] <- m.plot2["mci","soc"]
+  result_sa1[x,"int"] <- m.plot2["mci","int"]
+  result_sa1[x,"dif"] <- m.plot2["mci","int"] - m.plot2["mci","soc"]
+  
+}
+result_sa1
+plot(
+  x = result_sa1[,"onTx"], 
+  y = result_sa1[,"dif"], 
+  type = "l"
+)
+
+
+######################################## TEMPORARY AD-HOC SENSITIVITY ANALYSIS ON MORTALITY ########################################
+
+l.inputs_sa2 <- l.inputs
+
+# initialize outcome
+result_sa2 <- matrix(data=NA, nrow=30, ncol=5, dimnames=list(NULL,c("hr.mort_verymilddem","inc_alv","inc_mci","inc_qaly","inc_cost")))
+
+
+i=1
+for (x in seq(from=1, to=3, length.out=30)) {
+  
+  # define input
+  l.inputs_sa2[["hr.mort_verymilddem"]] <- x
+  
+  # run model
+  out_sa2 <- f.run_scenario(l.inputs = l.inputs_sa2, detailed = TRUE)
+  
+  # aggregate outcomes
+  soc <- cbind(
+    mci=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
+    mil=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
+    mod=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
+    sev=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+    dth=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
+  )
+  int <- cbind(
+    mci=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
+    mil=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
+    mod=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
+    sev=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+    dth=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
+  )
+  m.plot2 <- cbind(soc=colSums(soc), int=colSums(int))
+  m.plot2 <- m.plot2[c("mci","mil","mod","sev"),]
+  
+  # output
+  result_sa2[i,"hr.mort_verymilddem"] <- x
+  result_sa2[i,"inc_alv"] <- sum(m.plot2[,"int"]) - sum(m.plot2[,"soc"])
+  result_sa2[i,"inc_mci"] <- sum(m.plot2["mci","int"]) - sum(m.plot2["mci","soc"])
+  result_sa2[i,"inc_qaly"] <- out_sa2[["df.out_sum"]]["int","QALY"] - out_sa2[["df.out_sum"]]["soc","QALY"]
+  result_sa2[i,"inc_cost"] <- out_sa2[["df.out_sum"]]["int","COST"] - out_sa2[["df.out_sum"]]["soc","COST"]
+  
+  i = i+1
+}
+result_sa2
+plot(
+  x = result_sa2[,"hr.mort_verymilddem"], 
+  y = result_sa2[,"inc_qaly"], 
+  type = "l"
+)
+plot(
+  x = result_sa2[,"hr.mort_verymilddem"], 
+  y = result_sa2[,"inc_cost"], 
+  type = "l"
+)
 
 
 
