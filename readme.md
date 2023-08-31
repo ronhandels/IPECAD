@@ -255,7 +255,7 @@ Data can be stored in different when using programming languages. The cycle-depe
 An array is a collection of elements of the same data type (numbers, characters, etc) stored. Arrays in programming languages are often used to store a fixed number of elements, and each element can be accessed using its index.
 ```RStudio
 #creation of array
-array = [1, 2, 3, 4, 5]
+array <- (1, 2, 3, 4, 5)
 # Accessing elements
 print(my_array[0])  # Output: 1
 print(my_array[4])  # Output: 5
