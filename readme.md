@@ -247,6 +247,36 @@ its readibility and interpretation.
 <!-- .. explain a.TP... in our model -->
 <!-- !!!TO-DO: @ daphne/linh: i will explain during phone call, but idea is to show simple examples of the difficult parts in the model code. Among which:  -->
 <!-- 1. how the cycle-dependent TP matrix looks like (basically, explain how arrays work in a simple example and refer to details online R book).  -->
+#### cycle-dependent TP matrix
+Data can be stored in different when using programming languages. The cycle-dependent transition matrix has a couple important features that need to be explained. 
+1) The creation and definition of array and matrix
+2) The element of cycle-dependent transitions
+##### Array
+An array is a collection of elements of the same data type (numbers, characters, etc) stored. Arrays in programming languages are often used to store a fixed number of elements, and each element can be accessed using its index.
+```RStudio
+#creation of array
+array = [1, 2, 3, 4, 5]
+# Accessing elements
+print(my_array[0])  # Output: 1
+print(my_array[4])  # Output: 5
+```
+##### Matrix
+A matrix is a two-dimensional array, essentially an array of arrays. It consists of rows and columns, where each cell holds an element. Matrices are useful for representing grid-like data structures, such as tables or grids of numbers.
+|   |  A   |  B   |  C   |
+|---|------|------|------|
+| A | 0.2  | 0.1  | 0.2  |
+| B | 0.3  | 0.4  | 0.3  |
+| C | 0.5  | 0.6  | 0.5  |
+
+```RStudio
+#creation matrix
+my_matrix <- matrix(c(0.2, 0.1, 0.2,
+                      0.3, 0.4, 0.3,
+                      0.5, 0.6, 0.5), 
+                    nrow = 3, 
+                    byrow = TRUE,
+                    dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+```
 <!-- 2. explain how the 2 functions work with a simple example (so function `scenario` is used to prepare the inputs, then function `strategy` runs a strategy, then `scenario` takes the results and stores it (something along these lines). And refer to the available dampack R vignette and indicate we used that as an example.  -->
 <!-- 3. explain the Markov principle and data dependencies:  -->
 <!-- The model is build-up with the following dependencies: -->
