@@ -563,17 +563,57 @@ sum(out_base[["l.out_strategy"]][["int"]][["m.out"]][1:10,"qaly"])
 
 ######################################## 5.2.2. CALIBRATION ########################################
 
+# calibrate model
 l.inputs_cal_m <- l.inputs_cal_f <- l.inputs
-# male
+## male
 l.inputs_cal_m[["sex"]] <- "male"
 l.inputs_cal_m[["p.mci_mil"]] <- 0.1756
 out_base_cal_m <- f.run_scenario(l.inputs = l.inputs_cal_m, detailed = TRUE)
 sum(out_base_cal_m[["l.out_strategy"]][["soc"]][["m.trace"]][1:10,c("mcion","mciof")])
-# female
-l.inputs_cal_m[["sex"]] <- "female"
-l.inputs_cal_m[["p.mci_mil"]] <- 0.1830
-out_base_cal_m <- f.run_scenario(l.inputs = l.inputs_cal_m, detailed = TRUE)
-sum(out_base_cal_m[["l.out_strategy"]][["soc"]][["m.trace"]][1:10,c("mcion","mciof")])
+## female
+l.inputs_cal_f[["sex"]] <- "female"
+l.inputs_cal_f[["p.mci_mil"]] <- 0.1829
+out_base_cal_f <- f.run_scenario(l.inputs = l.inputs_cal_f, detailed = TRUE)
+sum(out_base_cal_f[["l.out_strategy"]][["soc"]][["m.trace"]][1:10,c("mcion","mciof")])
+
+
+## results: male
+### state trace
+temp.trace_soc <- out_base_cal_m[["l.out_strategy"]][["soc"]][["m.trace"]]; temp.trace_soc
+write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = FALSE)
+temp.trace_int <- out_base_cal_m[["l.out_strategy"]][["int"]][["m.trace"]]; temp.trace_int
+write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = FALSE)
+
+## cumulative person-years over 10-year time horizon (run model for 10 years: age = 70 to 80, tx_duration = 10)
+### cbind(soc=colSums(m.plot1_soc[1:10,]), int=colSums(m.plot1_int[1:10,]))
+### time on intervention
+sum(out_base_cal_m[["l.out_strategy"]][["int"]][["m.trace"]][1:10,"mcion"]) + sum(out_base_cal_m[["l.out_strategy"]][["int"]][["m.trace"]][1:10,"milon"])
+### total costs
+sum(out_base_cal_m[["l.out_strategy"]][["soc"]][["m.out"]][1:10,"cost"])
+sum(out_base_cal_m[["l.out_strategy"]][["int"]][["m.out"]][1:10,"cost"])
+### total qaly
+sum(out_base_cal_m[["l.out_strategy"]][["soc"]][["m.out"]][1:10,"qaly"])
+sum(out_base_cal_m[["l.out_strategy"]][["int"]][["m.out"]][1:10,"qaly"])
+
+
+## results: female
+## state trace
+temp.trace_soc <- out_base_cal_f[["l.out_strategy"]][["soc"]][["m.trace"]]; temp.trace_soc
+write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = FALSE)
+temp.trace_int <- out_base_cal_f[["l.out_strategy"]][["int"]][["m.trace"]]; temp.trace_int
+write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = FALSE)
+
+## cumulative person-years over 10-year time horizon (run model for 10 years: age = 70 to 80, tx_duration = 10)
+### cbind(soc=colSums(m.plot1_soc[1:10,]), int=colSums(m.plot1_int[1:10,]))
+### time on intervention
+sum(out_base_cal_f[["l.out_strategy"]][["int"]][["m.trace"]][1:10,"mcion"]) + sum(out_base_cal_f[["l.out_strategy"]][["int"]][["m.trace"]][1:10,"milon"])
+### total costs
+sum(out_base_cal_f[["l.out_strategy"]][["soc"]][["m.out"]][1:10,"cost"])
+sum(out_base_cal_f[["l.out_strategy"]][["int"]][["m.out"]][1:10,"cost"])
+### total qaly
+sum(out_base_cal_f[["l.out_strategy"]][["soc"]][["m.out"]][1:10,"qaly"])
+sum(out_base_cal_f[["l.out_strategy"]][["int"]][["m.out"]][1:10,"qaly"])
+
 
 
 
@@ -587,40 +627,40 @@ result_sa1 <- matrix(data=NA, nrow=30, ncol=5, dimnames=list(NULL,c("x","onTx","
 for (x in 1:30) {
   # define input
   l.inputs_sa1[["tx_duration"]] <- x
-  
+
   # run model
   out_sa1 <- f.run_scenario(l.inputs = l.inputs_sa1, detailed = TRUE)
-  
+
   # aggregate outcomes
   soc <- cbind(
-    mci=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
-    mil=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
-    mod=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
-    sev=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+    mci=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"],
+    mil=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"],
+    mod=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"],
+    sev=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"],
     dth=out_sa1[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
   )
   int <- cbind(
-    mci=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
-    mil=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
-    mod=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
-    sev=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+    mci=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"],
+    mil=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"],
+    mod=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"],
+    sev=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"],
     dth=out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
   )
   m.plot2 <- cbind(soc=colSums(soc), int=colSums(int))
   m.plot2 <- m.plot2[c("mci","mil","mod","sev"),]
-  
+
   # output
   result_sa1[x,"x"] <- x
   result_sa1[x,"onTx"] <- sum(out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"]) + sum(out_sa1[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"])
   result_sa1[x,"soc"] <- m.plot2["mci","soc"]
   result_sa1[x,"int"] <- m.plot2["mci","int"]
   result_sa1[x,"dif"] <- m.plot2["mci","int"] - m.plot2["mci","soc"]
-  
+
 }
 result_sa1
 plot(
-  x = result_sa1[,"onTx"], 
-  y = result_sa1[,"dif"], 
+  x = result_sa1[,"onTx"],
+  y = result_sa1[,"dif"],
   type = "l"
 )
 
@@ -635,49 +675,49 @@ result_sa2 <- matrix(data=NA, nrow=30, ncol=5, dimnames=list(NULL,c("hr.mort_ver
 
 i=1
 for (x in seq(from=1, to=3, length.out=30)) {
-  
+
   # define input
   l.inputs_sa2[["hr.mort_verymilddem"]] <- x
-  
+
   # run model
   out_sa2 <- f.run_scenario(l.inputs = l.inputs_sa2, detailed = TRUE)
-  
+
   # aggregate outcomes
   soc <- cbind(
-    mci=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
-    mil=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
-    mod=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
-    sev=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+    mci=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"],
+    mil=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"],
+    mod=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"],
+    sev=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"],
     dth=out_sa2[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
   )
   int <- cbind(
-    mci=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
-    mil=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
-    mod=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
-    sev=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+    mci=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"],
+    mil=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"],
+    mod=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"],
+    sev=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"],
     dth=out_sa2[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
   )
   m.plot2 <- cbind(soc=colSums(soc), int=colSums(int))
   m.plot2 <- m.plot2[c("mci","mil","mod","sev"),]
-  
+
   # output
   result_sa2[i,"hr.mort_verymilddem"] <- x
   result_sa2[i,"inc_alv"] <- sum(m.plot2[,"int"]) - sum(m.plot2[,"soc"])
   result_sa2[i,"inc_mci"] <- sum(m.plot2["mci","int"]) - sum(m.plot2["mci","soc"])
   result_sa2[i,"inc_qaly"] <- out_sa2[["df.out_sum"]]["int","QALY"] - out_sa2[["df.out_sum"]]["soc","QALY"]
   result_sa2[i,"inc_cost"] <- out_sa2[["df.out_sum"]]["int","COST"] - out_sa2[["df.out_sum"]]["soc","COST"]
-  
+
   i = i+1
 }
 result_sa2
 plot(
-  x = result_sa2[,"hr.mort_verymilddem"], 
-  y = result_sa2[,"inc_qaly"], 
+  x = result_sa2[,"hr.mort_verymilddem"],
+  y = result_sa2[,"inc_qaly"],
   type = "l"
 )
 plot(
-  x = result_sa2[,"hr.mort_verymilddem"], 
-  y = result_sa2[,"inc_cost"], 
+  x = result_sa2[,"hr.mort_verymilddem"],
+  y = result_sa2[,"inc_cost"],
   type = "l"
 )
 
