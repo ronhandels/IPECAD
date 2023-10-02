@@ -1,6 +1,22 @@
 
 
 
+
+                #!!!!!!!!!!!!!!!!!!!!!!
+                
+                
+                # !!TO-DO: add scenario without institutionalization
+                # c.mci = (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
+                # c.mil = (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
+                # c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
+                # c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
+
+
+  
+  
+  
+
+
 ######################################## INFORMATION ########################################
 
 # see readme for details
@@ -14,8 +30,7 @@ rm(list = ls()) # clear environment
 # install.packages("dampack") # remove # and run once to install package
 library(dampack) # load package
 setwd("~/GitHub/IPECAD")
-#setwd("D:/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
-#setwd("C:/users/Ron/surfdrive/PhD/Projects/IPECAD/open source model/2.0/_github/IPECAD/") # set working directory; change to your own directory
+
 
 
 ######################################## 1. INPUTS ########################################
@@ -46,10 +61,10 @@ l.inputs <- list(
   p.mod_sev = 0.109, # idem
   p.sev_mil = 0.000, # idem
   p.sev_mod = 0.196, # idem
-  p.mci_i = 0, # p.x_i transition probability from community to institutionalized setting 
-  p.mil_i = 0, # idem 
-  p.mod_i = 0, # idem 
-  p.sev_i = 0, # idem 
+  p.mci_i = 0, # p.x_i transition probability from community to institutionalized setting [Neumann, 1999: https://doi.org/10.1212/wnl.57.6.957]
+  p.mil_i = 0.038, # idem
+  p.mod_i = 0.110, # idem
+  p.sev_i = 0.259, # idem
   m.r.mortality = m.mortality_rate_US, # general population mortality rate
   hr.mort_mci = 1, # hr.mort_x: hazard ratio mortality by disease state (hazard ratio by dementia state compared to very mild dementia [Wimo, 2020: https://doi.org/10.3233/jad-191055] multiplied with HR or very mild compared to no dementia [Andersen, 2010: https://doi.org/10.1159/000265553])
   hr.mort_verymilddem = 1.82, # [Andersen, 2010: https://doi.org/10.1159/000265553]
@@ -65,18 +80,18 @@ l.inputs <- list(
   p.discontinuation_x = 0.1, # annual proportion discontinuation after year 1
   tx_duration = 7, # maximum treatment duration
   p.starting_state_mci = 1, # proportion starting in disease state MCI, remaining from 1 will start in 'mil' (all will start as 'of' in 'soc' and 'on' in 'int')
-  u.mci = 0.73, # u.x: utility in state [https://doi.org/10.1016/j.jalz.2019.05.004]
+  u.mci = 0.73, # u.x: utility in state in mixed community and institutionalized setting [Green, 2019: https://doi.org/10.1016/j.jalz.2019.05.004]
   u.mil = 0.69, # idem
   u.mod = 0.53, # idem
   u.sev = 0.38, # idem
-  c.mci = (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
-  c.mil = (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
-  c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
-  c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
-  c.mci_i = 1, # c.x_i costs in state (institutionalized setting)
-  c.mil_i = 1, # idem 
-  c.mod_i = 1, # idem 
-  c.sev_i = 1, # idem 
+  c.mci = (1254 +  222) * 12, # c.x: costs in state in community setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2]
+  c.mil = (1471 +  410) * 12, # idem
+  c.mod = (1958 +  653) * 12, # idem
+  c.sev = (2250 + 1095) * 12, # idem
+  c.mci_i = (1254 + 8762) * 12, # c.x_i costs in state in institutionalized setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2]
+  c.mil_i = (1471 + 8762) * 12, # idem 
+  c.mod_i = (1958 + 8762) * 12, # idem 
+  c.sev_i = (2250 + 8762) * 12, # idem 
   c.Tx = 10000, # treatment costs
   c.Tx_diagnostics1 = 2000, # costs diagnostics cycle 1 (not half-cycle corrected)
   discount_QALY = 0.035, # discount rate
@@ -697,16 +712,16 @@ matlines(
   y = a.plot1[,,"soc"], 
   type = "l",
   lty = 1,
-  col = c("green","yellow","orange","red","black")
+  col = c("green","blue","yellow","orange","black")
 )
 matlines(
   x = v.age_range, 
   y = a.plot1[,,"int"], 
   type = "l",
   lty = 2,
-  col = c("green","yellow","orange","red","black")
+  col = c("green","blue","yellow","orange","black")
 )
-legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1)
+legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","blue","yellow","orange","black"), lty=1)
 legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2))
 
 # plot: mean time in state
@@ -716,11 +731,11 @@ barplot(
   horiz = TRUE, 
   xlab = "time (years)", 
   ylab = "strategy", 
-  col=c("green","yellow","orange","red"), 
+  col=c("green","blue","yellow","orange"), 
   space = 0.2, 
   main = "mean time in state"
 )
-legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","yellow","orange","red"))
+legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","blue","yellow","orange"))
 text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), pos=4)
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
@@ -748,7 +763,7 @@ print(as.data.frame(t(icer)))
 # temp.out_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]]; temp.out_int
 # write.table(x = temp.out_int, file = "clipboard", sep = "\t", row.names = FALSE)
 
-
+print(m.plot2)
 
 ######################################## 5.2.2 DETERMINISTIC SENSITIVITY ANALYSIS ########################################
 
