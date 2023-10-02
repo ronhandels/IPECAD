@@ -165,14 +165,19 @@ The following input estimates were used for the base-case scenario:
 | discount_COST        | 0.035                                                           | user-defined                                                   | discount rate costs                                                                                                                                                                                                                                                                                                                  |
 | wtp                  | 40000                                                           | user-defined                                                   | willingness to pay                                                                                                                                                                                                                                                                                                                   |
 
-<!-- !!!TO-DO: @ daphne/linh: please tidy up this table and copy this tables description to the excel file and also as coding notes (#) to the code below and the R file on github.  -->
+<!-- !!!TO-DO: tidy up this table and copy this tables description to the excel file and also as coding notes (#) to the code below and the R file on github.  -->
 
 Notes on input estimates for the base case scenario:
 
 -   p.mci_mil: transition probability between MCI and dementia was
-    obtained from a rate reflecting AD high likelihood group \[Vos et
-    al. 2015: <https://doi.org/10.1093/brain/awv029>\]. Transitions were
-    assumed to mild stage of dementia (not moderate or severe).
+    obtained from a rate reflecting AD high likelihood group defined as
+    abnormal CSF & tau, or abnormal amyloid PET \[Vos et al. 2015:
+    <https://doi.org/10.1093/brain/awv029>\]. Transitions were assumed
+    to mild stage of dementia (not moderate or severe). The 3-year
+    cumulative incidence probability of 61% was converted to a 3-year
+    rate using ‘-log(1-0.61)=0.94’, then converted to a 1-year rate
+    dividing it by 3 ‘0.94/3=0.31’, then converted to a 1-year
+    probability using ‘1-exp(-0.31)=0.27’.
 -   p.mil_mod, p.mil_sev… etc: transition probabilities between dementia
     states were obtained from predicted values of an ordered probit
     model fitted to data from the Swedisch Dementia Registry (SveDem)
@@ -181,6 +186,27 @@ Notes on input estimates for the base case scenario:
     Cognitive status was reflected by the Mini-Mental State Examination
     (MMSE) and categorized as mild dementia (21-30), moderate dementia
     (10-20) or severe dementia (0-9) health state.
+
+### Alternative input estimates
+
+Alternative input estimates from Vos et al. \[2015:
+<https://doi.org/10.1093/brain/awv029>\] are:
+
+-   Amyloid positive and neuronal loss undetermined. This is reflected
+    by diagnostic criteria NIA-AA groups ‘High Alzheimer’s disease
+    likelihood group’ and ‘Conflicting IAP group’, with 3-year
+    cumulative incidence probability of 59% (AD dementia) and 4% (non-AD
+    dementia), and 22% (AD dementia) and (4%) of dementia and with
+    prevalence of 353 and 49 respectively. This results into a weighted
+    3-year cumulative incidence of ‘1-exp(- ( (-log(1-0.59) +
+    -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49)
+    )=0.57’ and corresponding 1-year probability of ‘1-exp(-
+    -log(1-0.57)/3)=0.24’
+-   Amyloid positive and neuronal loss undetermined. This is reflected
+    by diagnostic criteria NIA-AA group ‘High Alzheimer’s disease
+    likelihood group’, with 3-year cumulative incidence probability of
+    59%, corresponding to a 1-year probability of ‘1-exp(-
+    -log(1-0.59)/3)=0.26’
 
 ## Basic overview of model code (R version)
 
@@ -241,42 +267,22 @@ its readibility and interpretation.
 
 ### transition probability matrix explained
 
+\[Will follow\]
+
 <!-- ... contains TPs between states, also over time -->
 <!-- ... array is matrices stacked... refer to them by ... array[x,y,z] dimensions -->
 <!-- ... video on time dependent TPs can be found here, and example code -->
 <!-- .. explain a.TP... in our model -->
-<!-- !!!TO-DO: @ daphne/linh: i will explain during phone call, but idea is to show simple examples of the difficult parts in the model code. Among which:  -->
+<!-- Within Markov processes, a TP matrix is used to describe the probabilities of transitioning from one state to another within a discrete-time Markov chain. Each element of the matrix represents the probability of moving from one state to another in one time step. This probability of transitioning to a future state only depends on the current state.  -->
+<!-- The following table represents a simple TP matrix for the disease states relevant to dementia Alzheimer's disease states that were used in this model, the values within the TP matrix are randomized. The rows represent the current disease state, the columns represent the next possible disease states. The value in the matrix represents the TP within the given cycle length.  -->
+<!-- |        | MCI   | Mild  | Moderate | Severe | Death | -->
+<!-- | ------ | ----- | ----- | -------- | ------ | ----- | -->
+<!-- | **MCI** | 0.5   | 0.4   | 0.1      | 0.0    | 0.0   | -->
+<!-- | **Mild** | 0.0   | 0.6   | 0.3      | 0.1    | 0.0   | -->
+<!-- | **Moderate** | 0.0   | 0.0   | 0.5      | 0.4    | 0.1   | -->
+<!-- | **Severe** | 0.0   | 0.0   | 0.0      | 0.7    | 0.3   | -->
+<!-- | **Death** | 0.0   | 0.0   | 0.0      | 0.0    | 1.0   | -->
 <!-- 1. how the cycle-dependent TP matrix looks like (basically, explain how arrays work in a simple example and refer to details online R book).  -->
-#### cycle-dependent TP matrix
-Data can be stored in different when using programming languages. The cycle-dependent transition matrix has a couple important features that need to be explained. 
-1) The creation and definition of array and matrix
-2) The element of cycle-dependent transitions
-##### Array
-An array is a collection of elements of the same data type (numbers, characters, etc) stored. Arrays in programming languages are often used to store a fixed number of elements, and each element can be accessed using its index.
-```RStudio
-#creation of array
-array <- (1, 2, 3, 4, 5)
-# Accessing elements
-print(my_array[0])  # Output: 1
-print(my_array[4])  # Output: 5
-```
-##### Matrix
-A matrix is a two-dimensional array, essentially an array of arrays. It consists of rows and columns, where each cell holds an element. Matrices are useful for representing grid-like data structures, such as tables or grids of numbers.
-|   |  A   |  B   |  C   |
-|---|------|------|------|
-| A | 0.2  | 0.1  | 0.2  |
-| B | 0.3  | 0.4  | 0.3  |
-| C | 0.5  | 0.6  | 0.5  |
-
-```RStudio
-#creation matrix
-my_matrix <- matrix(c(0.2, 0.1, 0.2,
-                      0.3, 0.4, 0.3,
-                      0.5, 0.6, 0.5), 
-                    nrow = 3, 
-                    byrow = TRUE,
-                    dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
-```
 <!-- 2. explain how the 2 functions work with a simple example (so function `scenario` is used to prepare the inputs, then function `strategy` runs a strategy, then `scenario` takes the results and stores it (something along these lines). And refer to the available dampack R vignette and indicate we used that as an example.  -->
 <!-- 3. explain the Markov principle and data dependencies:  -->
 <!-- The model is build-up with the following dependencies: -->

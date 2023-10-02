@@ -128,7 +128,7 @@ discount_QALY	 | 	0.035	 | 	user-defined	 | 	discount rate QALY
 discount_COST	 | 	0.035	 | 	user-defined	 | 	discount rate costs
 wtp	 | 	40000	 | 	user-defined	 | 	willingness to pay
 
-<!-- !!!TO-DO: @ daphne/linh: please tidy up this table and copy this tables description to the excel file and also as coding notes (#) to the code below and the R file on github.  -->
+<!-- !!!TO-DO: tidy up this table and copy this tables description to the excel file and also as coding notes (#) to the code below and the R file on github.  -->
 
 Notes on input estimates for the base case scenario: 
 
@@ -208,14 +208,25 @@ See file `AD open-source model.R` associated with comments to supports its readi
 
 ### transition probability matrix explained
 
+[Will follow]
+
+
 <!-- ... contains TPs between states, also over time -->
 <!-- ... array is matrices stacked... refer to them by ... array[x,y,z] dimensions -->
 <!-- ... video on time dependent TPs can be found here, and example code -->
 <!-- .. explain a.TP... in our model -->
 
 
+<!-- Within Markov processes, a TP matrix is used to describe the probabilities of transitioning from one state to another within a discrete-time Markov chain. Each element of the matrix represents the probability of moving from one state to another in one time step. This probability of transitioning to a future state only depends on the current state.  -->
+<!-- The following table represents a simple TP matrix for the disease states relevant to dementia Alzheimer's disease states that were used in this model, the values within the TP matrix are randomized. The rows represent the current disease state, the columns represent the next possible disease states. The value in the matrix represents the TP within the given cycle length.  -->
+<!-- |        | MCI   | Mild  | Moderate | Severe | Death | -->
+<!-- | ------ | ----- | ----- | -------- | ------ | ----- | -->
+<!-- | **MCI** | 0.5   | 0.4   | 0.1      | 0.0    | 0.0   | -->
+<!-- | **Mild** | 0.0   | 0.6   | 0.3      | 0.1    | 0.0   | -->
+<!-- | **Moderate** | 0.0   | 0.0   | 0.5      | 0.4    | 0.1   | -->
+<!-- | **Severe** | 0.0   | 0.0   | 0.0      | 0.7    | 0.3   | -->
+<!-- | **Death** | 0.0   | 0.0   | 0.0      | 0.0    | 1.0   | -->
 
-<!-- !!!TO-DO: @ daphne/linh: i will explain during phone call, but idea is to show simple examples of the difficult parts in the model code. Among which:  -->
 
 <!-- 1. how the cycle-dependent TP matrix looks like (basically, explain how arrays work in a simple example and refer to details online R book).  -->
 
