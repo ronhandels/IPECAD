@@ -2,14 +2,12 @@
 
 
 
-                #!!!!!!!!!!!!!!!!!!!!!!
-                
-                
-                # !!TO-DO: add scenario without institutionalization
-                # c.mci = (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
-                # c.mil = (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
-                # c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
-                # c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
+# keep in newfeatures (don't push to 'main')
+# !!TO-DO: add scenario without institutionalization
+# c.mci = (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
+# c.mil = (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
+# c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
+# c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
 
 
   
@@ -19,7 +17,7 @@
 
 ######################################## INFORMATION ########################################
 
-# see readme for details
+# see readme.md for details
 
 
 
@@ -27,7 +25,7 @@
 
 cat("\014") # clear console
 rm(list = ls()) # clear environment
-# install.packages("dampack") # remove # and run once to install package
+# install.packages("dampack") # remove '#' at beginning of the line and run once to install this package
 library(dampack) # load package
 setwd("~/GitHub/IPECAD")
 
@@ -45,58 +43,60 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
+# see readme.md for a short explanation of each input parameter
+
 l.inputs <- list(
   v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = institutionalized (without '_i' = community-living)
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
-  age_start = 70, # age of starting population
-  age_end = 100, # age up to which model is run (reflecting time horizon)
-  sex = "female", # sex of starting population
-  p.mci_mil = 0.206, # p.x_x: transition probability between states [Wimo, 2020: https://doi.org/10.3233/jad-191055]
-  p.mci_mod = 0, # idem
-  p.mci_sev = 0, # idem
-  p.mil_mci = 0, # idem
-  p.mil_mod = 0.293, # idem
-  p.mil_sev = 0.001, # idem
-  p.mod_mil = 0.087, # idem
-  p.mod_sev = 0.109, # idem
-  p.sev_mil = 0.000, # idem
-  p.sev_mod = 0.196, # idem
-  p.mci_i = 0, # p.x_i transition probability from community to institutionalized setting [Neumann, 1999: https://doi.org/10.1212/wnl.57.6.957]
-  p.mil_i = 0.038, # idem
-  p.mod_i = 0.110, # idem
-  p.sev_i = 0.259, # idem
-  m.r.mortality = m.mortality_rate_US, # general population mortality rate
-  hr.mort_mci = 1, # hr.mort_x: hazard ratio mortality by disease state (hazard ratio by dementia state compared to very mild dementia [Wimo, 2020: https://doi.org/10.3233/jad-191055] multiplied with HR or very mild compared to no dementia [Andersen, 2010: https://doi.org/10.1159/000265553])
-  hr.mort_verymilddem = 1.82, # [Andersen, 2010: https://doi.org/10.1159/000265553]
-  hr.mort_mil = 1.318, # [Wimo, 2020: https://doi.org/10.3233/jad-191055]
-  hr.mort_mod = 2.419, # idem
-  hr.mort_sev = 4.267, # idem
-  rr.tx_mci_mil = 0.75, # treatment effect expressed as hazard ratio on transition rate
-  rr.tx_mci_mod = 1, # idem
-  rr.tx_mci_sev = 1, # idem
-  rr.tx_mil_mod = 0.75, # assumed same effect as for MCI to dementia
-  tx_waning = 0.05, # assumed annual waning of treatment
-  p.discontinuation1 = 0.1, # discontinuation at year 1
-  p.discontinuation_x = 0.1, # annual proportion discontinuation after year 1
-  tx_duration = 7, # maximum treatment duration
-  p.starting_state_mci = 1, # proportion starting in disease state MCI, remaining from 1 will start in 'mil' (all will start as 'of' in 'soc' and 'on' in 'int')
-  u.mci = 0.73, # u.x: utility in state in mixed community and institutionalized setting [Green, 2019: https://doi.org/10.1016/j.jalz.2019.05.004]
-  u.mil = 0.69, # idem
-  u.mod = 0.53, # idem
-  u.sev = 0.38, # idem
-  c.mci = (1254 +  222) * 12, # c.x: costs in state in community setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2]
-  c.mil = (1471 +  410) * 12, # idem
-  c.mod = (1958 +  653) * 12, # idem
-  c.sev = (2250 + 1095) * 12, # idem
-  c.mci_i = (1254 + 8762) * 12, # c.x_i costs in state in institutionalized setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2]
-  c.mil_i = (1471 + 8762) * 12, # idem 
-  c.mod_i = (1958 + 8762) * 12, # idem 
-  c.sev_i = (2250 + 8762) * 12, # idem 
-  c.Tx = 10000, # treatment costs
-  c.Tx_diagnostics1 = 2000, # costs diagnostics cycle 1 (not half-cycle corrected)
-  discount_QALY = 0.035, # discount rate
-  discount_COST = 0.035, # # discount rate
-  wtp = 40000 # willingness to pay
+  age_start = 70, 
+  age_end = 99, 
+  sex = "female", 
+  p.mci_mil = 0.206, 
+  p.mci_mod = 0, 
+  p.mci_sev = 0, 
+  p.mil_mci = 0, 
+  p.mil_mod = 0.293, 
+  p.mil_sev = 0.001, 
+  p.mod_mil = 0.087, 
+  p.mod_sev = 0.109, 
+  p.sev_mil = 0.000, 
+  p.sev_mod = 0.196, 
+  p.mci_i = 0, 
+  p.mil_i = 0.038, 
+  p.mod_i = 0.110, 
+  p.sev_i = 0.259, 
+  p.discontinuation1 = 0.1, 
+  p.discontinuation_x = 0.1, 
+  m.r.mortality = m.mortality_rate_US, 
+  hr.mort_mci = 1, 
+  hr.mort_verymilddem = 1.82, 
+  hr.mort_mil = 1.318, 
+  hr.mort_mod = 2.419, 
+  hr.mort_sev = 4.267, 
+  rr.tx_mci_mil = 0.75, 
+  rr.tx_mci_mod = 1, 
+  rr.tx_mci_sev = 1, 
+  rr.tx_mil_mod = 0.75, 
+  tx_waning = 0.05, 
+  tx_duration = 7, 
+  p.starting_state_mci = 1, 
+  u.mci = 0.73, 
+  u.mil = 0.69, 
+  u.mod = 0.53, 
+  u.sev = 0.38, 
+  c.mci = (1254 +  222) * 12, 
+  c.mil = (1471 +  410) * 12, 
+  c.mod = (1958 +  653) * 12, 
+  c.sev = (2250 + 1095) * 12, 
+  c.mci_i = (1254 + 8762) * 12, 
+  c.mil_i = (1471 + 8762) * 12, 
+  c.mod_i = (1958 + 8762) * 12, 
+  c.sev_i = (2250 + 8762) * 12, 
+  c.Tx = 10000, 
+  c.Tx_diagnostics1 = 2000, 
+  discount_QALY = 0.035, 
+  discount_COST = 0.035, 
+  wtp = 40000 
 )
 
 
