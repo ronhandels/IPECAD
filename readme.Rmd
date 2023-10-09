@@ -79,7 +79,7 @@ The following input estimates were used for the base-case scenario:
 
 Parameter | Value    | Source       | Notes
 :--       | :--      | :--          | :--------
-v.names_state | c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth") | fixed | names of disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = institutionalized (without '_i' = community-living)
+v.names_state | c("mcion", "mciof", "milon", "milof", "mod", "sev", "mci_i", "mil_i", "mod_i", "sev_i", "dth") | fixed | names of disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = institutionalized (without '_i' = community-living)
 v.names_strat | c("soc","int") | fixed | strategies: soc = standard of care strategy; int = intervention strategy
 age_start | 70       | user-defined | age of starting population
 age_end   | 99       | user-defined | age up to which model is run (reflecting time horizon)
