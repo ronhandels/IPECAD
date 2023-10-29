@@ -1,35 +1,36 @@
-This GitHub repository provides the IPECAD Open-Source Model v2 -
-Single-Domain for cost-effectiveness analysis of Alzheimer’s disease
+This GitHub repository provides the “IPECAD Open-Source Model v2 -
+Single-Domain” for cost-effectiveness analysis of Alzheimer’s disease
 interventions. Initial developement consisted of reconstructing an
 existing model by several members of the IPECAD modeling group (see
 details below). It differs from the IPECAD Open-Source Model v1 -
-Multi-Domain (detailed on www.ipecad.org/open-source-model)
+Multi-Domain (detailed on www.ipecad.org/open-source-model).
 
 The model is available in 3 formats under a public license that allows
 obtaining the source code and making changes.
 
-| Format      | Comment                                     | Link                                                                       |
+| Format      | Comment                                     | Link                                                                           |
 |:----------------|:---------------------------|:---------------------------|
-| R           | using base R and `dampack` package          | <https://github.com/ronhandels/ipecad/> \> file `AD open-source model.R`   |
-| spreadsheet | deterministic only                          | <https://github.com/ronhandels/ipecad/> \> file `AD open-source model.ods` |
-| Online      | deterministic only with selection of inputs | <https://ronhandels.shinyapps.io/ipecad/>                                  |
+| R           | using base R and `dampack` package          | <https://github.com/ronhandels/ipecad/> \> file `IPECAD open-source model.R`   |
+| spreadsheet | deterministic only                          | <https://github.com/ronhandels/ipecad/> \> file `IPECAD open-source model.ods` |
+| Online      | deterministic only with selection of inputs | <https://ronhandels.shinyapps.io/ipecad/>                                      |
 
 Generally, the formats are based on the same underlying inputs list and
-strategy and scenario functions (see model code for details). See github
-for details on versioning and potential differences between them.
+strategy and scenario functions (see model code for details). See below
+for details on versioning and repository files for differences between
+them.
 
-## Installation tutorial
+## Installation tutorial R version
 
 -   go to <https://github.com/ronhandels/ipecad/> \> click on ‘\<\>
     Code’ (green button) \> click on ‘Download ZIP’ \> unzip all files
 -   install R
 -   install RStudio (optional but suggested)
 -   install `dampack` by running the code `install.packages("dampack")`
--   open file ‘AD open-source model.R’ in RStudio (or R)
+-   open file ‘IPECAD open-source model.R’ in RStudio (or R)
 -   in the code under chapter ‘TECHNICAL PREPARATION’ change the working
     directory `~/GitHub/IPECAD` to the directory you have stored the
-    file ‘AD open-source model.R’ in to make sure the life table in the
-    subfolder is correctly referred to.
+    file ‘IPECAD open-source model.R’ in to make sure the life table in
+    the subfolder is correctly referred to.
 -   we recommend familiarizing with the general description of the model
     provided below and the description of its input sources detailed
     below.
@@ -264,13 +265,11 @@ This is based on recommendations by
 
 ## Model code
 
-See file `AD open-source model.R` associated with comments to supports
-its readibility and interpretation.
+See code comments in file `IPECAD open-source model.R` to support its
+readibility and interpretation.
 
-### transition probability matrix explained
-
-\[Will follow\]
-
+<!-- ### transition probability matrix explained -->
+<!-- [Will follow] -->
 <!-- ... contains TPs between states, also over time -->
 <!-- ... array is matrices stacked... refer to them by ... array[x,y,z] dimensions -->
 <!-- ... video on time dependent TPs can be found here, and example code -->
@@ -302,16 +301,23 @@ its readibility and interpretation.
 
 ## Version details
 
-### planned: v2.2.0-beta (2023)
+### main branch (planned to be released as v2.2.0-beta in late 2023)
 
-This version extends the previous version with new features (transitions
-to institutionalization, table/graph outcomes), new inputs (estimate of
-the transition from MCI to mild dementia, estimate for state-specific
-costs in community and institutional setting) and fixes (half-cycle
-correction before discounting).
+This is intended a stable development version.
+
+It extends v2.1.0 with new features (transitions to
+institutionalization, table/graph outcomes), new inputs (estimate of the
+transition from MCI to mild dementia, estimate for state-specific costs
+in community and institutional setting) and fixes (half-cycle correction
+before discounting).
 
 This version has been developed by: Ron Handels (main developer,
 Maastricht University - Netherlands) and Linh Nguyen.
+
+### newfeatures branch
+
+This is intended a version for developing new features (not necessarily
+stable)
 
 ### v2.1.0-beta (2023; released)
 
