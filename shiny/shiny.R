@@ -4,7 +4,7 @@ library(shiny)
 ui <- fluidPage(
   
   # App title
-  titlePanel("open-source model"),
+  titlePanel("IPECAD open-source model"),
   
   # Sidebar layout with input and output definitions
   sidebarLayout(
@@ -12,54 +12,55 @@ ui <- fluidPage(
     
     ######################################## * SIDEBAR PANEL ########################################
     sidebarPanel(
-      p("THIS IS AN ALPHA VERSION FOR TESTING ONLY. For details, see "), 
-      a("github.com/ronhandels/ipecad", href="http://github.com/ronhandels/ipecad"),
-      p(" "), 
-      
-      sliderInput(inputId="in_age_start_end", label="age start and end:", min = 50, max = 99, value = c(70,99)), 
-      radioButtons(inputId="sex", label="sex:", choices=c("male","female")), 
-      sliderInput(inputId="p.mci_mil", label="mci>mil (transition probability):", min = 0.01, max = 0.90, value = 0.206), 
-      sliderInput(inputId="rr.tx", label="treatment effect (RR):", min = 0.00, max = 1.00, value = 0.75), 
-      sliderInput(inputId="p.discontinuation", label="discontinuation (proportion per year):", min = 0.00, max = 1.00, value = 0.10), 
-      sliderInput(inputId="tx_duration", label="treatment duration (years):", min = 0, max = 20, value = 7), 
-      sliderInput(inputId="p.starting_state_mci", label="starting state MCI (proportion):", min = 0.00, max = 1.00, value = 1.00), 
-      sliderInput(inputId="c.Tx", label="costs treatment (USD):", min=0, max=50000, value=5000, step=1000), 
-      # selectInput(inputId="p.mci_mil", label="TP mci>mil:", choices=c(default_0.206=0.206, vos1_0.15=0.15), selectize=TRUE), 
+      p(""), 
+      sliderInput(inputId="in_age_start_end", label="Age start and end:", min = 50, max = 99, value = c(70,99)), 
+      radioButtons(inputId="sex", label="Sex:", choices=c("male","female")), 
+      sliderInput(inputId="p.mci_mil", label="Transition probability MCI to mild dementia:", min = 0.0, max = 1.0, value = 0.206), 
+      helpText("amyloid positive & injury positive = 0.28; amyloid positive & injury undetermined = 0.25 [Vos, 2015]"), 
+      sliderInput(inputId="p.discontinuation", label="Discontinuation (proportion per year):", min = 0.00, max = 1.00, value = 0.10), 
+      sliderInput(inputId="rr.tx", label="Treatment effect (RR):", min = 0.00, max = 1.00, value = 0.75), 
+      helpText("applied to transition MCI to mild dementia and to mild to moderate dementia"), 
+      sliderInput(inputId="tx_waning", label="Treatment waning:", min = 0.00, max = 1.00, value = 0.05), 
+      helpText("proportion per year treatment no longer effective"), 
+      sliderInput(inputId="tx_duration", label="Treatment duration (years):", min = 0, max = 20, value = 7), 
+      sliderInput(inputId="p.starting_state_mci", label="Starting state MCI (proportion):", min = 0.00, max = 1.00, value = 1.00), 
+      helpText("1 minus this proportion starts in mild dementia"), 
+      sliderInput(inputId="c.Tx", label="Costs treatment (USD):", min=0, max=50000, value=5000, step=1000), 
+      helpText("when on treatment")
       # sliderInput(inputId="in_age_start", label="starting age:", min=50, max=99, value=70), 
       # sliderInput(inputId="decimal", label="Decimal:", min = 0, max = 1, value = 0.5, step = 0.1), 
       # sliderInput(inputId="format", label="Custom Format:", min = 0, max = 10000, value = 0, step = 2500, pre = "$", sep = ",", animate = TRUE), # custom currency format for with basic animation
       # sliderInput(inputId="animation", label="Looping Animation:", min = 1, max = 2000, value = 1, step = 10, animate = animationOptions(interval = 300, loop = TRUE)), # Input: Animation with custom interval (in ms) to control speed, plus looping
-      helpText("abbreviations: dif=difference; dth=death; int=intervention; mci=mild cognitive impairment; mil=mild dementia; RR=relative risk; soc=standard of care; TP=transition probability; ")
     ),
     
     
     ######################################## * MAIN PANEL ########################################
     mainPanel(
-      h1("Model outcomes"),
-      p("THIS IS AN ALPHA VERSION FOR TESTING ONLY. For details, see "), 
+      p("This is the beta version of the IPECAD Open-Source Model v2 - Single-Domain for cost-effectiveness analysis of Alzheimer’s disease interventions. For important background information see: "), 
       a("github.com/ronhandels/ipecad", href="http://github.com/ronhandels/ipecad"),
-      p(" "), 
+      helpText("abbreviations: dth=death; int=intervention strategy; LY=life years; mci=mild cognitive impairment; mil=mild dementia; mod=moderate dementia; NHB=net health benefit; QALY=quality-adjusted life years; sev=severe dementia; soc=standard of care strategy"), 
       
-      h2("health-economic outcomes"),
+      h2("Health-economic outcomes"),
       tableOutput("table_summary"),
-      
-      h2("state trace: plot"),
+
+      h2("State trace: plot"),
       plotOutput("trace"),
-      
-      h2("state trace: standard of care strategy"), 
+
+      h2("State trace:"), 
+      h3("Standard of care strategy"), 
       tableOutput("trace_soc"), 
-      
-      h2("state trace: intervention strategy"), 
+      h3("Intervention strategy"), 
       tableOutput("trace_int"), 
-      
-      h2("state trace: mean time in state"), 
+
+      h2("State trace: mean time in state"), 
       plotOutput("plot2", width = "100%"),
       
-      h2("incremental cost-effectiveness plane"), 
+      h2("Incremental cost-effectiveness plane"), 
       plotOutput("icer"), 
-      
-      h2("incremental cost-effectiveness ratio"), 
-      tableOutput("table_icer")
+
+      h2("Incremental cost-effectiveness ratio"), 
+      tableOutput("table_icer"), 
+      helpText("Effect=QALY; Inc=incremental")
       
     )
   )
@@ -84,53 +85,61 @@ server <- function(input, output, session) {
     
     ######################################## ** PREPARE MODEL ########################################
     
-    # put UI inputs into list of model inputes
-    m.lifetable_US <- as.matrix(read.csv(file="lifetable_US.csv", header=TRUE))[,c("male","female")] # import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
+    # put UI inputs into list of model inputs
+    m.lifetable_US <- as.matrix(read.csv(file="life_tables/lifetable_US.csv", header=TRUE))[,c("male","female")] # import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
     m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
     l.inputs <- list(
-      v.names_state = c("mcion","mciof","milon","milof","mod","sev","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead
+      v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
       v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
-      age_start = input$in_age_start_end[[1]], # start age (dicated by the benchmark scenario)
-      age_end = input$in_age_start_end[[2]], # end age (set at max)
-      sex = input$sex, # sex of starting population (dependent is mortality table)
-      p.mci_mil = as.numeric(input$p.mci_mil), # p.x_x: transition probability between states [Wimo, 2020: https://doi.org/10.3233/jad-191055]
-      p.mci_mod = 0, # idem
-      p.mci_sev = 0, # idem
-      p.mil_mci = 0, # idem
-      p.mil_mod = 0.293, # idem
-      p.mil_sev = 0.001, # idem
-      p.mod_mil = 0.087, # idem
-      p.mod_sev = 0.109, # idem
-      p.sev_mil = 0.000, # idem
-      p.sev_mod = 0.196, # idem
-      m.r.mortality = m.mortality_rate_US, # general population mortality rate
-      hr.mort_mci = 1, # hr.mort_x: hazard ratio mortality by disease state (hazard ratio by dementia state compared to very mild dementia [Wimo, 2020: https://doi.org/10.3233/jad-191055] multiplied with HR or very mild compared to no dementia [Andersen, 2010: https://doi.org/10.1159/000265553])
-      hr.mort_verymilddem = 1.82, # [Andersen, 2010: https://doi.org/10.1159/000265553]
-      hr.mort_mil = 1.318, # [Wimo, 2020: https://doi.org/10.3233/jad-191055]
-      hr.mort_mod = 2.419, # idem
-      hr.mort_sev = 4.267, # idem
-      rr.tx_mci_mil = input$rr.tx, # treatment effect expressed as hazard ratio on transition rate
-      rr.tx_mci_mod = 1, # idem
-      rr.tx_mci_sev = 1, # idem
-      rr.tx_mil_mod = input$rr.tx, # assumed same effect as for MCI to dementia
-      tx_waning = 0.05, # assumed annual waning of treatment
-      p.discontinuation1 = input$p.discontinuation, # discontinuation at year 1
-      p.discontinuation_x = input$p.discontinuation, # annual proportion discontinuation
-      tx_duration = input$tx_duration, # maximum treatment duration
-      p.starting_state_mci = input$p.starting_state_mci, # proportion starting in disease state MCI, remaining from 1 will start in 'mil' (all will start as 'of' in 'soc' and 'on' in 'int')
-      u.mci = 0.73, # u.x: utility in state [https://doi.org/10.1016/j.jalz.2019.05.004]
-      u.mil = 0.69, # idem
-      u.mod = 0.53, # idem
-      u.sev = 0.38, # idem
-      c.mci = (1254 +  222) * 12 * (1-0    ) + (1254 + 8762) * 12 * 0, # c.x: costs in state, build up as montly costs in patient health and social care by care setting (community/residential) multiplied by 12 (annual costs) [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 2] and multiplied by proportion in setting [Tahami, 2023: https://doi.org/10.1007/s40120-023-00460-1 table 1]
-      c.mil = (1471 +  410) * 12 * (1-0.038) + (1471 + 8762) * 12 * 0.038, # idem
-      c.mod = (1958 +  653) * 12 * (1-0.110) + (1958 + 8762) * 12 * 0.110, # idem
-      c.sev = (2250 + 1095) * 12 * (1-0.259) + (2250 + 8762) * 12 * 0.259, # idem
-      c.Tx = input$c.Tx, # treatment costs
-      c.Tx_diagnostics1 = 2000, # costs diagnostics cycle 1 (not half-cycle corrected)
-      discount_QALY = 0.035, # discount rate
-      discount_COST = 0.035, # # discount rate
-      wtp = 40000 # willingness to pay
+      age_start = input$in_age_start_end[[1]], 
+      age_end = input$in_age_start_end[[2]], 
+      sex = input$sex, 
+      p.mci_mil = as.numeric(input$p.mci_mil), 
+      p.mci_mod = 0, 
+      p.mci_sev = 0, 
+      p.mil_mci = 0, 
+      p.mil_mod = 0.293, 
+      p.mil_sev = 0.001, 
+      p.mod_mil = 0.087, 
+      p.mod_sev = 0.109, 
+      p.sev_mil = 0.000, 
+      p.sev_mod = 0.196, 
+      p.mci_i = 0, 
+      p.mil_i = 0.038, 
+      p.mod_i = 0.110, 
+      p.sev_i = 0.259, 
+      p.discontinuation1 = input$p.discontinuation, 
+      p.discontinuation_x = input$p.discontinuation, 
+      m.r.mortality = m.mortality_rate_US, 
+      hr.mort_mci = 1, 
+      hr.mort_verymilddem = 1.82, 
+      hr.mort_mil = 1.318, 
+      hr.mort_mod = 2.419, 
+      hr.mort_sev = 4.267, 
+      rr.tx_mci_mil = input$rr.tx, 
+      rr.tx_mci_mod = 1, 
+      rr.tx_mci_sev = 1, 
+      rr.tx_mil_mod = input$rr.tx, 
+      tx_waning = input$tx_waning, 
+      tx_duration = input$tx_duration, 
+      p.starting_state_mci = input$p.starting_state_mci, 
+      u.mci = 0.73, 
+      u.mil = 0.69, 
+      u.mod = 0.53, 
+      u.sev = 0.38, 
+      c.mci = (1254 +  222) * 12, 
+      c.mil = (1471 +  410) * 12, 
+      c.mod = (1958 +  653) * 12, 
+      c.sev = (2250 + 1095) * 12, 
+      c.mci_i = (1254 + 8762) * 12, 
+      c.mil_i = (1471 + 8762) * 12, 
+      c.mod_i = (1958 + 8762) * 12, 
+      c.sev_i = (2250 + 8762) * 12, 
+      c.Tx = input$c.Tx, 
+      c.Tx_diagnostics1 = 2000, 
+      discount_QALY = 0.035, 
+      discount_COST = 0.035, 
+      wtp = 40000 
     )
     
     # load model functions
@@ -156,17 +165,17 @@ server <- function(input, output, session) {
     
     ## plot: state trace
     m.trace_soc <- cbind(
-      mci=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"], 
-      mil=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"], 
-      mod=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"], 
-      sev=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"], 
+      mci=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mci_i"], 
+      mil=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mil_i"], 
+      mod=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod_i"], 
+      sev=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev_i"], 
       dth=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
     )
     m.trace_int <- cbind(
-      mci=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"], 
-      mil=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"], 
-      mod=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"], 
-      sev=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"], 
+      mci=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mci_i"], 
+      mil=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mil_i"], 
+      mod=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod_i"], 
+      sev=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev_i"], 
       dth=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
     )
     a.trace <- array(data=c(m.trace_soc,m.trace_int), dim=c(nrow(m.trace_soc),5,2), dimnames=list(NULL,colnames(m.trace_soc),c("soc","int")))
