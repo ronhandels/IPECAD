@@ -35,7 +35,7 @@ l.inputs <- list(
   age_start = 70, 
   age_end = 99, 
   sex = "female", 
-  p.mci_mil = 0.206, 
+  p.mci_mil = 0.21, 
   p.mci_mod = 0, 
   p.mci_sev = 0, 
   p.mil_mci = 0, 
@@ -575,8 +575,8 @@ text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), po
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
 ## table: proportion in state
-round(a.plot1[1:10,,"soc"], 3) # state trace standard of care strategy
-round(a.plot1[1:10,,"int"], 3) # state trace intervention strategy
+print(round(a.plot1[1:10,,"soc"], 2)) # state trace standard of care strategy
+print(round(a.plot1[1:10,,"int"], 2)) # state trace intervention strategy
 
 ## plot: icer
 par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)

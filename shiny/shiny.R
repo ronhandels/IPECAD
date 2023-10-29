@@ -14,8 +14,8 @@ ui <- fluidPage(
     sidebarPanel(
       p(""), 
       sliderInput(inputId="in_age_start_end", label="Age start and end:", min = 50, max = 99, value = c(70,99)), 
-      radioButtons(inputId="sex", label="Sex:", choices=c("male","female")), 
-      sliderInput(inputId="p.mci_mil", label="Transition probability MCI to mild dementia:", min = 0.0, max = 1.0, value = 0.206), 
+      radioButtons(inputId="sex", label="Sex:", choices=c("female","male")), 
+      sliderInput(inputId="p.mci_mil", label="Transition probability MCI to mild dementia:", min = 0.0, max = 1.0, value = 0.21), 
       helpText("amyloid positive & injury positive = 0.28; amyloid positive & injury undetermined = 0.25 [Vos, 2015]"), 
       sliderInput(inputId="p.discontinuation", label="Discontinuation (proportion per year):", min = 0.00, max = 1.00, value = 0.10), 
       sliderInput(inputId="rr.tx", label="Treatment effect (RR):", min = 0.00, max = 1.00, value = 0.75), 
@@ -25,7 +25,7 @@ ui <- fluidPage(
       sliderInput(inputId="tx_duration", label="Treatment duration (years):", min = 0, max = 20, value = 7), 
       sliderInput(inputId="p.starting_state_mci", label="Starting state MCI (proportion):", min = 0.00, max = 1.00, value = 1.00), 
       helpText("1 minus this proportion starts in mild dementia"), 
-      sliderInput(inputId="c.Tx", label="Costs treatment (USD):", min=0, max=50000, value=5000, step=1000), 
+      sliderInput(inputId="c.Tx", label="Costs treatment (USD):", min=0, max=50000, value=10000, step=1000), 
       helpText("when on treatment")
       # sliderInput(inputId="in_age_start", label="starting age:", min=50, max=99, value=70), 
       # sliderInput(inputId="decimal", label="Decimal:", min = 0, max = 1, value = 0.5, step = 0.1), 
