@@ -260,7 +260,7 @@ See code comments in file `IPECAD open-source model.R` to support its readibilit
 
 ### main branch (planned to be released as v2.2.0-beta in late 2023)
 
-This is intended a stable development version. 
+This is for development and fine tuning before release, it is intended to be stable but not guaranteed. 
 
 It extends v2.1.0 with new features (transitions to institutionalization, table/graph outcomes), new inputs (estimate of the transition from MCI to mild dementia, estimate for state-specific costs in community and institutional setting) and fixes (half-cycle correction before discounting). 
 
@@ -269,7 +269,7 @@ This version has been developed by: Ron Handels (main developer, Maastricht Univ
 
 ### newfeatures branch
 
-This is intended a version for developing new features (not necessarily stable)
+This is for development, experimenting and exploring new features, it is not necessarily stable. 
 
 
 ### v2.1.0-beta (2023; released)

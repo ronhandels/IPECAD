@@ -303,7 +303,8 @@ readibility and interpretation.
 
 ### main branch (planned to be released as v2.2.0-beta in late 2023)
 
-This is intended a stable development version.
+This is for development and fine tuning before release, it is intended
+to be stable but not guaranteed.
 
 It extends v2.1.0 with new features (transitions to
 institutionalization, table/graph outcomes), new inputs (estimate of the
@@ -316,8 +317,8 @@ Maastricht University - Netherlands) and Linh Nguyen.
 
 ### newfeatures branch
 
-This is intended a version for developing new features (not necessarily
-stable)
+This is for development, experimenting and exploring new features, it is
+not necessarily stable.
 
 ### v2.1.0-beta (2023; released)
 
