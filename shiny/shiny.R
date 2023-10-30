@@ -16,7 +16,11 @@ ui <- fluidPage(
       sliderInput(inputId="in_age_start_end", label="Age start and end:", min = 50, max = 99, value = c(70,99)), 
       radioButtons(inputId="sex", label="Sex:", choices=c("female","male")), 
       sliderInput(inputId="p.mci_mil", label="Transition probability MCI to mild dementia:", min = 0.0, max = 1.0, value = 0.21), 
-      helpText("amyloid positive & injury positive = 0.28; amyloid positive & injury undetermined = 0.25 [Vos, 2015]"), 
+      helpText(
+        ("0.28 = amyloid positive & injury positive [Vos, 2015]"), 
+        br(), 
+        ("0.25 = amyloid positive & injury undetermined [Vos, 2015]")
+        ), 
       sliderInput(inputId="p.discontinuation", label="Discontinuation (proportion per year):", min = 0.00, max = 1.00, value = 0.10), 
       sliderInput(inputId="rr.tx", label="Treatment effect (RR):", min = 0.00, max = 1.00, value = 0.75), 
       helpText("applied to transition MCI to mild dementia and to mild to moderate dementia"), 
@@ -38,7 +42,29 @@ ui <- fluidPage(
     mainPanel(
       p("This is the beta version of the IPECAD Open-Source Model v2 - Single-Domain for cost-effectiveness analysis of Alzheimer’s disease interventions. For important background information see: "), 
       a("github.com/ronhandels/ipecad", href="http://github.com/ronhandels/ipecad"),
-      helpText("abbreviations: dth=death; int=intervention strategy; LY=life years; mci=mild cognitive impairment; mil=mild dementia; mod=moderate dementia; NHB=net health benefit; QALY=quality-adjusted life years; sev=severe dementia; soc=standard of care strategy"), 
+      helpText(
+        ("abbreviations:"),
+        br(), 
+        ("dth = death"),
+        br(),
+        ("int = intervention strategy"),         
+        br(),         
+        ("LY = life years"),         
+        br(),         
+        ("mci = mild cognitive impairment"),         
+        br(),         
+        ("mil = mild dementia"),         
+        br(),         
+        ("mod = moderate dementia"),         
+        br(),         
+        ("NHB = net health benefit"),         
+        br(),         
+        ("QALY = quality-adjusted life years"),         
+        br(),         
+        ("sev = severe dementia"),         
+        br(),         
+        ("soc = standard of care strategy")
+      ), 
       
       h2("Health-economic outcomes"),
       tableOutput("table_summary"),
