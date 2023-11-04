@@ -208,7 +208,9 @@ Alternative input estimates from Vos et al. \[2015:
     and corresponding 1-year probability of
     `1-exp(- -log(1-temp.est2)/3)` = 0.248.
 
-## Basic overview of model code (R version)
+## Model code
+
+### Basic overview of model code (R version)
 
 The model code is build-up as follows:
 
@@ -239,31 +241,38 @@ the code follows these steps:
 -   H: store strategy results
 -   I: add strategy results to scenario outcomes
 
-## Coding reference
+### Coding reference
 
-Standard naming for objects is ‘x.y.object_name’ with:
+Standard naming for objects is ‘x.object_name’, with x:
 
-x:
+1.  = vector
 
-v = vector m = matrix a = array df = data frame l = list
+2.  = matrix
 
-y:
+3.  = array
 
-p = probability or proportion r = rate rr = relative risk hr = hazard
-ratio n = number u = utility c = cost
+4.  = list df. = data frame
 
-Other naming:
+5.  = probability or proportion
 
-f.name = function temp.name = temporary object
+6.  = rate rr. = relative risk or relative rate hr. = hazard ratio
 
-This is based on recommendations by
-<https://github.com/DARTH-git/darthpack> (<https://rdcu.be/bRP5h> table
-3).
+7.  = number
 
-## Model code
+8.  = utility
+
+9.  = cost
+
+10. = function temp. = temporary object
+
+This is inspired by recommendations by
+<https://github.com/DARTH-git/darthpack> (<https://rdcu.be/bRP5h> or
+<https://doi.org/10.1007/s40273-019-00837-x> table 3).
+
+### Code comments
 
 See code comments in file `IPECAD open-source model.R` to support its
-readibility and interpretation.
+readability and interpretation.
 
 <!-- ### transition probability matrix explained -->
 <!-- [Will follow] -->
