@@ -178,22 +178,20 @@ Overall, the code follows these steps:
 
 Standard naming for objects is 'x.object_name', with x: 
 
-v. = vector
-m. = matrix
-a. = array
-l. = list 
-df. = data frame
-
-p. = probability or proportion
-r. = rate
-rr. = relative risk or relative rate
-hr. = hazard ratio
-n. = number
-u. = utility
-c. = cost
-
-f. = function
-temp. = temporary object
+* v = vector
+  * p = probability or proportion
+  * r = rate
+  * rr = relative risk or relative rate
+  * hr = hazard ratio
+  * n = number
+  * u = utility
+  * c = cost
+* m = matrix
+* a = array
+* l = list 
+* df = data frame
+* f = function
+* temp = temporary object
 
 This is inspired by recommendations by https://github.com/DARTH-git/darthpack (https://rdcu.be/bRP5h or https://doi.org/10.1007/s40273-019-00837-x table 3). 
 
