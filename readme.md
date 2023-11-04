@@ -206,7 +206,7 @@ Alternative input estimates from Vos et al. \[2015:
     averaging):
     `temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )`
     and corresponding 1-year probability of
-    `1-exp(- -log(1-temp.est2)/3)` = 0.248. temp.est2
+    `1-exp(- -log(1-temp.est2)/3)` = 0.248.
 
 ## Basic overview of model code (R version)
 
