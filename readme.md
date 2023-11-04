@@ -8,11 +8,11 @@ Multi-Domain (detailed on www.ipecad.org/open-source-model).
 The model is available in 3 formats under a public license that allows
 obtaining the source code and making changes.
 
-| Format      | Comment                                     | Link                                                                           |
+| Format      | Comment                                     | Link                                                                                       |
 |:----------------|:---------------------------|:---------------------------|
-| R           | using base R and `dampack` package          | <https://github.com/ronhandels/ipecad/> \> file `IPECAD open-source model.R`   |
-| spreadsheet | deterministic only                          | <https://github.com/ronhandels/ipecad/> \> file `IPECAD open-source model.ods` |
-| Online      | deterministic only with selection of inputs | <https://ronhandels.shinyapps.io/ipecad/>                                      |
+| R           | using base R and `dampack` package          | <https://github.com/ronhandels/ipecad/> \> file `IPECAD open-source model.R`               |
+| spreadsheet | deterministic only                          | <https://github.com/ronhandels/ipecad/> \> file `IPECAD open-source model spreadsheet.ods` |
+| Online      | deterministic only with selection of inputs | <https://ronhandels.shinyapps.io/ipecad/>                                                  |
 
 Generally, the formats are based on the same underlying inputs list and
 strategy and scenario functions (see model code for details). See below
@@ -172,15 +172,6 @@ The following input estimates were used for the base-case scenario:
 
 Notes on input estimates for the base case scenario:
 
--   p.mci_mil: transition probability between MCI and dementia was
-    obtained from a rate reflecting AD high likelihood group defined as
-    abnormal CSF & tau, or abnormal amyloid PET \[Vos et al. 2015:
-    <https://doi.org/10.1093/brain/awv029>\]. Transitions were assumed
-    to mild stage of dementia (not moderate or severe). The 3-year
-    cumulative incidence probability of 61% was converted to a 3-year
-    rate using ‘-log(1-0.61)=0.94’, then converted to a 1-year rate
-    dividing it by 3 ‘0.94/3=0.31’, then converted to a 1-year
-    probability using ‘1-exp(-0.31)=0.27’.
 -   p.mil_mod, p.mil_sev… etc: transition probabilities between dementia
     states were obtained from predicted values of an ordered probit
     model fitted to data from the Swedisch Dementia Registry (SveDem)
@@ -195,21 +186,27 @@ Notes on input estimates for the base case scenario:
 Alternative input estimates from Vos et al. \[2015:
 <https://doi.org/10.1093/brain/awv029>\] are:
 
--   Amyloid positive and neuronal loss undetermined. This is reflected
-    by diagnostic criteria NIA-AA groups ‘High Alzheimer’s disease
-    likelihood group’ and ‘Conflicting IAP group’, with 3-year
-    cumulative incidence probability of 59% (AD dementia) and 4% (non-AD
-    dementia), and 22% (AD dementia) and (4%) of dementia and with
-    prevalence of 353 and 49 respectively. This results into a weighted
-    3-year cumulative incidence of ‘1-exp(- ( (-log(1-0.59) +
-    -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49)
-    )=0.57’ and corresponding 1-year probability of ‘1-exp(-
-    -log(1-0.57)/3)=0.24’
--   Amyloid positive and neuronal loss undetermined. This is reflected
-    by diagnostic criteria NIA-AA group ‘High Alzheimer’s disease
-    likelihood group’, with 3-year cumulative incidence probability of
-    59%, corresponding to a 1-year probability of ‘1-exp(-
-    -log(1-0.59)/3)=0.26’
+-   Amyloid positive & neuronal loss positive. Operationalized by
+    diagnostic criteria NIA-AA categories: ‘NIA-AA high AD’ (Amyloid+,
+    Injury+). Corresponding 3-year cumulative incidence probability:
+    ‘high AD’ = 59% (AD dementia; table 3) and 4% (non-AD dementia;
+    mentioned in text). This results into a weighted 3-year cumulative
+    incidence of: `temp.est1 <- 1-exp(- (-log(1-0.59) + -log(1-0.04)) )`
+    and corresponding 1-year probability of
+    `1-exp(- -log(1-temp.est1)/3)` = 0.267.
+-   Amyloid positive & neuronal loss undetermined. Operationalized by
+    diagnostic criteria NIA-AA categories: ‘NIA-AA high AD’ (Amyloid+,
+    Injury+) and ‘conflicting IAP’ (Amyloid+, Injury-). Corresponding
+    3-year cumulative incidence probability: ‘high AD’ = 59% (AD
+    dementia; table 3) and 4% (non-AD dementia; mentioned in text), and
+    22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in
+    text) with prevalence of 353 and 49 respectively (respectively).
+    This results into a weighted 3-year cumulative incidence of
+    (converting all 4 probabilities to rates before weighting and
+    averaging):
+    `temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )`
+    and corresponding 1-year probability of
+    `1-exp(- -log(1-temp.est2)/3)` = 0.248. temp.est2
 
 ## Basic overview of model code (R version)
 
