@@ -547,16 +547,16 @@ matlines(
   y = a.plot1[,,"soc"], 
   type = "l",
   lty = 1,
-  col = c("green","blue","yellow","orange","black")
+  col = c("green","yellow","orange","red","black")
 )
 matlines(
   x = v.age_range, 
   y = a.plot1[,,"int"], 
   type = "l",
   lty = 2,
-  col = c("green","blue","yellow","orange","black")
+  col = c("green","yellow","orange","red","black")
 )
-legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","blue","yellow","orange","black"), lty=1)
+legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1)
 legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2))
 
 # plot: mean time in state
@@ -566,11 +566,11 @@ barplot(
   horiz = TRUE, 
   xlab = "time (years)", 
   ylab = "strategy", 
-  col=c("green","blue","yellow","orange"), 
+  col=c("green","yellow","orange","red"), 
   space = 0.2, 
   main = "mean time in state"
 )
-legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","blue","yellow","orange"))
+legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","yellow","orange","red"))
 text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), pos=4)
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
