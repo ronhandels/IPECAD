@@ -13,7 +13,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This GitHub repository provides the "IPECAD Open-Source Model v2 - Single-Domain" for cost-effectiveness analysis of Alzheimer's disease interventions. Initial developement consisted of reconstructing an existing model by several members of the IPECAD modeling group (see details below). It differs from the IPECAD Open-Source Model v1 - Multi-Domain (detailed on www.ipecad.org/open-source-model). 
+This GitHub repository provides the "IPECAD Open-Source Model v2 - Single-Domain" for cost-effectiveness analysis of Alzheimer's disease interventions. Initial development consisted of reconstructing an existing model by several members of the IPECAD modeling group (see details below). It differs from the IPECAD Open-Source Model v1 - Multi-Domain (detailed on www.ipecad.org/open-source-model and https://doi.org/10.1016/j.jalz.2019.05.004). 
 
 The model is available in 3 formats under a public license that allows obtaining the source code and making changes.  
 
@@ -23,7 +23,7 @@ R           | using base R and `dampack` package      | https://github.com/ronha
 spreadsheet | deterministic only                      | https://github.com/ronhandels/ipecad/ > file `IPECAD open-source model spreadsheet.ods`
 Online      | deterministic only with selection of inputs | https://ronhandels.shinyapps.io/ipecad/
 
-Generally, the formats are based on the same underlying inputs list and strategy and scenario functions (see model code for details). See below for details on versioning and repository files for differences between them. 
+Generally, the formats are based on the same underlying inputs list and strategy and scenario functions (see model code for details).  
 
 
 ## Installation tutorial R version
@@ -53,7 +53,7 @@ Here we describe the methods and code of the open-source model for cost-effectiv
 
 ## Method
 
-A cohort state-transition Markov model has been developed. Initial developement consisted of reconstructing an existing model in terms of its disease progression part (see https://www.doi.org/10.3233/JAD-191055). Then, inputs were changed and new features were added. See 'Version details' for more information. It differs from the IPECAD open-source model released in 2019 (published on https://doi-org.mu.idm.oclc.org/10.1016/j.jalz.2019.05.004 and available from www.ipecad.org/open-source-model). 
+A cohort state-transition Markov model has been developed. Initial development consisted of reconstructing an existing model in terms of its disease progression part (see https://www.doi.org/10.3233/JAD-191055). Then, inputs were changed and new features were added. See 'Version details' for more information.  
 
 
 ### Features and assumptions
@@ -71,6 +71,8 @@ The model has the following features and assumptions:
 * Treatment effect is implemented as a relative risk with which forward transition rates (user-selected) were multiplied with. In the standard of care strategy all start off treatment, in the intervention strategy all start in on treatment. 
 * Discounting (user-defined) is applied on the half-cycle corrected estimates. 
 * The model runs for male or female separately. It is up to the end-user to provide weighted mean results. 
+
+![simplified model structure](https://github.com/ronhandels/IPECAD/blob/main/model_figure.png?raw=true "Model structure, some (back) transitions are not included")
 
 
 ### Input estimates of the base case scenario

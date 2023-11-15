@@ -1,9 +1,10 @@
 This GitHub repository provides the “IPECAD Open-Source Model v2 -
 Single-Domain” for cost-effectiveness analysis of Alzheimer’s disease
-interventions. Initial developement consisted of reconstructing an
+interventions. Initial development consisted of reconstructing an
 existing model by several members of the IPECAD modeling group (see
 details below). It differs from the IPECAD Open-Source Model v1 -
-Multi-Domain (detailed on www.ipecad.org/open-source-model).
+Multi-Domain (detailed on www.ipecad.org/open-source-model and
+<https://doi.org/10.1016/j.jalz.2019.05.004>).
 
 The model is available in 3 formats under a public license that allows
 obtaining the source code and making changes.
@@ -15,9 +16,7 @@ obtaining the source code and making changes.
 | Online      | deterministic only with selection of inputs | <https://ronhandels.shinyapps.io/ipecad/>                                                  |
 
 Generally, the formats are based on the same underlying inputs list and
-strategy and scenario functions (see model code for details). See below
-for details on versioning and repository files for differences between
-them.
+strategy and scenario functions (see model code for details).
 
 ## Installation tutorial R version
 
@@ -63,13 +62,10 @@ cost-effectiveness analysis of Alzheimer’s disease interventions.
 ## Method
 
 A cohort state-transition Markov model has been developed. Initial
-developement consisted of reconstructing an existing model in terms of
+development consisted of reconstructing an existing model in terms of
 its disease progression part (see
 <https://www.doi.org/10.3233/JAD-191055>). Then, inputs were changed and
-new features were added. See ‘Version details’ for more information. It
-differs from the IPECAD open-source model released in 2019 (published on
-<https://doi-org.mu.idm.oclc.org/10.1016/j.jalz.2019.05.004> and
-available from www.ipecad.org/open-source-model).
+new features were added. See ‘Version details’ for more information.
 
 ### Features and assumptions
 
@@ -111,6 +107,14 @@ The model has the following features and assumptions:
     estimates.
 -   The model runs for male or female separately. It is up to the
     end-user to provide weighted mean results.
+
+<figure>
+<img
+src="https://github.com/ronhandels/IPECAD/blob/main/model_figure.png?raw=true"
+title="Model structure, some (back) transitions are not included"
+alt="simplified model structure" />
+<figcaption aria-hidden="true">simplified model structure</figcaption>
+</figure>
 
 ### Input estimates of the base case scenario
 
