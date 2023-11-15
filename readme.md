@@ -48,9 +48,7 @@ and difference to “IPECAD Open-Source Model v1 - Multi-Domain”.
 -   ISPOR 2023 [presentation
     session](https://www.ispor.org/conferences-education/conferences/upcoming-conferences/ispor-europe-2023/program/program/session/euro2023-3781/17212)
     on IPECAD open-source model:
--   ISPOR 2023 [poster
-    download](https://www.ispor.org/docs/default-source/euro2023/poster-supplemental-material131246-pdf.pdf?sfvrsn=b9eefd1f_0)
-    poster download and
+-   ISPOR 2023 [poster download](https://osf.io/7xbez) and
     [abstract](https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246)
     on IPECAD workshop model cross-comparison
 
