@@ -97,9 +97,14 @@ cost-effectiveness analysis of Alzheimer’s disease interventions.
 
 A cohort state-transition Markov model has been developed. Initial
 development consisted of reconstructing an existing model in terms of
-its disease progression part (see
-<https://www.doi.org/10.3233/JAD-191055>). Then, inputs were changed and
-new features were added. See ‘Version details’ for more information.
+its disease progression part (see Wimo et al. \[2020:
+<https://www.doi.org/10.3233/JAD-191055>\]). Then, inputs were changed
+and new features were added. See ‘Version details’ for more information.
+
+See
+<https://github.com/github/codeql/blob/main/presentation_2023_11_14_IPECAD_open_source_model_ISPOR_v4.pdf>
+for additional information from presentation slides presented on ISPOR
+Europe 2023.
 
 ## Features and assumptions
 
@@ -144,7 +149,7 @@ The model has the following features and assumptions:
 
 <figure>
 <img
-src="https://github.com/ronhandels/IPECAD/blob/main/model_figure.png?raw=true"
+src="https://github.com/ronhandels/IPECAD/blob/main/additional_documentation/model_figure.png?raw=true"
 alt="Figure: Model structure (some back transitions are not shown)" />
 <figcaption aria-hidden="true">Figure: Model structure (some back
 transitions are not shown)</figcaption>
