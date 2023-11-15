@@ -35,7 +35,7 @@ l.inputs <- list(
   age_start = 70, 
   age_end = 99, 
   sex = "female", 
-  p.mci_mil = 0.21, 
+  p.mci_mil = 0.248, 
   p.mci_mod = 0, 
   p.mci_sev = 0, 
   p.mil_mci = 0, 
@@ -49,8 +49,8 @@ l.inputs <- list(
   p.mil_i = 0.038, 
   p.mod_i = 0.110, 
   p.sev_i = 0.259, 
-  p.discontinuation1 = 0.1, 
-  p.discontinuation_x = 0.1, 
+  p.discontinuation1 = 0.10, 
+  p.discontinuation_x = 0.10, 
   m.r.mortality = m.mortality_rate_US, 
   hr.mort_mci = 1, 
   hr.mort_verymilddem = 1.82, 
@@ -61,8 +61,13 @@ l.inputs <- list(
   rr.tx_mci_mod = 1, 
   rr.tx_mci_sev = 1, 
   rr.tx_mil_mod = 0.75, 
+  rr.tx_mci_mil_dis = 0.75, 
+  rr.tx_mci_mod_dis = 1, 
+  rr.tx_mci_sev_dis = 1, 
+  rr.tx_mil_mod_dis = 0.75, 
   tx_waning = 0.05, 
-  tx_duration = 7, 
+  tx_waning_dis = 0.25, 
+  tx_duration = 5, 
   p.starting_state_mci = 1, 
   u.mci = 0.73, 
   u.mil = 0.69, 
@@ -76,7 +81,7 @@ l.inputs <- list(
   c.mil_i = (1471 + 8762) * 12, 
   c.mod_i = (1958 + 8762) * 12, 
   c.sev_i = (2250 + 8762) * 12, 
-  c.Tx = 10000, 
+  c.Tx = 5000, 
   c.Tx_diagnostics1 = 2000, 
   discount_QALY = 0.035, 
   discount_COST = 0.035, 
@@ -174,7 +179,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["milof","mil_i",] <- v.p.mil_mil   *    p.mil_i                            * (1-a.TP["milof","dth",])
     a.TP["milof","mod_i",] <- v.p.mil_mod   *    p.mil_i                            * (1-a.TP["milof","dth",])
     a.TP["milof","sev_i",] <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milof","dth",])
-
+    
     # TP matrix state: from moderate community-setting
     a.TP["mod","milof",] <- v.p.mod_mil     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
     a.TP["mod","mod",]   <- v.p.mod_mod     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
@@ -332,9 +337,8 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       
       # discontinuation
       v.p.discontinuation <- rep(x=0, times=n.cycle) # initialize vector
-      v.p.discontinuation[1] <- 0 # discontinuation at cycle 1 (starting states) fixed to 0
-      v.p.discontinuation[2] <- p.discontinuation1 # discontinuation at cycle 2
-      v.p.discontinuation[3:n.cycle] <- p.discontinuation_x # discontinuation at cycle 3 onwards
+      v.p.discontinuation[1] <- p.discontinuation1 # discontinuation at cycle 1
+      v.p.discontinuation[2:n.cycle] <- p.discontinuation_x # discontinuation at cycle 2 onward
       v.p.discontinuation[tx_duration:n.cycle] <- 1 # maximum treatment duration implemented as discontinuation
       
       # death (subset mortality table to obtain age- and sex-specific mortality)
@@ -354,16 +358,28 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         temp.rr.tx_mci_mod <- rr.tx_mci_mod^temp.waning
         temp.rr.tx_mci_sev <- rr.tx_mci_sev^temp.waning
         temp.rr.tx_mil_mod <- rr.tx_mil_mod^temp.waning
+        temp.waning_dis <- (1-tx_waning_dis)^(0:(n.cycle-1))
+        temp.rr.tx_mci_mil_dis <- rr.tx_mci_mil_dis^temp.waning_dis
+        temp.rr.tx_mci_mod_dis <- rr.tx_mci_mod_dis^temp.waning_dis
+        temp.rr.tx_mci_sev_dis <- rr.tx_mci_sev_dis^temp.waning_dis
+        temp.rr.tx_mil_mod_dis <- rr.tx_mil_mod_dis^temp.waning_dis
         
-        # update transition probabilities treatment effect
+        # update transition probabilities treatment effect: during treatment
         v.p.mcion_mil <- 1-exp(-(-log(1-p.mci_mil) * temp.rr.tx_mci_mil)) # convert probability to rate, then multiply with treatment relative risk, then convert to probability
         v.p.mcion_mod <- 1-exp(-(-log(1-p.mci_mod) * temp.rr.tx_mci_mod)) # idem
         v.p.mcion_sev <- 1-exp(-(-log(1-p.mci_sev) * temp.rr.tx_mci_sev)) # idem
         v.p.milon_mod <- 1-exp(-(-log(1-p.mil_mod) * temp.rr.tx_mil_mod)) # idem
+        # update transition probabilities treatment effect: after discontinuation
+        v.p.mci_mil <- 1-exp(-(-log(1-p.mci_mil) * temp.rr.tx_mci_mil_dis)) # convert probability to rate, then multiply with treatment relative risk, then convert to probability
+        v.p.mci_mod <- 1-exp(-(-log(1-p.mci_mod) * temp.rr.tx_mci_mod_dis)) # idem
+        v.p.mci_sev <- 1-exp(-(-log(1-p.mci_sev) * temp.rr.tx_mci_sev_dis)) # idem
+        v.p.mil_mod <- 1-exp(-(-log(1-p.mil_mod) * temp.rr.tx_mil_mod_dis)) # idem
         
         # update transition probabilities of remaining in the same state
         v.p.mcion_mci <- 1 - v.p.mcion_mil - v.p.mcion_mod - v.p.mcion_sev
         v.p.milon_mil <- 1 - v.p.milon_mci - v.p.milon_mod - v.p.mil_sev
+        v.p.mci_mci <- 1 - v.p.mci_mil - v.p.mci_mod - v.p.mci_sev
+        v.p.mil_mil <- 1 - v.p.mil_mci - v.p.mil_mod - v.p.mil_sev
         
         # starting states
         m.trace1 <- matrix(data=0, nrow=1, ncol=n.state, dimnames=list(NULL,v.names_state))
@@ -419,12 +435,14 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       df.out_sum[strat,"NHB"]  <- sum(m.out[,"nhb"]) # calculate total QALYs and store them
     }
     
-    # return result
+    # return basic result
     if(!detailed) return(df.out_sum)
+    
+    # return detailed result
     if(detailed) {
       return(list(
-        l.out_strategy = l.out_strategy,
-        df.out_sum = df.out_sum
+        df.out_sum = df.out_sum,
+        l.out_strategy = l.out_strategy
       ))
     }
   }
@@ -470,7 +488,7 @@ out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
 # out_base[["l.out_strategy"]][["int"]][["m.trace"]]
 # out_base[["l.out_strategy"]][["int"]][["m.out"]]
 # out_base[["df.out_sum"]] # scenario results
-
+print(out_base[["l.out_strategy"]][["int"]][["m.trace"]])
 # prepare data for tables/plots
 
 ## table: summary outcomes
@@ -513,6 +531,17 @@ icer <- calculate_icers(
   strategies = out_base[["df.out_sum"]][,"strategy"]
 )
 
+## proportion extrapolated
+t <- 2 # time within trial (in cycles)
+t.QALY_dif <- out_base[["l.out_strategy"]][["int"]][["m.out"]][,"qaly"] - out_base[["l.out_strategy"]][["soc"]][["m.out"]][,"qaly"] # outcome difference between 2 strategies
+t.QALY_dif_withintrial <- sum(t.QALY_dif[1:t])
+t.QALY_dif_extrapolated <- sum(t.QALY_dif[-1:-t])
+p.QALY <- t.QALY_dif_extrapolated / sum(t.QALY_dif_withintrial, t.QALY_dif_extrapolated)
+t.QALY_dif_withintrial
+t.QALY_dif_extrapolated
+p.QALY
+
+
 
 # print tables/plots
 
@@ -547,16 +576,16 @@ matlines(
   y = a.plot1[,,"soc"], 
   type = "l",
   lty = 1,
-  col = c("green","blue","yellow","orange","black")
+  col = c("green","yellow","orange","red","black")
 )
 matlines(
   x = v.age_range, 
   y = a.plot1[,,"int"], 
   type = "l",
   lty = 2,
-  col = c("green","blue","yellow","orange","black")
+  col = c("green","yellow","orange","red","black")
 )
-legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","blue","yellow","orange","black"), lty=1)
+legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1)
 legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2))
 
 # plot: mean time in state
@@ -566,11 +595,11 @@ barplot(
   horiz = TRUE, 
   xlab = "time (years)", 
   ylab = "strategy", 
-  col=c("green","blue","yellow","orange"), 
+  col=c("green","yellow","orange","red"), 
   space = 0.2, 
   main = "mean time in state"
 )
-legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","blue","yellow","orange"))
+legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","yellow","orange","red"))
 text(x=c(0,cumsum(m.plot2[1:3,"soc"])), y=1, labels=round(m.plot2[,"soc"],1), pos=4)
 text(x=c(0,cumsum(m.plot2[1:3,"int"])), y=2, labels=round(m.plot2[,"int"],1), pos=4)
 
@@ -602,7 +631,102 @@ print(m.plot2)
 
 
 ######################################## 5.2.2 DETERMINISTIC SENSITIVITY ANALYSIS ########################################
-# to be developed for this version, see release '2.1.0 ISPOR Europe 2023 abstract' for an older version
+
+if(T) {
+  
+  # list parameters for DSA
+  dsa_pars <- c(
+    "age_start",
+    "hr.mort_verymilddem",
+    "hr.mort_mil",
+    "hr.mort_mod",
+    "hr.mort_sev",
+    "p.mci_mil",
+    "rr.tx_mci_mil",
+    "rr.tx_mil_mod",
+    "tx_duration",
+    "c.Tx"
+  )
+  
+  # list minimum values
+  dsa_min <- c(
+    60,
+    1.55,
+    1.153,
+    2.122,
+    3.610,
+    l.inputs[["p.mci_mil"]]/2,
+    l.inputs[["rr.tx_mci_mil"]]^2,
+    l.inputs[["rr.tx_mil_mod"]]^2,
+    l.inputs[["tx_duration"]]/2,
+    l.inputs[["c.Tx"]]/5
+  )
+  
+  # list maximum values
+  dsa_max <- c(
+    80,
+    2.14,
+    1.507,
+    2.757,
+    5.043,
+    l.inputs[["p.mci_mil"]]*2,
+    l.inputs[["rr.tx_mci_mil"]]^0.5,
+    l.inputs[["rr.tx_mil_mod"]]^0.5,
+    l.inputs[["tx_duration"]]*2,
+    l.inputs[["c.Tx"]]*5
+  )
+  
+  # define sensitivity analysis range
+  df.owsa_params_range <- data.frame(
+    pars = dsa_pars,
+    min = dsa_min,
+    max = dsa_max
+  ); df.owsa_params_range
+  
+  # run DSA
+  out_owsa_det <- run_owsa_det(
+    params_range = df.owsa_params_range,
+    params_basecase = l.inputs,
+    nsamp = 25, # n equally-spaced samples
+    FUN = f.run_scenario, # make sure the f.run_scenario function only returns a single dataframe with aggregated outcomes (not detailed outcomes)
+    outcomes = NULL, # NULL for all outcomes (requires to select specific outcome for plotting the tornado graph later)
+    strategies = NULL, # NULL for all strategies
+    progress = TRUE
+  )
+  str(out_owsa_det) # show structure of result
+  out_owsa_det # show results
+  
+  # !! IMPORTANT: the function 'owsa_tornado' omits parameters with negative values due to the 'min_rel_diff' option. Therefore, you need to manually adjust the function. The following is suggested: 
+  # step 1: run the following code: trace("owsa_tornado", edit=TRUE)
+  # step 2: manually adjust the code line 20 by adding 'abs()' function: 'abs(.data$outcome_val.low)' instead of '.data$outcome_val.low'
+  
+  # plot tornado graph of DSA outcome 'NMB' (fyi: not incremental)
+  select_owsa <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_int") # select outcome and from which strategy
+  owsa_tornado(select_owsa)
+  
+  # plot tornado graph of incremental outcome (only use when there are 2 strategies, in case of more than 2 strategies see 'dampack' vignette for notes on tornado limitation: https://cran.r-project.org/web/packages/dampack/)
+  out_owsa_det_NHB_soc <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_soc") # select outcome and from which strategy
+  out_owsa_det_NHB_int <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_int") # select outcome and from alternative strategy
+  if(!all(out_owsa_det_NHB_soc[,c("parameter","param_val")]==out_owsa_det_NHB_int[,c("parameter","param_val")])) stop("error") # check to determine if data is correctly compared
+  out_owsa_det_iNHB <- out_owsa_det_NHB_int
+  out_owsa_det_iNHB[,"outcome_val"] <- NA
+  out_owsa_det_iNHB[,"outcome_val"] <- out_owsa_det_NHB_int[,"outcome_val"] - out_owsa_det_NHB_soc[,"outcome_val"]
+  owsa_tornado(out_owsa_det_iNHB, n_y_ticks=4, return = "data")
+  owsa_tornado(out_owsa_det_iNHB, n_y_ticks=4, return = "plot")
+  
+  # plot optimal strategy (outcome over each parameter range for each strategy)
+  plot(out_owsa_det$owsa_NHB, n_x_ticks = 3)
+  # Visualize optimal strategy (max NMB) over each parameter range
+  owsa_opt_strat(out_owsa_det$owsa_NHB, return="data")
+  #windows()
+  owsa_opt_strat(out_owsa_det$owsa_NHB, return="plot")
+  
+}
+
+
+
+# [to be implemented in updated version]
+
 
 # natural progression MCI to dementia
 ## source: [Vos, 2015: https://doi.org/10.1093/brain/awv029]
@@ -625,7 +749,6 @@ temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(
 temp.est2 <- 1-exp(- -log(1-temp.est2)/3)
 temp.est2
 
-# [to be implemented in updated version]
 
 
 
