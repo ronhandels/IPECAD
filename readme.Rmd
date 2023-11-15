@@ -33,8 +33,8 @@ This readme describes model installation, methods, development versions, and dif
 
 # Quick links
 
-- ISPOR 2023 [presentation session](https://www.ispor.org/conferences-education/conferences/upcoming-conferences/ispor-europe-2023/program/program/session/euro2023-3781/17212) on IPECAD open-source model: 
-- ISPOR 2023 [poster download](https://osf.io/7xbez) and [abstract](https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246) on IPECAD workshop model cross-comparison
+- ISPOR Europe 2023 model [presentation slides download](https://github.com/ronhandels/IPECAD/blob/main/additional_documentation/presentation_2023_11_14_IPECAD_open_source_model_ISPOR_v4.pdf) and [session details](https://www.ispor.org/conferences-education/conferences/upcoming-conferences/ispor-europe-2023/program/program/session/euro2023-3781/17212) 
+- ISPOR Europe 2023 IPECAD workshop model cross-comparison [poster download](https://osf.io/7xbez) and [abstract](https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246), in which the IPECAD open-source models (both version v1 and v2) have been used. 
 
 
 # Installation tutorial R version
@@ -66,7 +66,7 @@ Here we describe the methods and code of the open-source model for cost-effectiv
 
 A cohort state-transition Markov model has been developed. Initial development consisted of reconstructing an existing model in terms of its disease progression part (see Wimo et al. [2020: https://www.doi.org/10.3233/JAD-191055]). Then, inputs were changed and new features were added. See 'Version details' for more information. 
 
-See https://github.com/github/codeql/blob/main/presentation_2023_11_14_IPECAD_open_source_model_ISPOR_v4.pdf for additional information from presentation slides presented on ISPOR Europe 2023. 
+For additional information see [presentation slides](https://github.com/ronhandels/IPECAD/blob/main/additional_documentation/presentation_2023_11_14_IPECAD_open_source_model_ISPOR_v4.pdf) presented on ISPOR Europe 2023. 
 
 
 ## Features and assumptions
