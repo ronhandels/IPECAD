@@ -27,7 +27,7 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
-# see readme.md for a short explanation of each input parameter
+# input parameters per year (unless stated otherwise), see readme.md for a short explanation of each input parameter
 
 l.inputs <- list(
   v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
@@ -124,8 +124,8 @@ f.run_strategy <- function(l.inputs) {
     a.TP <- array(data = 0, dim = c(n.state, n.state, n.cycle), dimnames = list(v.names_state,v.names_state,NULL))
     
     # TP matrix state: to death
-    a.TP["mcion","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci)) 
-    a.TP["mciof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci)) 
+    a.TP["mcion","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
+    a.TP["mciof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
     a.TP["milon","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil * hr.mort_verymilddem))
     a.TP["milof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil * hr.mort_verymilddem))
     a.TP["mod",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_mod * hr.mort_verymilddem))
