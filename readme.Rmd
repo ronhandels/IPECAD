@@ -6,6 +6,7 @@ date: "`r Sys.Date()`"
 output:
   md_document:
     variant: markdown_github
+    toc: true
 ---
 
 
@@ -13,20 +14,30 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This GitHub repository provides the "IPECAD Open-Source Model v2 - Single-Domain" for cost-effectiveness analysis of Alzheimer's disease interventions. Initial development consisted of reconstructing an existing model by several members of the IPECAD modeling group (see details below). It differs from the IPECAD Open-Source Model v1 - Multi-Domain (detailed on www.ipecad.org/open-source-model and https://doi.org/10.1016/j.jalz.2019.05.004). 
+# Quick guide
 
-The model is available in 3 formats under a public license that allows obtaining the source code and making changes.  
+This GitHub repository provides the "IPECAD Open-Source Model v2 - Single-Domain" for cost-effectiveness analysis of Alzheimer's disease interventions. 
+
+The model is a further development of a replicated model published by Wimo et al. [2020: https://www.doi.org/10.3233/JAD-191055]. 
+
+The model is open-source available in 3 formats:   
 
 Format      | Comment                                 | Link
 :--         | :----                                   | :----
 R           | using base R and `dampack` package      | https://github.com/ronhandels/ipecad/ > file `IPECAD open-source model.R`
 spreadsheet | deterministic only                      | https://github.com/ronhandels/ipecad/ > file `IPECAD open-source model spreadsheet.ods`
-Online      | deterministic only with selection of inputs | https://ronhandels.shinyapps.io/ipecad/
+Online      | deterministic only with selected inputs | https://ronhandels.shinyapps.io/ipecad/
 
-Generally, the formats are based on the same underlying inputs list and strategy and scenario functions (see model code for details).  
+This readme describes model installation, methods, development versions, and difference to "IPECAD Open-Source Model v1 - Multi-Domain". 
 
 
-## Installation tutorial R version
+# Quick links
+
+- ISPOR 2023 [presentation session](https://www.ispor.org/conferences-education/conferences/upcoming-conferences/ispor-europe-2023/program/program/session/euro2023-3781/17212) on IPECAD open-source model: 
+- ISPOR 2023 [poster download](https://www.ispor.org/docs/default-source/euro2023/poster-supplemental-material131246-pdf.pdf?sfvrsn=b9eefd1f_0) poster download and [abstract](https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246) on IPECAD workshop model cross-comparison
+
+
+# Installation tutorial R version
 
 * go to https://github.com/ronhandels/ipecad/ > click on '<> Code' (green button) > click on 'Download ZIP' > unzip all files
 * install R
@@ -37,12 +48,12 @@ Generally, the formats are based on the same underlying inputs list and strategy
 * we recommend familiarizing with the general description of the model provided below and the description of its input sources detailed below. 
 
 
-## Cite this work
+# Cite this work
 
 IPECAD open-source model https://github.com/ronhandels/IPECAD
 
 
-## Background
+# Background
 
 Limited health-care resources require choices on how to distribute them. Cost-effectiveness analysis assesses the value an intervention to inform such choice. A decision-analytic model can be used when available empirical health-economic data are limited, for example to extrapolate beyond a randomized controlled trial follow-up period. Transparency and credibility of decision-models are key for their results to be used by decision-makers. 
 
@@ -51,12 +62,12 @@ Recent drug developments in Alzheimer’s disease (AD) have increased attention 
 Here we describe the methods and code of the open-source model for cost-effectiveness analysis of Alzheimer's disease interventions. 
 
 
-## Method
+# Method
 
 A cohort state-transition Markov model has been developed. Initial development consisted of reconstructing an existing model in terms of its disease progression part (see https://www.doi.org/10.3233/JAD-191055). Then, inputs were changed and new features were added. See 'Version details' for more information.  
 
 
-### Features and assumptions
+## Features and assumptions
 
 The model has the following features and assumptions: 
 
@@ -72,10 +83,10 @@ The model has the following features and assumptions:
 * Discounting (user-defined) is applied on the half-cycle corrected estimates. 
 * The model runs for male or female separately. It is up to the end-user to provide weighted mean results. 
 
-![simplified model structure](https://github.com/ronhandels/IPECAD/blob/main/model_figure.png?raw=true "Model structure, some (back) transitions are not included")
+![Figure: Model structure (some back transitions are not shown)](https://github.com/ronhandels/IPECAD/blob/main/model_figure.png?raw=true)
 
 
-### Input estimates of the base case scenario
+## Input estimates of the base case scenario
 
 The following input estimates were used for the base-case scenario: 
 
@@ -138,7 +149,7 @@ Notes on input estimates for the base case scenario:
 * p.mil_mod, p.mil_sev... etc: transition probabilities between dementia states were obtained from predicted values of an ordered probit model fitted to data from the Swedisch Dementia Registry (SveDem) longitudinal cognitive status after controlling for drop-out [Handels et al. 2020: https://doi.org/10.1002/alz.12050]. Cognitive status was reflected by the Mini-Mental State Examination (MMSE) and categorized as mild dementia (21-30), moderate dementia (10-20) or severe dementia (0-9) health state. 
 
 
-### Alternative input estimates
+## Alternative input estimates
 
 Alternative input estimates from Vos et al. [2015: https://doi.org/10.1093/brain/awv029] are: 
 
@@ -146,9 +157,9 @@ Alternative input estimates from Vos et al. [2015: https://doi.org/10.1093/brain
 * Amyloid positive & neuronal loss undetermined. Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+) and 'conflicting IAP' (Amyloid+, Injury-). Corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text), and 22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text) with prevalence of 353 and 49 respectively (respectively). This results into a weighted 3-year cumulative incidence of (converting all 4 probabilities to rates before weighting and averaging): `temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )` and corresponding 1-year probability of `1-exp(- -log(1-temp.est2)/3)` = 0.248.
 
 
-## Model code
+# Model code
 
-### Basic overview of model code (R version)
+## Basic overview of model code (R version)
 
 The model code is build-up as follows: 
 
@@ -176,7 +187,7 @@ Overall, the code follows these steps:
 * I: add strategy results to scenario outcomes
 
 
-### Coding reference
+## Coding reference
 
 Standard naming for objects is 'x.object_name', with x: 
 
@@ -198,9 +209,9 @@ Standard naming for objects is 'x.object_name', with x:
 This is inspired by recommendations by https://github.com/DARTH-git/darthpack (https://rdcu.be/bRP5h or https://doi.org/10.1007/s40273-019-00837-x table 3). 
 
 
-### Code comments
+## Code comments
 
-See code comments in file `IPECAD open-source model.R` to support its readability and interpretation. 
+See code comments in file `IPECAD open-source model.R` to support readability and interpretation. 
 
 <!-- ### transition probability matrix explained -->
 <!-- [Will follow] -->
@@ -251,9 +262,9 @@ See code comments in file `IPECAD open-source model.R` to support its readabilit
 <!-- 10. explain that '# probability of remaining in the same state' needed to be updated in the intervention strategy -->
 
 
-## Version details
+# Version details
 
-### main branch (planned to be released as v2.2.0-beta in late 2023)
+## main branch (planned to be released as v2.2.0-beta in late 2023)
 
 This is for development and fine tuning before release, it is intended to be stable but not guaranteed. 
 
@@ -262,12 +273,12 @@ It extends v2.1.0 with new features (transitions to institutionalization, table/
 This version has been developed by: Ron Handels (main developer, Maastricht University - Netherlands) and Linh Nguyen. 
 
 
-### newfeatures branch
+## newfeatures branch
 
 This is for development, experimenting and exploring new features, it is not necessarily stable. 
 
 
-### v2.1.0-beta (2023; released)
+## v2.1.0-beta (2023; released)
 
 This version was build for the abstract submitted to ISPOR Europe 2023. 
 
@@ -286,7 +297,7 @@ This version has been developed and/or supported by:
 * Will Herring
 
 
-### v2.0.1-alpha (2023)
+## v2.0.1-alpha (2023)
 
 We replaced any (non-rounded input) estimates or information not in the public domain with (rounded) input estimates or information available in the public domain. Specifically, this refers to the following aspects: 
 
@@ -304,7 +315,7 @@ This version has been developed by:
 * Daphne Silvertand
 
 
-### v2.0.0-alpha (2023)
+## v2.0.0-alpha (2023)
 
 An existing model [Wimo et al. 2020: https://www.doi.org/10.3233/JAD-191055] (further referred to as 'original SveDem model') was reconstructed in terms of its disease progression part. This original SveDem model was a cohort-based Markov model and consisted of health states Mild Cognitive Impairment (MCI), mild dementia, moderate dementia, severe dementia and death. Progression between states was modeled with a cycle length of 1 year simulating from age 60 to 100. See publication for a detailed acknowledgment of the developers and funders (partly funded by Merck & Co., Inc., Kenilworth, NJ, USA). 
 
@@ -318,12 +329,12 @@ This version has been developed by:
 * Anders Wimo
 
 
-### v1 (2019)
+## v1 (2019)
 
-The IPECAD Open-Source Model v1 - Multi-Domain is an open-source model described in a publication [Green et al. 2019: https://doi-org.mu.idm.oclc.org/10.1016/j.jalz.2019.05.004] and available at www.ipecad.org/open-source-model. This v1 is a different model independent from v2.
+The IPECAD Open-Source Model v1 - Multi-Domain is an open-source model described in a publication [Green et al. 2019: https://doi.org/10.1016/j.jalz.2019.05.004] and can be freely requested at www.ipecad.org/open-source-model. This v1 is a different model independent from v2.
 
 
-## Acknowledgment
+# Acknowledgment
 
 We acknowledge all members of the IPECAD group [www.ipecad.org]. 
 
