@@ -32,6 +32,7 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 l.inputs <- list(
   v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
+  cycle_length = 1/4, 
   age_start = 70, 
   age_end = 99, 
   sex = "female", 
@@ -49,8 +50,8 @@ l.inputs <- list(
   p.mil_i = 0.038, 
   p.mod_i = 0.110, 
   p.sev_i = 0.259, 
-  p.discontinuation1 = 0.10, 
-  p.discontinuation_x = 0.10, 
+  p.discontinuation1 = 0.1, 
+  p.discontinuation_x = 0.1, 
   m.r.mortality = m.mortality_rate_US, 
   hr.mort_mci = 1, 
   hr.mort_verymilddem = 1.82, 
@@ -122,7 +123,7 @@ f.run_strategy <- function(l.inputs) {
     
     # initialize time-dependent TP matrix (STEP G1: prepare transition probability matrix)
     a.TP <- array(data = 0, dim = c(n.state, n.state, n.cycle), dimnames = list(v.names_state,v.names_state,NULL))
-    
+
     # TP matrix state: to death
     a.TP["mcion","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
     a.TP["mciof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
@@ -137,64 +138,64 @@ f.run_strategy <- function(l.inputs) {
     a.TP["sev_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev * hr.mort_verymilddem))
     
     # TP matrix state: from mci-on community-setting
-    a.TP["mcion","mcion",] <- v.p.mcion_mci * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mciof",] <- v.p.mcion_mci * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
-    a.TP["mcion","milon",] <- v.p.mcion_mil * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
-    a.TP["mcion","milof",] <- v.p.mcion_mil * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mod",]   <- v.p.mcion_mod * (1-p.mci_i)                           * (1-a.TP["mcion","dth",])
-    a.TP["mcion","sev",]   <- v.p.mcion_sev * (1-p.mci_i)                           * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mci_i",] <- v.p.mcion_mci *    p.mci_i                            * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mil_i",] <- v.p.mcion_mil *    p.mci_i                            * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mod_i",] <- v.p.mcion_mod *    p.mci_i                            * (1-a.TP["mcion","dth",])
-    a.TP["mcion","sev_i",] <- v.p.mcion_sev *    p.mci_i                            * (1-a.TP["mcion","dth",])
+    a.TP["mcion","mcion",] <- v.p.mcion_mci * (1-v.p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
+    a.TP["mcion","mciof",] <- v.p.mcion_mci * (1-v.p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
+    a.TP["mcion","milon",] <- v.p.mcion_mil * (1-v.p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
+    a.TP["mcion","milof",] <- v.p.mcion_mil * (1-v.p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
+    a.TP["mcion","mod",]   <- v.p.mcion_mod * (1-v.p.mci_i)                           * (1-a.TP["mcion","dth",])
+    a.TP["mcion","sev",]   <- v.p.mcion_sev * (1-v.p.mci_i)                           * (1-a.TP["mcion","dth",])
+    a.TP["mcion","mci_i",] <- v.p.mcion_mci *    v.p.mci_i                            * (1-a.TP["mcion","dth",])
+    a.TP["mcion","mil_i",] <- v.p.mcion_mil *    v.p.mci_i                            * (1-a.TP["mcion","dth",])
+    a.TP["mcion","mod_i",] <- v.p.mcion_mod *    v.p.mci_i                            * (1-a.TP["mcion","dth",])
+    a.TP["mcion","sev_i",] <- v.p.mcion_sev *    v.p.mci_i                            * (1-a.TP["mcion","dth",])
 
     # TP matrix state: from mci-off community-setting
-    a.TP["mciof","mciof",] <- v.p.mci_mci   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","milof",] <- v.p.mci_mil   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mod",]   <- v.p.mci_mod   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","sev",]   <- v.p.mci_sev   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mci_i",] <- v.p.mci_mci   *    p.mci_i                            * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mil_i",] <- v.p.mci_mil   *    p.mci_i                            * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mod_i",] <- v.p.mci_mod   *    p.mci_i                            * (1-a.TP["mciof","dth",])
-    a.TP["mciof","sev_i",] <- v.p.mci_sev   *    p.mci_i                            * (1-a.TP["mciof","dth",])
+    a.TP["mciof","mciof",] <- v.p.mci_mci   * (1-v.p.mci_i)                           * (1-a.TP["mciof","dth",])
+    a.TP["mciof","milof",] <- v.p.mci_mil   * (1-v.p.mci_i)                           * (1-a.TP["mciof","dth",])
+    a.TP["mciof","mod",]   <- v.p.mci_mod   * (1-v.p.mci_i)                           * (1-a.TP["mciof","dth",])
+    a.TP["mciof","sev",]   <- v.p.mci_sev   * (1-v.p.mci_i)                           * (1-a.TP["mciof","dth",])
+    a.TP["mciof","mci_i",] <- v.p.mci_mci   *    v.p.mci_i                            * (1-a.TP["mciof","dth",])
+    a.TP["mciof","mil_i",] <- v.p.mci_mil   *    v.p.mci_i                            * (1-a.TP["mciof","dth",])
+    a.TP["mciof","mod_i",] <- v.p.mci_mod   *    v.p.mci_i                            * (1-a.TP["mciof","dth",])
+    a.TP["mciof","sev_i",] <- v.p.mci_sev   *    v.p.mci_i                            * (1-a.TP["mciof","dth",])
     
     # TP matrix state: from mild-on community-setting
-    a.TP["milon","mcion",] <- v.p.milon_mci * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
-    a.TP["milon","mciof",] <- v.p.milon_mci * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
-    a.TP["milon","milon",] <- v.p.milon_mil * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
-    a.TP["milon","milof",] <- v.p.milon_mil * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
-    a.TP["milon","mod",]   <- v.p.milon_mod * (1-p.mil_i)                           * (1-a.TP["milon","dth",])
-    a.TP["milon","sev",]   <- v.p.mil_sev   * (1-p.mil_i)                           * (1-a.TP["milon","dth",])
-    a.TP["milon","mci_i",] <- v.p.milon_mci *    p.mil_i                            * (1-a.TP["milon","dth",])
-    a.TP["milon","mil_i",] <- v.p.milon_mil *    p.mil_i                            * (1-a.TP["milon","dth",])
-    a.TP["milon","mod_i",] <- v.p.milon_mod *    p.mil_i                            * (1-a.TP["milon","dth",])
-    a.TP["milon","sev_i",] <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milon","dth",])
+    a.TP["milon","mcion",] <- v.p.milon_mci * (1-v.p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
+    a.TP["milon","mciof",] <- v.p.milon_mci * (1-v.p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
+    a.TP["milon","milon",] <- v.p.milon_mil * (1-v.p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
+    a.TP["milon","milof",] <- v.p.milon_mil * (1-v.p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
+    a.TP["milon","mod",]   <- v.p.milon_mod * (1-v.p.mil_i)                           * (1-a.TP["milon","dth",])
+    a.TP["milon","sev",]   <- v.p.mil_sev   * (1-v.p.mil_i)                           * (1-a.TP["milon","dth",])
+    a.TP["milon","mci_i",] <- v.p.milon_mci *    v.p.mil_i                            * (1-a.TP["milon","dth",])
+    a.TP["milon","mil_i",] <- v.p.milon_mil *    v.p.mil_i                            * (1-a.TP["milon","dth",])
+    a.TP["milon","mod_i",] <- v.p.milon_mod *    v.p.mil_i                            * (1-a.TP["milon","dth",])
+    a.TP["milon","sev_i",] <- v.p.mil_sev   *    v.p.mil_i                            * (1-a.TP["milon","dth",])
     
     # TP matrix state: from mild-off community-setting
-    a.TP["milof","mciof",] <- v.p.mil_mci   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","milof",] <- v.p.mil_mil   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","mod",]   <- v.p.mil_mod   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","sev",]   <- v.p.mil_sev   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","mci_i",] <- v.p.mil_mci   *    p.mil_i                            * (1-a.TP["milof","dth",])
-    a.TP["milof","mil_i",] <- v.p.mil_mil   *    p.mil_i                            * (1-a.TP["milof","dth",])
-    a.TP["milof","mod_i",] <- v.p.mil_mod   *    p.mil_i                            * (1-a.TP["milof","dth",])
-    a.TP["milof","sev_i",] <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milof","dth",])
+    a.TP["milof","mciof",] <- v.p.mil_mci   * (1-v.p.mil_i)                           * (1-a.TP["milof","dth",])
+    a.TP["milof","milof",] <- v.p.mil_mil   * (1-v.p.mil_i)                           * (1-a.TP["milof","dth",])
+    a.TP["milof","mod",]   <- v.p.mil_mod   * (1-v.p.mil_i)                           * (1-a.TP["milof","dth",])
+    a.TP["milof","sev",]   <- v.p.mil_sev   * (1-v.p.mil_i)                           * (1-a.TP["milof","dth",])
+    a.TP["milof","mci_i",] <- v.p.mil_mci   *    v.p.mil_i                            * (1-a.TP["milof","dth",])
+    a.TP["milof","mil_i",] <- v.p.mil_mil   *    v.p.mil_i                            * (1-a.TP["milof","dth",])
+    a.TP["milof","mod_i",] <- v.p.mil_mod   *    v.p.mil_i                            * (1-a.TP["milof","dth",])
+    a.TP["milof","sev_i",] <- v.p.mil_sev   *    v.p.mil_i                            * (1-a.TP["milof","dth",])
     
     # TP matrix state: from moderate community-setting
-    a.TP["mod","milof",] <- v.p.mod_mil     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
-    a.TP["mod","mod",]   <- v.p.mod_mod     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
-    a.TP["mod","sev",]   <- v.p.mod_sev     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
-    a.TP["mod","mil_i",] <- v.p.mod_mil     *    p.mod_i                            * (1-a.TP["mod","dth",])
-    a.TP["mod","mod_i",] <- v.p.mod_mod     *    p.mod_i                            * (1-a.TP["mod","dth",])
-    a.TP["mod","sev_i",] <- v.p.mod_sev     *    p.mod_i                            * (1-a.TP["mod","dth",])
+    a.TP["mod","milof",] <- v.p.mod_mil     * (1-v.p.mod_i)                           * (1-a.TP["mod","dth",])
+    a.TP["mod","mod",]   <- v.p.mod_mod     * (1-v.p.mod_i)                           * (1-a.TP["mod","dth",])
+    a.TP["mod","sev",]   <- v.p.mod_sev     * (1-v.p.mod_i)                           * (1-a.TP["mod","dth",])
+    a.TP["mod","mil_i",] <- v.p.mod_mil     *    v.p.mod_i                            * (1-a.TP["mod","dth",])
+    a.TP["mod","mod_i",] <- v.p.mod_mod     *    v.p.mod_i                            * (1-a.TP["mod","dth",])
+    a.TP["mod","sev_i",] <- v.p.mod_sev     *    v.p.mod_i                            * (1-a.TP["mod","dth",])
     
     # TP matrix state: from severe community-setting
-    a.TP["sev","milof",] <- v.p.sev_mil     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
-    a.TP["sev","mod",]   <- v.p.sev_mod     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
-    a.TP["sev","sev",]   <- v.p.sev_sev     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
-    a.TP["sev","mil_i",] <- v.p.sev_mil     *    p.sev_i                            * (1-a.TP["sev","dth",])
-    a.TP["sev","mod_i",] <- v.p.sev_mod     *    p.sev_i                            * (1-a.TP["sev","dth",])
-    a.TP["sev","sev_i",] <- v.p.sev_sev     *    p.sev_i                            * (1-a.TP["sev","dth",])
+    a.TP["sev","milof",] <- v.p.sev_mil     * (1-v.p.sev_i)                           * (1-a.TP["sev","dth",])
+    a.TP["sev","mod",]   <- v.p.sev_mod     * (1-v.p.sev_i)                           * (1-a.TP["sev","dth",])
+    a.TP["sev","sev",]   <- v.p.sev_sev     * (1-v.p.sev_i)                           * (1-a.TP["sev","dth",])
+    a.TP["sev","mil_i",] <- v.p.sev_mil     *    v.p.sev_i                            * (1-a.TP["sev","dth",])
+    a.TP["sev","mod_i",] <- v.p.sev_mod     *    v.p.sev_i                            * (1-a.TP["sev","dth",])
+    a.TP["sev","sev_i",] <- v.p.sev_sev     *    v.p.sev_i                            * (1-a.TP["sev","dth",])
 
     # TP matrix state: from mci institutionalized-setting
     a.TP["mci_i","mci_i",] <- v.p.mci_mci                                           * (1-a.TP["mci_i","dth",])
@@ -223,6 +224,8 @@ f.run_strategy <- function(l.inputs) {
       temp1 <- colSums(a.TP[i,,])
       if(!isTRUE(all.equal(current = temp1, target = rep(1,n.cycle), tolerance = 1e-10))) stop(paste("TPs for",i,"do not add up to 1"))
     }
+    # !!! TO-DO: check TPs are within 0-1 range
+    
     
     # initialize output table (STEP G3: initialize objects to store strategy outcomes)
     m.out <- matrix(data = NA, nrow = n.cycle, ncol = 4, dimnames = list(NULL, c("qaly","cost","ly","nhb")))
@@ -239,9 +242,9 @@ f.run_strategy <- function(l.inputs) {
     }
     
     # primary economic outputs (STEP G6: multiply states with utility and cost estimates)
-    m.out[,"ly"]   <- m.trace %*% c(1           , 1    , 1           , 1    , 1    , 1    , 1      , 1      , 1      , 1      , 0) # must match order of states
-    m.out[,"qaly"] <- m.trace %*% c(u.mci       , u.mci, u.mil       , u.mil, u.mod, u.sev, u.mci  , u.mil  , u.mod  , u.sev  , 0) # must match order of states
-    m.out[,"cost"] <- m.trace %*% c(c.mci + c.Tx, c.mci, c.mil + c.Tx, c.mil, c.mod, c.sev, c.mci_i, c.mil_i, c.mod_i, c.sev_i, 0) # must match order of states
+    m.out[,"ly"]   <- m.trace %*% (c(1           , 1    , 1           , 1    , 1    , 1    , 1      , 1      , 1      , 1      , 0) * cycle_length) # must match order of states
+    m.out[,"qaly"] <- m.trace %*% (c(u.mci       , u.mci, u.mil       , u.mil, u.mod, u.sev, u.mci  , u.mil  , u.mod  , u.sev  , 0) * cycle_length) # must match order of states
+    m.out[,"cost"] <- m.trace %*% (c(c.mci + c.Tx, c.mci, c.mil + c.Tx, c.mil, c.mod, c.sev, c.mci_i, c.mil_i, c.mod_i, c.sev_i, 0) * cycle_length) # must match order of states
     
     # half-cycle correction (STEP G7: apply half-cycle correction)
     for (i in 1:(n.cycle-1)) {
@@ -258,8 +261,8 @@ f.run_strategy <- function(l.inputs) {
     }
     
     # define vector for discounting QALYs and costs (STEP G8: apply discounting)
-    v.discount_QALY <- 1 / (( 1 + (discount_QALY)) ^ (0 : (age_end-age_start-1)))
-    v.discount_COST <- 1 / (( 1 + (discount_COST)) ^ (0 : (age_end-age_start-1)))
+    v.discount_QALY <- 1 / (( 1 + (discount_QALY)) ^ (0 : (n.cycle-1)*cycle_length))
+    v.discount_COST <- 1 / (( 1 + (discount_COST)) ^ (0 : (n.cycle-1)*cycle_length))
     
     # apply discounting
     m.out[,"qaly"] <- m.out[,"qaly"]*v.discount_QALY
@@ -289,7 +292,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
     # store counters (STEP B: prepare and initialize objects to store scenario and strategy outcomes)
     n.state <- length(v.names_state) # number of states
     n.strat <- length(v.names_strat) # number of strategies
-    n.cycle <- (age_end-age_start) # number of cycles
+    n.cycle <- (age_end-age_start)/cycle_length # number of cycles
     
     # initialize output matrix (create an empty dataframe to store outcomes of a scenario)
     df.out_sum <- data.frame(
@@ -307,6 +310,98 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
     
     # loop over strategies (STEP C: run each strategy in a loop)
     for(strat in v.names_strat) {
+      
+      # adjust for cycle length: mci to dementia (p.mci_mil is chosen to adjust separately for cycle time)
+      if(p.mci_mod!=0 & cycle_length!=1) stop("can't adjust p.mci_mod for other cycle time")
+      if(p.mci_sev!=0 & cycle_length!=1) stop("can't adjust p.mci_sev for other cycle time")
+      p.mci_mil <- 1-(1-p.mci_mil)^(cycle_length)
+      
+      # adjust for cycle length: dementia disease progression transitions for cycle time (p.mci_mil is chosen to adjust separately for cycle time)
+      if(p.mil_mci!=0 & cycle_length!=1) stop("can't adjust p.mil_mci for other cycle time")
+      t.TP <- matrix(data=NA, nrow=3, ncol=3, dimnames=list(c("mil","mod","sev"),c("mil","mod","sev")))
+      t.TP["mil","mod"] <- p.mil_mod
+      t.TP["mil","sev"] <- p.mil_sev
+      t.TP["mod","mil"] <- p.mod_mil
+      t.TP["mod","sev"] <- p.mod_sev
+      t.TP["sev","mil"] <- p.sev_mil
+      t.TP["sev","mod"] <- p.sev_mod
+      t.TP["mil","mil"] <- 1-sum(t.TP["mil","mod"], t.TP["mil","sev"])
+      t.TP["mod","mod"] <- 1-sum(t.TP["mod","mil"], t.TP["mod","sev"])
+      t.TP["sev","sev"] <- 1-sum(t.TP["sev","mil"], t.TP["sev","mod"])
+      t.TP
+      
+                # tp <- matrix(data=0, nrow=4, ncol=4)
+                # tp[1,2] <- 0.248
+                # tp[2,3] <- 0.25
+                # tp[3,2] <- 0.05
+                # tp[3,4] <- 0.20
+                # tp[4,3] <- 0.10
+                # tp[1,1] <- 1-sum(tp[1,-1])
+                # tp[2,2] <- 1-sum(tp[2,-2])
+                # tp[3,3] <- 1-sum(tp[3,-3])
+                # tp[4,4] <- 1-sum(tp[4,-4])
+                # tp
+                # t.TP <- tp
+                # p.mci_mil
+      
+      D <- diag(x=eigen(t.TP)$values); D
+      V <- eigen(t.TP)$vectors; V
+      t.TP2 <- V %*% D^(cycle_length) %*% solve(V); t.TP2
+      if(min(t.TP2)< -0.05) stop("too large negative transition probabilities generated when adjusting for cycle length")
+      if(any(is.nan(t.TP2))) stop("NaN present in transition probabilities when adjusting for cycle length")
+      if(any(is.na(t.TP2))) stop("NaN present in transition probabilities when adjusting for cycle length")
+      if(any(is.null(t.TP2))) stop("NULL present in transition probabilities when adjusting for cycle length")
+      t.TP2[t.TP2 < 0] <- 0
+      t.TP2 <- round(t.TP2, 3)
+      dimnames(t.TP2) <- dimnames(t.TP)
+      
+      # x <- c(1,0,0,0)
+      # x <- x %*% t.TP2
+      # x
+      
+      t.TP2["mil","mil"] <- 1-sum(t.TP2["mil","mod"], t.TP2["mil","sev"])
+      t.TP2["mod","mod"] <- 1-sum(t.TP2["mod","mil"], t.TP2["mod","sev"])
+      t.TP2["sev","sev"] <- 1-sum(t.TP2["sev","mil"], t.TP2["sev","mod"])
+      
+      p.mil_mod <- t.TP2["mil","mod"]
+      p.mil_sev <- t.TP2["mil","sev"]
+      p.mod_mil <- t.TP2["mod","mil"]
+      p.mod_sev <- t.TP2["mod","sev"]
+      p.sev_mil <- t.TP2["sev","mil"]
+      p.sev_mod <- t.TP2["sev","mod"]
+      
+      # adjust for cycle length: institutionalization
+      p.mci_i <- 1-(1-p.mci_i)^(cycle_length)
+      p.mil_i <- 1-(1-p.mil_i)^(cycle_length)
+      p.mod_i <- 1-(1-p.mod_i)^(cycle_length)
+      p.sev_i <- 1-(1-p.sev_i)^(cycle_length)
+      v.p.mci_i <- rep(x=p.mci_i, time=n.cycle)
+      v.p.mil_i <- rep(x=p.mil_i, time=n.cycle)
+      v.p.mod_i <- rep(x=p.mod_i, time=n.cycle)
+      v.p.sev_i <- rep(x=p.sev_i, time=n.cycle)
+
+      # x <- t(c(1,0,0)) %*% t.TP2; x
+      # x <- x %*% t.TP2; x
+      # y <- t(c(1,0,0)) %*% t.TP; y
+      # y <- y %*% t.TP; y
+      # 
+      # # alternative method > larger deviation!
+      # t.TP
+      # t.TP3 <- t.TP
+      # i=4
+      # for (i in 1:9) {
+      #   t.TP3[i] <- 1-(1-t.TP[i])^(1/4)
+      # }
+      # t.TP3
+      # t.TP3["mil","mil"] <- 1-sum(t.TP3["mil","mod"], t.TP3["mil","sev"])
+      # t.TP3["mod","mod"] <- 1-sum(t.TP3["mod","mil"], t.TP3["mod","sev"])
+      # t.TP3["sev","sev"] <- 1-sum(t.TP3["sev","mil"], t.TP3["sev","mod"])
+      # x <- t(c(1,0,0)) %*% t.TP3; x
+      # x <- x %*% t.TP3; x
+      # y <- t(c(1,0,0)) %*% t.TP; y
+      # y <- y %*% t.TP; y
+      
+      
       
       # convert time-independent transitions to vector of transitions (STEP D: prepare inputs to be used in each strategy)
       v.p.mci_mil <- rep(p.mci_mil, n.cycle)
@@ -336,13 +431,17 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       v.p.milon_mil <- v.p.mil_mil
       
       # discontinuation
+      p.discontinuation1 <- 1-(1-p.discontinuation1)^(cycle_length) # adjust discontinuation for cycle length
+      p.discontinuation_x <- 1-(1-p.discontinuation_x)^(cycle_length) # adjust discontinuation for cycle length
       v.p.discontinuation <- rep(x=0, times=n.cycle) # initialize vector
-      v.p.discontinuation[1] <- p.discontinuation1 # discontinuation at cycle 1
-      v.p.discontinuation[2:n.cycle] <- p.discontinuation_x # discontinuation at cycle 2 onward
-      v.p.discontinuation[tx_duration:n.cycle] <- 1 # maximum treatment duration implemented as discontinuation
+      cycles_peryear <- 1/cycle_length
+      v.p.discontinuation[1:cycles_peryear] <- p.discontinuation1 # discontinuation at year 1
+      v.p.discontinuation[cycles_peryear:n.cycle] <- p.discontinuation_x # discontinuation at year 2 onward
+      v.p.discontinuation[(tx_duration/cycle_length):n.cycle] <- 1 # maximum treatment duration implemented as discontinuation
       
       # death (subset mortality table to obtain age- and sex-specific mortality)
-      v.r.dth <- m.r.mortality[age_start:(age_end-1), sex]
+      v.r.dth <- m.r.mortality[age_start:(age_end-1), sex] * cycle_length
+      v.r.dth <- rep(x=v.r.dth, each=1/cycle_length)
       
       # starting states
       m.trace1 <- matrix(data=0, nrow=1, ncol=n.state, dimnames=list(NULL,v.names_state))
@@ -353,11 +452,18 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       if(strat=="int") {
         
         # waning
+                      # cycle_length <- 1/4
+                      # tx_waning <- 0.05
+                      # tx_waning_adj <- 1-(1-tx_waning)^(cycle_length)
+                      # round((1-tx_waning    )^(0:8),2)
+                      # round((1-tx_waning_adj)^((0:8)*4),2)
+        tx_waning <- 1-(1-tx_waning)^(cycle_length) # adjust waning for cycle length
         temp.waning <- (1-tx_waning)^(0:(n.cycle-1))
         temp.rr.tx_mci_mil <- rr.tx_mci_mil^temp.waning
         temp.rr.tx_mci_mod <- rr.tx_mci_mod^temp.waning
         temp.rr.tx_mci_sev <- rr.tx_mci_sev^temp.waning
         temp.rr.tx_mil_mod <- rr.tx_mil_mod^temp.waning
+        tx_waning_dis <- 1-(1-tx_waning_dis)^(cycle_length) # adjust waning for cycle length
         temp.waning_dis <- (1-tx_waning_dis)^(0:(n.cycle-1))
         temp.rr.tx_mci_mil_dis <- rr.tx_mci_mil_dis^temp.waning_dis
         temp.rr.tx_mci_mod_dis <- rr.tx_mci_mod_dis^temp.waning_dis
@@ -417,6 +523,10 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         v.p.milon_mil = v.p.milon_mil, 
         v.p.discontinuation = v.p.discontinuation, 
         v.r.dth = v.r.dth, 
+        v.p.mci_i = v.p.mci_i, 
+        v.p.mil_i = v.p.mil_i, 
+        v.p.mod_i = v.p.mod_i, 
+        v.p.sev_i = v.p.sev_i, 
         m.trace1 = m.trace1
       ))
       
@@ -469,10 +579,21 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 5.2. DETERMINISTIC ########################################
 
+# cycle length outside model: 
+
+# costs, utilities, life years
+  # multiply input by cycle length
+
+# discounting (comes close as discount rate is low)
+x <- 1-(1-0.035)^(1/4)
+1/(1+x)^(0:20*4)
+1/(1+0.035)^(0:20)
+
 
 ######################################## 5.2.1 BASE CASE ########################################
 
 # run the model
+l.inputs[["cycle_length"]] <- 1/4
 out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
 
 # possible output to choose from
@@ -488,7 +609,11 @@ out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
 # out_base[["l.out_strategy"]][["int"]][["m.trace"]]
 # out_base[["l.out_strategy"]][["int"]][["m.out"]]
 # out_base[["df.out_sum"]] # scenario results
-print(out_base[["l.out_strategy"]][["int"]][["m.trace"]])
+print(round(out_base[["l.out_strategy"]][["soc"]][["m.trace"]],2))
+print(round(out_base[["l.out_strategy"]][["soc"]][["m.trace"]][(0:20)*4+1,],2))
+
+#print(round(out_base[["l.out_strategy"]][["int"]][["m.trace"]],2))
+
 # prepare data for tables/plots
 
 ## table: summary outcomes
@@ -515,6 +640,7 @@ m.plot1_int <- cbind(
   dth=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
 )
 a.plot1 <- array(data=c(m.plot1_soc,m.plot1_int), dim=c(nrow(m.plot1_soc),5,2), dimnames=list(NULL,colnames(m.plot1_soc),c("soc","int")))
+      matplot(a.plot1[(0:10)*1,,"soc"], type="l")
 
 ## plot: mean time in state
 m.plot2 <- cbind(soc=colSums(m.plot1_soc), int=colSums(m.plot1_int))
@@ -632,7 +758,7 @@ print(m.plot2)
 
 ######################################## 5.2.2 DETERMINISTIC SENSITIVITY ANALYSIS ########################################
 
-if(T) {
+if(F) {
   
   # list parameters for DSA
   dsa_pars <- c(
