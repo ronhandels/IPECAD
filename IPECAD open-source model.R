@@ -32,7 +32,6 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 l.inputs <- list(
   v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
-  cycle_length = 1/4, 
   age_start = 70, 
   age_end = 99, 
   sex = "female", 
@@ -311,98 +310,6 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
     # loop over strategies (STEP C: run each strategy in a loop)
     for(strat in v.names_strat) {
       
-      # adjust for cycle length: mci to dementia (p.mci_mil is chosen to adjust separately for cycle time)
-      if(p.mci_mod!=0 & cycle_length!=1) stop("can't adjust p.mci_mod for other cycle time")
-      if(p.mci_sev!=0 & cycle_length!=1) stop("can't adjust p.mci_sev for other cycle time")
-      p.mci_mil <- 1-(1-p.mci_mil)^(cycle_length)
-      
-      # adjust for cycle length: dementia disease progression transitions for cycle time (p.mci_mil is chosen to adjust separately for cycle time)
-      if(p.mil_mci!=0 & cycle_length!=1) stop("can't adjust p.mil_mci for other cycle time")
-      t.TP <- matrix(data=NA, nrow=3, ncol=3, dimnames=list(c("mil","mod","sev"),c("mil","mod","sev")))
-      t.TP["mil","mod"] <- p.mil_mod
-      t.TP["mil","sev"] <- p.mil_sev
-      t.TP["mod","mil"] <- p.mod_mil
-      t.TP["mod","sev"] <- p.mod_sev
-      t.TP["sev","mil"] <- p.sev_mil
-      t.TP["sev","mod"] <- p.sev_mod
-      t.TP["mil","mil"] <- 1-sum(t.TP["mil","mod"], t.TP["mil","sev"])
-      t.TP["mod","mod"] <- 1-sum(t.TP["mod","mil"], t.TP["mod","sev"])
-      t.TP["sev","sev"] <- 1-sum(t.TP["sev","mil"], t.TP["sev","mod"])
-      t.TP
-      
-                # tp <- matrix(data=0, nrow=4, ncol=4)
-                # tp[1,2] <- 0.248
-                # tp[2,3] <- 0.25
-                # tp[3,2] <- 0.05
-                # tp[3,4] <- 0.20
-                # tp[4,3] <- 0.10
-                # tp[1,1] <- 1-sum(tp[1,-1])
-                # tp[2,2] <- 1-sum(tp[2,-2])
-                # tp[3,3] <- 1-sum(tp[3,-3])
-                # tp[4,4] <- 1-sum(tp[4,-4])
-                # tp
-                # t.TP <- tp
-                # p.mci_mil
-      
-      D <- diag(x=eigen(t.TP)$values); D
-      V <- eigen(t.TP)$vectors; V
-      t.TP2 <- V %*% D^(cycle_length) %*% solve(V); t.TP2
-      if(min(t.TP2)< -0.05) stop("too large negative transition probabilities generated when adjusting for cycle length")
-      if(any(is.nan(t.TP2))) stop("NaN present in transition probabilities when adjusting for cycle length")
-      if(any(is.na(t.TP2))) stop("NaN present in transition probabilities when adjusting for cycle length")
-      if(any(is.null(t.TP2))) stop("NULL present in transition probabilities when adjusting for cycle length")
-      t.TP2[t.TP2 < 0] <- 0
-      t.TP2 <- round(t.TP2, 3)
-      dimnames(t.TP2) <- dimnames(t.TP)
-      
-      # x <- c(1,0,0,0)
-      # x <- x %*% t.TP2
-      # x
-      
-      t.TP2["mil","mil"] <- 1-sum(t.TP2["mil","mod"], t.TP2["mil","sev"])
-      t.TP2["mod","mod"] <- 1-sum(t.TP2["mod","mil"], t.TP2["mod","sev"])
-      t.TP2["sev","sev"] <- 1-sum(t.TP2["sev","mil"], t.TP2["sev","mod"])
-      
-      p.mil_mod <- t.TP2["mil","mod"]
-      p.mil_sev <- t.TP2["mil","sev"]
-      p.mod_mil <- t.TP2["mod","mil"]
-      p.mod_sev <- t.TP2["mod","sev"]
-      p.sev_mil <- t.TP2["sev","mil"]
-      p.sev_mod <- t.TP2["sev","mod"]
-      
-      # adjust for cycle length: institutionalization
-      p.mci_i <- 1-(1-p.mci_i)^(cycle_length)
-      p.mil_i <- 1-(1-p.mil_i)^(cycle_length)
-      p.mod_i <- 1-(1-p.mod_i)^(cycle_length)
-      p.sev_i <- 1-(1-p.sev_i)^(cycle_length)
-      v.p.mci_i <- rep(x=p.mci_i, time=n.cycle)
-      v.p.mil_i <- rep(x=p.mil_i, time=n.cycle)
-      v.p.mod_i <- rep(x=p.mod_i, time=n.cycle)
-      v.p.sev_i <- rep(x=p.sev_i, time=n.cycle)
-
-      # x <- t(c(1,0,0)) %*% t.TP2; x
-      # x <- x %*% t.TP2; x
-      # y <- t(c(1,0,0)) %*% t.TP; y
-      # y <- y %*% t.TP; y
-      # 
-      # # alternative method > larger deviation!
-      # t.TP
-      # t.TP3 <- t.TP
-      # i=4
-      # for (i in 1:9) {
-      #   t.TP3[i] <- 1-(1-t.TP[i])^(1/4)
-      # }
-      # t.TP3
-      # t.TP3["mil","mil"] <- 1-sum(t.TP3["mil","mod"], t.TP3["mil","sev"])
-      # t.TP3["mod","mod"] <- 1-sum(t.TP3["mod","mil"], t.TP3["mod","sev"])
-      # t.TP3["sev","sev"] <- 1-sum(t.TP3["sev","mil"], t.TP3["sev","mod"])
-      # x <- t(c(1,0,0)) %*% t.TP3; x
-      # x <- x %*% t.TP3; x
-      # y <- t(c(1,0,0)) %*% t.TP; y
-      # y <- y %*% t.TP; y
-      
-      
-      
       # convert time-independent transitions to vector of transitions (STEP D: prepare inputs to be used in each strategy)
       v.p.mci_mil <- rep(p.mci_mil, n.cycle)
       v.p.mci_mod <- rep(p.mci_mod, n.cycle)
@@ -578,6 +485,203 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 
 ######################################## 5.2. DETERMINISTIC ########################################
+
+# function to convert probability (p) to a different cycle time (t=time proportional to current 1-year cycle length)
+f.p_time <- function(p, t) 1-(1-p)^(t)
+
+# proportion of the 1-year cycle length
+t <- 1/4
+
+# simultaneously convert matrix of dementia transition probabilities to new cycle length
+## temporary matrix of dementia transition probabilities
+t.TP <- matrix(data=NA, nrow=3, ncol=3, dimnames=list(c("mil","mod","sev"),c("mil","mod","sev")))
+t.TP["mil","mod"] <- l.inputs[["p.mil_mod"]]
+t.TP["mil","sev"] <- l.inputs[["p.mil_sev"]]
+t.TP["mod","mil"] <- l.inputs[["p.mod_mil"]]
+t.TP["mod","sev"] <- l.inputs[["p.mod_sev"]]
+t.TP["sev","mil"] <- l.inputs[["p.sev_mil"]]
+t.TP["sev","mod"] <- l.inputs[["p.sev_mod"]]
+t.TP[1,1] <- 1-sum(t.TP[1,-1])
+t.TP[2,2] <- 1-sum(t.TP[2,-2])
+t.TP[3,3] <- 1-sum(t.TP[3,-3])
+t.TP
+
+## convert TPs using eigenvalues
+D <- diag(x=eigen(t.TP)$values); D
+V <- eigen(t.TP)$vectors; V
+t.TP2 <- V %*% D^(t) %*% solve(V); t.TP2
+## manually check for non-numbers or negative values (if very small, might be rounded to 0)
+t.TP2
+t.TP2[t.TP2 < 0] <- 0 #convert small negative values to 0
+t.TP2 <- round(t.TP2, 3) # round
+dimnames(t.TP2) <- dimnames(t.TP) # add names
+rowSums(t.TP2) # check if rowsums add up to 1
+diag(t.TP2) <- NA # remove matrix diagonal (probability of remaining in the same state)
+t.TP2[1,1] <- 1-sum(t.TP2[1,-1]) # calculate probability of remaining in the same state as '1-(other probabilities)'
+t.TP2[2,2] <- 1-sum(t.TP2[2,-2])
+t.TP2[3,3] <- 1-sum(t.TP2[3,-3])
+t.TP2
+
+  # check: compare p.mci_mil handled separately versus handled simultaneously with dementia transition probabilities
+  ## handled separately
+  t.TP2_mci <- rbind(0,cbind(0,t.TP2))
+  rownames(t.TP2_mci)[1] <- "mci"
+  colnames(t.TP2_mci)[1] <- "mci"
+  t.TP2_mci["mci","mil"] <- f.p_time(p = l.inputs[["p.mci_mil"]], t = t)
+  diag(t.TP2_mci) <- NA
+  t.TP2_mci[1,1] <- 1-sum(t.TP2_mci[1,-1])
+  t.TP2_mci[2,2] <- 1-sum(t.TP2_mci[2,-2])
+  t.TP2_mci[3,3] <- 1-sum(t.TP2_mci[3,-3])
+  t.TP2_mci[4,4] <- 1-sum(t.TP2_mci[4,-4])
+  t.TP2_mci
+  ## simple markov chain
+  TP2_mci_st <- c(1,0,0,0)
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  round(TP2_mci_st,3)
+  
+  ## handled simultaneously
+  t.TP_mci <- rbind(0,cbind(0,t.TP))
+  rownames(t.TP_mci)[1] <- "mci"
+  colnames(t.TP_mci)[1] <- "mci"
+  t.TP_mci["mci","mil"] <- l.inputs[["p.mci_mil"]]
+  diag(t.TP_mci) <- NA
+  t.TP_mci[1,1] <- 1-sum(t.TP_mci[1,-1])
+  t.TP_mci[2,2] <- 1-sum(t.TP_mci[2,-2])
+  t.TP_mci[3,3] <- 1-sum(t.TP_mci[3,-3])
+  t.TP_mci[4,4] <- 1-sum(t.TP_mci[4,-4])
+  t.TP_mci
+  D_mci <- diag(x=eigen(t.TP_mci)$values)
+  V_mci <- eigen(t.TP_mci)$vectors
+  t.TP_mci <- V_mci %*% D_mci^(t) %*% solve(V_mci); t.TP_mci
+  round(t.TP_mci,3)
+  t.TP_mci[t.TP_mci < 0] <- 0
+  t.TP_mci <- round(t.TP_mci, 3)
+  colnames(t.TP_mci) <- c("mci",colnames(t.TP))
+  rownames(t.TP_mci) <- c("mci",rownames(t.TP))
+  rowSums(t.TP_mci)
+  diag(t.TP_mci) <- NA
+  t.TP_mci[1,1] <- 1-sum(t.TP_mci[1,-1])
+  t.TP_mci[2,2] <- 1-sum(t.TP_mci[2,-2])
+  t.TP_mci[3,3] <- 1-sum(t.TP_mci[3,-3])
+  t.TP_mci[4,4] <- 1-sum(t.TP_mci[4,-4])
+  t.TP_mci
+  ## simple markov chain
+  TP_mci_st <- c(1,0,0,0)
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  round(TP_mci_st,3)
+  ## compare 2 methods
+  round(t.TP2_mci, 3) # TP
+  round(t.TP_mci, 3)
+  round(TP2_mci_st,3) # markov chain at cycle n
+  round(TP_mci_st,3)
+  
+  
+
+
+l.inputs_cycle4 <- list(
+  v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+  v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
+  age_start = 70, 
+  age_end = 99, 
+  sex = "female", 
+  p.mci_mil = f.p_time(p = l.inputs[["p.mci_mil"]], t = t), # this is converted independent of dementia state transitions to allow more flexibility (and no backtransitions to mci exist)
+  p.mci_mod = 0, # if this probability is different from 0, consider include it in the simultaneous conversion of cycle time
+  p.mci_sev = 0, # idem
+  p.mil_mci = 0, # idem
+  p.mil_mod = t.TP2["mil","mod"], 
+  p.mil_sev = 0.001, etc.
+  p.mod_mil = 0.087, 
+  p.mod_sev = 0.109, 
+  p.sev_mil = 0.000, 
+  p.sev_mod = 0.196, 
+  p.mci_i = 0, 
+  p.mil_i = 0.038, 
+  p.mod_i = 0.110, 
+  p.sev_i = 0.259, 
+  p.discontinuation1 = 0.1, 
+  p.discontinuation_x = 0.1, 
+  m.r.mortality = m.mortality_rate_US, 
+  hr.mort_mci = 1, 
+  hr.mort_verymilddem = 1.82, 
+  hr.mort_mil = 1.318, 
+  hr.mort_mod = 2.419, 
+  hr.mort_sev = 4.267, 
+  rr.tx_mci_mil = 0.75, 
+  rr.tx_mci_mod = 1, 
+  rr.tx_mci_sev = 1, 
+  rr.tx_mil_mod = 0.75, 
+  rr.tx_mci_mil_dis = 0.75, 
+  rr.tx_mci_mod_dis = 1, 
+  rr.tx_mci_sev_dis = 1, 
+  rr.tx_mil_mod_dis = 0.75, 
+  tx_waning = 0.05, 
+  tx_waning_dis = 0.25, 
+  tx_duration = 5, 
+  p.starting_state_mci = 1, 
+  u.mci = 0.73, 
+  u.mil = 0.69, 
+  u.mod = 0.53, 
+  u.sev = 0.38, 
+  c.mci = (1254 +  222) * 12, 
+  c.mil = (1471 +  410) * 12, 
+  c.mod = (1958 +  653) * 12, 
+  c.sev = (2250 + 1095) * 12, 
+  c.mci_i = (1254 + 8762) * 12, 
+  c.mil_i = (1471 + 8762) * 12, 
+  c.mod_i = (1958 + 8762) * 12, 
+  c.sev_i = (2250 + 8762) * 12, 
+  c.Tx = 5000, 
+  c.Tx_diagnostics1 = 2000, 
+  discount_QALY = 0.035, 
+  discount_COST = 0.035, 
+  wtp = 40000 
+)
+
+
+
+
+# cycle length outside model: 
+
+# costs, utilities, life years
+# multiply input by cycle length
+
+
+# discounting: 
+# (check formula discounting when adjusted for cycle length (intro tutorial cohort state transition model 2022; DARTH))
+
+x <- 1-(1-0.035)^(1/4)
+1/(1+x)^(0:20*4)
+1/(1+0.035)^(0:20)
+
+
+# p.mci_mil
+p.mci_mil <- 
+
+# probabilities between dementia states
+# matrix eigenvalues can be done outside model
+
+# institutionalization
+p.mci_i <- 1-(1-p.mci_i)^(cycle_length) # etc.
+
+# discontinuation
+p.discontinuation1 <- 1-(1-p.discontinuation1)^(cycle_length)
+p.discontinuation_x <- 1-(1-p.discontinuation_x)^(cycle_length)
+#!!! discontinuation needs to be applied to first year, perhaps define first period in terms of number of cycles?
+  
+  # death
+  m.r.mortality <- m.r.mortality * cycle_length
+#!!! problem is that mortality is linked to age, and age increases with increments (perhaps prepare age table increments???)
+#also, i need to check if the model is dependent on age (i know that is for mortality). Perhaps use mortality as a starting age and an off-set by cycle?
+  
+  # waning
+  tx_waning <- 1-(1-tx_waning)^(cycle_length)
+
 
 # cycle length outside model: 
 
