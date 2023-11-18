@@ -695,7 +695,7 @@ t.QALY_dif_extrapolated
 s.nh_soc <- sum(out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,c("mci_i","mil_i","mod_i","sev_i")])
 s.nh_int <- sum(out_base[["l.out_strategy"]][["int"]][["m.trace"]][,c("mci_i","mil_i","mod_i","sev_i")])
 
-## costs by sector over time
+## annual cost difference by sector over time
 m.cost_incr <- out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] - out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")]
 m.cost_incr <- m.cost_incr[,c("cost_hc","cost_sc","cost_ic","cost_tx","cost_dx")]
   #t.hb <- out_base[["l.out_strategy"]][["int"]][["m.out"]][,"qaly"] - out_base[["l.out_strategy"]][["soc"]][["m.out"]][,"qaly"]
@@ -795,7 +795,7 @@ if(T) {
   s.nh_int
   (s.nh_int - s.nh_soc)/s.nh_soc # proportion change in institutionalized living
   
-  ## figure: costs by sector over time
+  ## figure: annual cost difference by sector over time
   m.cost_incr.pos <- m.cost_incr.neg <- m.cost_incr # split positive and negative
   m.cost_incr.pos[m.cost_incr.pos<0] <- 0
   m.cost_incr.neg[m.cost_incr.neg>=0] <- 0
@@ -816,7 +816,7 @@ if(T) {
     col = rainbow(5),
     add = T
   )
-  legend(x = "topright", legend = c("hc","sc","if","tx","dx"), fill = rainbow(5))
+  legend(x = "topright", legend = c("health","social","informal","treatment","diagnostic"), fill = rainbow(5))
   
 
 }
