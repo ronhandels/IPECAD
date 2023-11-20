@@ -61,7 +61,7 @@ l.inputs <- list(
   rr.tx_mci_mil_dis = 0.75, 
   rr.tx_mci_mod_dis = 1, 
   rr.tx_mci_sev_dis = 1, 
-  rr.tx_mil_mod_dis = 1, 
+  rr.tx_mil_mod_dis = 0.75, 
   p.discontinuation1 = 0.1, 
   p.discontinuation2 = 0.5, 
   discontinuation2_start = 2, 
@@ -379,7 +379,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       
       # discontinuation
       v.p.discontinuation <- rep(x=0, times=n.cycle) # initialize vector
-      v.p.discontinuation[1:discontinuation2_start-1] <- p.discontinuation1 # discontinuation up to discontinuation2 start cycle
+      v.p.discontinuation[1:(discontinuation2_start-1)] <- p.discontinuation1 # discontinuation up to discontinuation2 start cycle
       v.p.discontinuation[discontinuation2_start:n.cycle] <- p.discontinuation2 # discontinuation at discontinuation2 start cycle onward
       v.p.discontinuation[tx_duration:n.cycle] <- 1 # maximum treatment duration implemented as discontinuation
       
@@ -507,6 +507,7 @@ f.prepare_outcomes <- function(out_scenario, ncycles) {
     dth     =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("dth")], 
     home    = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
     instit  = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
+    ontx    = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","milon")]), 
     qaly_pt =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly_pt")], 
     qaly_ic =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly_ic")], 
     qaly    =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly")], 
@@ -527,6 +528,7 @@ f.prepare_outcomes <- function(out_scenario, ncycles) {
     dth     =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("dth")], 
     home    = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
     instit  = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
+    ontx    = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","milon")]), 
     qaly_pt =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly_pt")], 
     qaly_ic =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly_ic")], 
     qaly    =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly")], 
@@ -573,7 +575,7 @@ f.prepare_outcomes <- function(out_scenario, ncycles) {
     # proportional difference is invalid for outcomes with negative values
   
   # short outcomes
-  m.out_short <- matrix(data=NA, nrow=8, ncol=3, dimnames=list(c("mci","mil","mod","sev","alv","cost","qaly","nhb"),c("soc","int","dif")))
+  m.out_short <- matrix(data=NA, nrow=11, ncol=3, dimnames=list(c("mci","mil","mod","sev","alv","home","instit","ontx","cost","qaly","nhb"),c("soc","int","dif")))
   for(i in rownames(m.out_short)) {
     m.out_short[i,"soc"] <- sum(a.trace[1:ncycles,i,"soc"])
     m.out_short[i,"int"] <- sum(a.trace[1:ncycles,i,"int"])
@@ -731,9 +733,14 @@ out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
   # out_base[["l.out_strategy"]][["int"]][["m.out"]]
   # out_base[["df.out_sum"]] # scenario results
 
+
+round(out_base[["l.out_strategy"]][["soc"]][["m.trace"]],3)
+round(colSums(out_base[["l.out_strategy"]][["soc"]][["m.trace"]]),2)
+print(round(colSums(out_base[["l.out_strategy"]][["int"]][["m.trace"]]),2))
+
 # summary outcomes
-out_short <- f.prepare_outcomes(out_scenario = out_base, ncycles = 29)[["m.out_short"]]
-  print(round(out_short,5))
+out_base_prepared <- f.prepare_outcomes(out_scenario = out_base, ncycles = 29)
+  print(round(out_base_prepared[["m.out_short"]],5))
 
 # prepare: icer
 icer <- calculate_icers(
@@ -755,12 +762,13 @@ print(icer)
 if(F) {
   
   ## table: summary outcomes
-  table.out_summary <- format(m.out_summary, digits=2, scientific=FALSE, big.mark=",")
+  table.out_summary <- format(out_base_prepared[["m.out_short"]], digits=2, scientific=FALSE, big.mark=",")
   print(table.out_summary)
   
   ## figure: state trace
   v.age_range <- c(l.inputs[["age_start"]]:(l.inputs[["age_start"]]+l.inputs[["n.cycle"]]-1)) # store age range
   xx <- c(v.age_range, rev(v.age_range)) # prepare polygon x-values
+  a.trace <- out_base_prepared[["a.trace"]]
   yy_mci <- c(a.trace[,"mci","soc"], rev(a.trace[,"mci","int"])) # polygon y-values
   yy_mil <- c(a.trace[,"mil","soc"], rev(a.trace[,"mil","int"])) # idem
   yy_mod <- c(a.trace[,"mod","soc"], rev(a.trace[,"mod","int"])) # idem
