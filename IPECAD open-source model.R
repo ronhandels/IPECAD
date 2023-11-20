@@ -27,8 +27,7 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
-# input parameters per year (unless stated otherwise), see readme.md for a short explanation of each input parameter
-
+# input parameters per cycle (unless stated otherwise), see readme.md for a short explanation of each input parameter
 l.inputs <- list(
   v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
@@ -648,24 +647,24 @@ df.he_incr <- rbind(
 )
 
 ## state trace
-m.st_soc <- cbind(
-  mci=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mciof"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mci_i"], 
-  mil=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"milof"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mil_i"], 
-  mod=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"mod_i"], 
-  sev=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev"] + out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"sev_i"], 
+m.trace_soc <- cbind(
+  mci=rowSums(out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,c("mcion","mciof","mci_i")]), 
+  mil=rowSums(out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,c("milon","milof","mil_i")]), 
+  mod=rowSums(out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,c("mod","mod_i")]), 
+  sev=rowSums(out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,c("sev","sev_i")]), 
   dth=out_base[["l.out_strategy"]][["soc"]][["m.trace"]][,"dth"]
 )
-m.st_int <- cbind(
-  mci=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mcion"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mciof"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mci_i"], 
-  mil=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milon"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"milof"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mil_i"], 
-  mod=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"mod_i"], 
-  sev=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev"] + out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"sev_i"], 
+m.trace_int <- cbind(
+  mci=rowSums(out_base[["l.out_strategy"]][["int"]][["m.trace"]][,c("mcion","mciof","mci_i")]), 
+  mil=rowSums(out_base[["l.out_strategy"]][["int"]][["m.trace"]][,c("milon","milof","mil_i")]), 
+  mod=rowSums(out_base[["l.out_strategy"]][["int"]][["m.trace"]][,c("mod","mod_i")]), 
+  sev=rowSums(out_base[["l.out_strategy"]][["int"]][["m.trace"]][,c("sev","sev_i")]), 
   dth=out_base[["l.out_strategy"]][["int"]][["m.trace"]][,"dth"]
 )
-a.st <- array(data=c(m.st_soc,m.st_int), dim=c(nrow(m.st_soc),5,2), dimnames=list(NULL,colnames(m.st_soc),c("soc","int")))
+a.trace <- array(data=c(m.trace_soc,m.trace_int), dim=c(nrow(m.trace_soc),5,2), dimnames=list(NULL,colnames(m.trace_soc),c("soc","int")))
 
 ## mean time in state
-m.time_state <- cbind(soc = colSums(m.st_soc), int = colSums(m.st_int))
+m.time_state <- cbind(soc = colSums(m.trace_soc), int = colSums(m.trace_int))
 
 ## icer
 icer <- calculate_icers(
@@ -720,15 +719,15 @@ if(T) {
   ## figure: state trace
   v.age_range <- c(l.inputs[["age_start"]]:(l.inputs[["age_start"]]+l.inputs[["n.cycle"]]-1)) # store age range
   xx <- c(v.age_range, rev(v.age_range)) # prepare polygon x-values
-  yy_mci <- c(a.st[,"mci","soc"], rev(a.st[,"mci","int"])) # polygon y-values
-  yy_mil <- c(a.st[,"mil","soc"], rev(a.st[,"mil","int"])) # idem
-  yy_mod <- c(a.st[,"mod","soc"], rev(a.st[,"mod","int"])) # idem
-  yy_sev <- c(a.st[,"sev","soc"], rev(a.st[,"sev","int"])) # idem
-  yy_dth <- c(a.st[,"dth","soc"], rev(a.st[,"dth","int"])) # idem
+  yy_mci <- c(a.trace[,"mci","soc"], rev(a.trace[,"mci","int"])) # polygon y-values
+  yy_mil <- c(a.trace[,"mil","soc"], rev(a.trace[,"mil","int"])) # idem
+  yy_mod <- c(a.trace[,"mod","soc"], rev(a.trace[,"mod","int"])) # idem
+  yy_sev <- c(a.trace[,"sev","soc"], rev(a.trace[,"sev","int"])) # idem
+  yy_dth <- c(a.trace[,"dth","soc"], rev(a.trace[,"dth","int"])) # idem
   par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
   matplot(
     x = v.age_range, 
-    y = a.st[,,"soc"], 
+    y = a.trace[,,"soc"], 
     type = "n", 
     xlab = "age", 
     ylab = "proportion in state", 
@@ -742,14 +741,14 @@ if(T) {
   polygon(xx, yy_dth, col = "gray95", border = FALSE)
   matlines(
     x = v.age_range, 
-    y = a.st[,,"soc"], 
+    y = a.trace[,,"soc"], 
     type = "l",
     lty = 1,
     col = c("green","yellow","orange","red","black")
   )
   matlines(
     x = v.age_range, 
-    y = a.st[,,"int"], 
+    y = a.trace[,,"int"], 
     type = "l",
     lty = 2,
     col = c("green","yellow","orange","red","black")
@@ -774,8 +773,8 @@ if(T) {
   text(x=c(0,cumsum(m.time_state2[1:3,"int"])), y=2, labels=round(m.time_state2[,"int"],1), pos=4)
   
   ## table: proportion in state
-  print(round(a.st[1:10,,"soc"], 2)) # state trace standard of care strategy
-  print(round(a.st[1:10,,"int"], 2)) # state trace intervention strategy
+  print(round(a.trace[1:10,,"soc"], 2)) # state trace standard of care strategy
+  print(round(a.trace[1:10,,"int"], 2)) # state trace intervention strategy
   
   ## figure: icer
   par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
@@ -1022,7 +1021,7 @@ if(F) {
 }
 
 
-######################################## 5.2.2. DETERMINISTIC SENSITIVITY ANALYSIS ########################################
+######################################## 5.2.3. DETERMINISTIC SENSITIVITY ANALYSIS ########################################
 
 if(F) {
   
@@ -1144,7 +1143,108 @@ temp.est2
 
 
 
-######################################## 5.2.3. HEADROOM ########################################
+######################################## 5.2.4. HEADROOM ########################################
 # to be developed for this version, see release '2.1.0 ISPOR Europe 2023 abstract' for an older version
+
+
+
+######################################## 5.2.5. ICER REPLICATION ########################################
+
+# input parameters
+l.inputs_icer <- list(
+  v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+  v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
+  age_start = 70, 
+  n.cycle = 29, 
+  sex = "male", 
+  p.mci_mil = 0.23, 
+  p.mci_mod = 0, 
+  p.mci_sev = 0, 
+  p.mil_mci = 0.03, 
+  p.mil_mod = 0.35, 
+  p.mil_sev = 0.04, 
+  p.mod_mil = 0.03, 
+  p.mod_sev = 0.42, 
+  p.sev_mil = 0, 
+  p.sev_mod = 0.02, 
+  p.mci_i = 0.024, 
+  p.mil_i = 0.038, 
+  p.mod_i = 0.110, 
+  p.sev_i = 0.259, 
+  m.r.mortality = m.mortality_rate_US, 
+  hr.mort_mci = 1.82, 
+  hr.mort_verymilddem = 1, 
+  hr.mort_mil = 2.92, 
+  hr.mort_mod = 3.85, 
+  hr.mort_sev = 9.52, 
+  rr.tx_mci_mil = 0.69, 
+  rr.tx_mci_mod = 1, 
+  rr.tx_mci_sev = 1, 
+  rr.tx_mil_mod = 0.69, 
+  rr.tx_mci_mil_dis = 0.69, 
+  rr.tx_mci_mod_dis = 1, 
+  rr.tx_mci_sev_dis = 1, 
+  rr.tx_mil_mod_dis = 0.69, 
+  p.discontinuation1 = 0.069, 
+  p.discontinuation2 = 0, 
+  discontinuation2_start = 2, 
+  tx_waning = 0, 
+  tx_waning_dis = 0, 
+  tx_duration = 29, 
+  p.starting_state_mci = 0.55, 
+  u.mci_pt = 0.73, 
+  u.mil_pt = 0.73 + 0.17 - 0.22, 
+  u.mod_pt = 0.73 + 0.17 - 0.36, 
+  u.sev_pt = 0.73 + 0.17 - 0.53, 
+  u.mci_ic = -0.03, 
+  u.mil_ic = -0.05, 
+  u.mod_ic = -0.08, 
+  u.sev_ic = -0.10, 
+  c.mci_hc = 1254 * 12, 
+  c.mil_hc = 1471 * 12, 
+  c.mod_hc = 1958 * 12, 
+  c.sev_hc = 2250 * 12, 
+  c.mci_sc = 222 * 12, 
+  c.mil_sc = 410 * 12, 
+  c.mod_sc = 653 * 12, 
+  c.sev_sc = 1095 * 12, 
+  c.mci_ic =  988 * 12, 
+  c.mil_ic = 2184 * 12, 
+  c.mod_ic = 3227 * 12, 
+  c.sev_ic = 5402 * 12, 
+  c.mci_i_hc = 1254 * 12, 
+  c.mil_i_hc = 1471 * 12, 
+  c.mod_i_hc = 1958 * 12, 
+  c.sev_i_hc = 2250 * 12, 
+  c.mci_i_sc = 8762 * 12, 
+  c.mil_i_sc = 8762 * 12, 
+  c.mod_i_sc = 8762 * 12, 
+  c.sev_i_sc = 8762 * 12, 
+  c.mci_i_ic =  435 * 12, 
+  c.mil_i_ic =  961 * 12, 
+  c.mod_i_ic = 1420 * 12, 
+  c.sev_i_ic = 2377 * 12, 
+  c.Tx = 5000, 
+  c.Tx_diagnostics1 = 2000, 
+  discount_QALY = 0.03, 
+  discount_COST = 0.03, 
+  wtp = 40000 
+)
+
+# run the model
+out_base <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
+
+# discount life years
+ly_soc <- out_base[["l.out_strategy"]][["soc"]][["m.out"]][,"ly"]
+ly_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]][,"ly"]
+v.discount <- 1 / (( 1 + (0.03)) ^ (0:28))
+sum(v.discount * ly_soc)
+sum(v.discount * ly_int)
+
+sum(v.discount * ly_int) - sum(v.discount * ly_soc)
+
+
+
+
 
 
