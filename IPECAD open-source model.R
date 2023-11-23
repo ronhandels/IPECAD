@@ -495,50 +495,50 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 2.3. PREPARE OUTCOMES ########################################
 
-f.prepare_outcomes <- function(out_scenario, ncycles) {
+f.prepare_outcomes <- function(l.out_scenario, n.cycles) {
 
   # trace with aggregated results
   m.trace_soc <- cbind(
-    mci     = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","mci_i")]), 
-    mil     = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("milon","milof","mil_i")]), 
-    mod     = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mod","mod_i")]), 
-    sev     = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("sev","sev_i")]), 
-    alv     = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i")]), 
-    dth     =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("dth")], 
-    home    = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
-    instit  = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
-    ontx    = rowSums(out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","milon")]), 
-    qaly_pt =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly_pt")], 
-    qaly_ic =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly_ic")], 
-    qaly    =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly")], 
-    cost_dx =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_dx")], 
-    cost_tx =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_tx")], 
-    cost_hc =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_hc")], 
-    cost_sc =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_sc")], 
-    cost_ic =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_ic")], 
-    cost    =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost")], 
-    nhb     =         out_base[["l.out_strategy"]][["soc"]][["m.out"]][,c("nhb")]
+    mci     = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","mci_i")]), 
+    mil     = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("milon","milof","mil_i")]), 
+    mod     = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("mod","mod_i")]), 
+    sev     = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("sev","sev_i")]), 
+    alv     = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i")]), 
+    dth     =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("dth")], 
+    home    = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
+    instit  = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
+    ontx    = rowSums(l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("mcion","milon")]), 
+    qaly_pt =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly_pt")], 
+    qaly_ic =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly_ic")], 
+    qaly    =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("qaly")], 
+    cost_dx =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_dx")], 
+    cost_tx =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_tx")], 
+    cost_hc =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_hc")], 
+    cost_sc =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_sc")], 
+    cost_ic =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost_ic")], 
+    cost    =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("cost")], 
+    nhb     =         l.out_scenario[["l.out_strategy"]][["soc"]][["m.out"]][,c("nhb")]
   )
   m.trace_int <- cbind(
-    mci     = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","mci_i")]), 
-    mil     = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("milon","milof","mil_i")]), 
-    mod     = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mod","mod_i")]), 
-    sev     = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("sev","sev_i")]), 
-    alv     = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i")]), 
-    dth     =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("dth")], 
-    home    = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
-    instit  = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
-    ontx    = rowSums(out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","milon")]), 
-    qaly_pt =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly_pt")], 
-    qaly_ic =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly_ic")], 
-    qaly    =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly")], 
-    cost_dx =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_dx")], 
-    cost_tx =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_tx")], 
-    cost_hc =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_hc")], 
-    cost_sc =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_sc")], 
-    cost_ic =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_ic")], 
-    cost    =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("cost")], 
-    nhb     =         out_base[["l.out_strategy"]][["int"]][["m.out"]][,c("nhb")]
+    mci     = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","mci_i")]), 
+    mil     = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("milon","milof","mil_i")]), 
+    mod     = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("mod","mod_i")]), 
+    sev     = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("sev","sev_i")]), 
+    alv     = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i")]), 
+    dth     =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("dth")], 
+    home    = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
+    instit  = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
+    ontx    = rowSums(l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("mcion","milon")]), 
+    qaly_pt =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly_pt")], 
+    qaly_ic =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly_ic")], 
+    qaly    =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("qaly")], 
+    cost_dx =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_dx")], 
+    cost_tx =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_tx")], 
+    cost_hc =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_hc")], 
+    cost_sc =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_sc")], 
+    cost_ic =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("cost_ic")], 
+    cost    =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("cost")], 
+    nhb     =         l.out_scenario[["l.out_strategy"]][["int"]][["m.out"]][,c("nhb")]
   )
   a.trace <- array(data=c(m.trace_soc,m.trace_int), dim=c(nrow(m.trace_soc),ncol(m.trace_soc),2), dimnames=list(NULL,colnames(m.trace_soc),c("soc","int")))
   
@@ -577,8 +577,8 @@ f.prepare_outcomes <- function(out_scenario, ncycles) {
   # short outcomes
   m.out_short <- matrix(data=NA, nrow=11, ncol=3, dimnames=list(c("mci","mil","mod","sev","alv","home","instit","ontx","cost","qaly","nhb"),c("soc","int","dif")))
   for(i in rownames(m.out_short)) {
-    m.out_short[i,"soc"] <- sum(a.trace[1:ncycles,i,"soc"])
-    m.out_short[i,"int"] <- sum(a.trace[1:ncycles,i,"int"])
+    m.out_short[i,"soc"] <- sum(a.trace[1:n.cycles,i,"soc"])
+    m.out_short[i,"int"] <- sum(a.trace[1:n.cycles,i,"int"])
   }
   m.out_short[,"dif"] <- m.out_short[,"int"] - m.out_short[,"soc"]
   
@@ -739,7 +739,7 @@ round(colSums(out_base[["l.out_strategy"]][["soc"]][["m.trace"]]),2)
 print(round(colSums(out_base[["l.out_strategy"]][["int"]][["m.trace"]]),2))
 
 # summary outcomes
-out_base_prepared <- f.prepare_outcomes(out_scenario = out_base, ncycles = 29)
+out_base_prepared <- f.prepare_outcomes(l.out_scenario = out_base, n.cycles = 29)
   print(round(out_base_prepared[["m.out_short"]],5))
 
 # prepare: icer
@@ -1190,7 +1190,7 @@ temp.est2
 
 ######################################## 5.2.5. ICER REPLICATION ########################################
 
-if(F) {
+if(T) {
   
   # input parameters
   l.inputs_icer <- list(
@@ -1266,11 +1266,13 @@ if(F) {
     c.mil_i_ic =  961 * 12, 
     c.mod_i_ic = 1420 * 12, 
     c.sev_i_ic = 2377 * 12, 
-    c.Tx = 5000, 
-    c.Tx_diagnostics1 = 2000, 
+    c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
+    c.Tx_diagnostics1 = 261.10*3 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
+    discount_EFFECT = 0.03, 
     discount_QALY = 0.03, 
     discount_COST = 0.03, 
-    wtp = 40000 
+    wtp = 100000, 
+    half_cycle_correction = FALSE
   )
   
   # run the model
@@ -1287,4 +1289,133 @@ if(F) {
   
  
 }
+
+
+######################################## 5.2.6. PREPARE SENSITIVITY ANALYSIS ########################################
+
+# s_cdrhr
+l.inputs_s_cdrhr <- l.inputs_icer
+l.inputs_s_cdrhr[["rr.tx_mci_mil"]] = 0.66
+l.inputs_s_cdrhr[["rr.tx_mil_mod"]] = 0.66
+l.inputs_s_cdrhr[["rr.tx_mci_mil_dis"]] = 0.66
+l.inputs_s_cdrhr[["rr.tx_mil_mod_dis"]] = 0.66
+l.inputs_s_cdrhr[["p.discontinuation1"]] = 0.069
+l.inputs_s_cdrhr[["p.discontinuation2"]] = 0
+l.inputs_s_cdrhr[["discontinuation2_start"]] = 2
+l.inputs_s_cdrhr[["tx_waning"]] = 0
+l.inputs_s_cdrhr[["tx_waning_dis"]] = 0
+l.inputs_s_cdrhr[["tx_duration"]] = 29
+l.inputs_s_cdrhr[["p.starting_state_mci"]] = 0.55
+
+# run model
+out_s_cdrhr <- f.run_scenario(l.inputs = l.inputs_s_cdrhr, detailed = TRUE)
+
+# run results
+out_s_cdrhr_prepared <- f.prepare_outcomes(l.out_scenario = out_s_cdrhr, n.cycles = 29)
+
+# s_cdr_%
+# s_cdr_timeshift
+# s_mmse_hr
+# s_mmse_%
+# s_mmse_time
+
+# sA (= cdrhr)
+l.inputs_sA <- l.inputs_s_cdrhr
+l.inputs_sA[["rr.tx_mci_mil_dis"]] = 0.66
+l.inputs_sA[["rr.tx_mil_mod_dis"]] = 0.66
+l.inputs_sA[["p.discontinuation2"]] = 0
+l.inputs_sA[["discontinuation2_start"]] = 2
+l.inputs_sA[["tx_waning"]] = 0
+l.inputs_sA[["tx_waning_dis"]] = 0
+out_sA <- f.run_scenario(l.inputs = l.inputs_sA, detailed = TRUE)
+out_sA_prepared <- f.prepare_outcomes(l.out_scenario = out_sA, n.cycles = 29)
+
+# sB
+round((1-0.25)^c(0:7),2) # reflects decrease to relatively small treatment effect over 7 years
+l.inputs_sB <- l.inputs_s_cdrhr
+l.inputs_sB[["rr.tx_mci_mil_dis"]] = 0.66
+l.inputs_sB[["rr.tx_mil_mod_dis"]] = 0.66
+l.inputs_sB[["p.discontinuation2"]] = 0
+l.inputs_sB[["discontinuation2_start"]] = 2
+l.inputs_sB[["tx_waning"]] = 0.25
+l.inputs_sB[["tx_waning_dis"]] = 0.25
+l.inputs_sB[["tx_duration"]] = 29
+out_sB <- f.run_scenario(l.inputs = l.inputs_sB, detailed = TRUE)
+out_sB_prepared <- f.prepare_outcomes(l.out_scenario = out_sB, n.cycles = 29)
+
+# sC
+l.inputs_sC <- l.inputs_s_cdrhr
+l.inputs_sC[["rr.tx_mci_mil_dis"]] = 1
+l.inputs_sC[["rr.tx_mil_mod_dis"]] = 1
+l.inputs_sC[["p.discontinuation2"]] = 1
+l.inputs_sC[["discontinuation2_start"]] = 2
+l.inputs_sC[["tx_waning"]] = 0
+l.inputs_sC[["tx_waning_dis"]] = 0
+l.inputs_sC[["tx_duration"]] = 29
+out_sC <- f.run_scenario(l.inputs = l.inputs_sC, detailed = TRUE)
+out_sC_prepared <- f.prepare_outcomes(l.out_scenario = out_sC, n.cycles = 29)
+
+# sD
+l.inputs_sD <- l.inputs_s_cdrhr
+l.inputs_sD[["rr.tx_mci_mil_dis"]] = 0.66
+l.inputs_sD[["rr.tx_mil_mod_dis"]] = 0.66
+l.inputs_sD[["p.discontinuation2"]] = 1
+l.inputs_sD[["discontinuation2_start"]] = 2
+l.inputs_sD[["tx_waning"]] = 0
+l.inputs_sD[["tx_waning_dis"]] = 0
+l.inputs_sD[["tx_duration"]] = 29
+out_sD <- f.run_scenario(l.inputs = l.inputs_sD, detailed = TRUE)
+out_sD_prepared <- f.prepare_outcomes(l.out_scenario = out_sD, n.cycles = 29)
+
+# sE
+l.inputs_sE <- l.inputs_s_cdrhr
+l.inputs_sE[["rr.tx_mci_mil_dis"]] = 0.66
+l.inputs_sE[["rr.tx_mil_mod_dis"]] = 0.66
+l.inputs_sE[["p.discontinuation2"]] = 1
+l.inputs_sE[["discontinuation2_start"]] = 2
+l.inputs_sE[["tx_waning"]] = 0.25
+l.inputs_sE[["tx_waning_dis"]] = 0.25
+l.inputs_sE[["tx_duration"]] = 29
+out_sE <- f.run_scenario(l.inputs = l.inputs_sE, detailed = TRUE)
+out_sE_prepared <- f.prepare_outcomes(l.out_scenario = out_sE, n.cycles = 29)
+
+# initialize: summary incremental outcomes
+m.sABCDE <- matrix(data = NA, nrow = 5, ncol = 6, dimnames = list(c("A","B","C","D","E"),c("mcimil","alv","qaly_pt","cost_dxtx","cost_hcscic","nhb")))
+# fill
+m.sABCDE["A","mcimil"]      <- sum(out_sA_prepared[["m.out_summary"]][c("mci","mil"),"dif"])
+m.sABCDE["A","alv"]         <-     out_sA_prepared[["m.out_summary"]]["alv","dif"]
+m.sABCDE["A","qaly_pt"]     <-     out_sA_prepared[["m.out_summary"]]["qaly_pt","dif"]
+m.sABCDE["A","cost_dxtx"]   <- sum(out_sA_prepared[["m.out_summary"]][c("cost_dx","cost_tx"),"dif"])
+m.sABCDE["A","cost_hcscic"] <- sum(out_sA_prepared[["m.out_summary"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
+m.sABCDE["A","nhb"]         <-     out_sA_prepared[["m.out_summary"]][c("nhb"),"dif"]
+
+m.sABCDE["B","mcimil"]      <- sum(out_sB_prepared[["m.out_summary"]][c("mci","mil"),"dif"])
+m.sABCDE["B","alv"]         <-     out_sB_prepared[["m.out_summary"]]["alv","dif"]
+m.sABCDE["B","qaly_pt"]     <-     out_sB_prepared[["m.out_summary"]]["qaly_pt","dif"]
+m.sABCDE["B","cost_dxtx"]   <- sum(out_sB_prepared[["m.out_summary"]][c("cost_dx","cost_tx"),"dif"])
+m.sABCDE["B","cost_hcscic"] <- sum(out_sB_prepared[["m.out_summary"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
+m.sABCDE["B","nhb"]         <-     out_sB_prepared[["m.out_summary"]][c("nhb"),"dif"]
+
+m.sABCDE["C","mcimil"]      <- sum(out_sC_prepared[["m.out_summary"]][c("mci","mil"),"dif"])
+m.sABCDE["C","alv"]         <-     out_sC_prepared[["m.out_summary"]]["alv","dif"]
+m.sABCDE["C","qaly_pt"]     <-     out_sC_prepared[["m.out_summary"]]["qaly_pt","dif"]
+m.sABCDE["C","cost_dxtx"]   <- sum(out_sC_prepared[["m.out_summary"]][c("cost_dx","cost_tx"),"dif"])
+m.sABCDE["C","cost_hcscic"] <- sum(out_sC_prepared[["m.out_summary"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
+m.sABCDE["C","nhb"]         <-     out_sC_prepared[["m.out_summary"]][c("nhb"),"dif"]
+
+m.sABCDE["D","mcimil"]      <- sum(out_sD_prepared[["m.out_summary"]][c("mci","mil"),"dif"])
+m.sABCDE["D","alv"]         <-     out_sD_prepared[["m.out_summary"]]["alv","dif"]
+m.sABCDE["D","qaly_pt"]     <-     out_sD_prepared[["m.out_summary"]]["qaly_pt","dif"]
+m.sABCDE["D","cost_dxtx"]   <- sum(out_sD_prepared[["m.out_summary"]][c("cost_dx","cost_tx"),"dif"])
+m.sABCDE["D","cost_hcscic"] <- sum(out_sD_prepared[["m.out_summary"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
+m.sABCDE["D","nhb"]         <-     out_sD_prepared[["m.out_summary"]][c("nhb"),"dif"]
+
+m.sABCDE["E","mcimil"]      <- sum(out_sE_prepared[["m.out_summary"]][c("mci","mil"),"dif"])
+m.sABCDE["E","alv"]         <-     out_sE_prepared[["m.out_summary"]]["alv","dif"]
+m.sABCDE["E","qaly_pt"]     <-     out_sE_prepared[["m.out_summary"]]["qaly_pt","dif"]
+m.sABCDE["E","cost_dxtx"]   <- sum(out_sE_prepared[["m.out_summary"]][c("cost_dx","cost_tx"),"dif"])
+m.sABCDE["E","cost_hcscic"] <- sum(out_sE_prepared[["m.out_summary"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
+m.sABCDE["E","nhb"]         <-     out_sE_prepared[["m.out_summary"]][c("nhb"),"dif"]
+
+print(round(m.sABCDE,2))
 
