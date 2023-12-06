@@ -77,3 +77,17 @@ https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.x
 
 ## notes
 
+
+# US_herring_2017 (United States)
+
+## obtained from
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table01.xlsx
+
+## retrieved on
+2023-12-06
+
+## notes
+referred to by Herring et al. [2021: https://doi.org/10.1007/s40120-021-00273-0]. 
+Estimate obtained from Xu et al. [2019: Arias E. United States Life Tables, 2017. Natl Vital Stat Rep. 2019 Jun;68(7):1-66. PMID: 32501200.; https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_07-508.pdf] from table 1 (link to excel as listed above). 
+
+combined estimate (male and female) copied to CSV column for male and female
