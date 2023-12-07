@@ -378,13 +378,14 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       v.p.sev_sev <- 1 - v.p.sev_mil - v.p.sev_mod
       
       # copy for on treatment
+      v.p.mcion_mci <- v.p.mci_mci
       v.p.mcion_mil <- v.p.mci_mil
       v.p.mcion_mod <- v.p.mci_mod
       v.p.mcion_sev <- v.p.mci_sev
       v.p.milon_mci <- v.p.mil_mci
-      v.p.milon_mod <- v.p.mil_mod
-      v.p.mcion_mci <- v.p.mci_mci
       v.p.milon_mil <- v.p.mil_mil
+      v.p.milon_mod <- v.p.mil_mod
+      v.p.milon_sev <- v.p.mil_sev
       
       # discontinuation
       v.p.discontinuation <- rep(x=0, times=n.cycle) # initialize vector
@@ -409,22 +410,26 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         temp.rr.tx_mci_mod <- rr.tx_mci_mod^temp.waning
         temp.rr.tx_mci_sev <- rr.tx_mci_sev^temp.waning
         temp.rr.tx_mil_mod <- rr.tx_mil_mod^temp.waning
+        temp.rr.tx_mil_sev <- rr.tx_mil_sev^temp.waning
         temp.waning_dis <- (1-tx_waning_dis)^(0:(n.cycle-1))
         temp.rr.tx_mci_mil_dis <- rr.tx_mci_mil_dis^temp.waning_dis
         temp.rr.tx_mci_mod_dis <- rr.tx_mci_mod_dis^temp.waning_dis
         temp.rr.tx_mci_sev_dis <- rr.tx_mci_sev_dis^temp.waning_dis
         temp.rr.tx_mil_mod_dis <- rr.tx_mil_mod_dis^temp.waning_dis
+        temp.rr.tx_mil_sev_dis <- rr.tx_mil_sev_dis^temp.waning_dis
         
         # update transition probabilities treatment effect: during treatment
         v.p.mcion_mil <- 1-exp(-(-log(1-p.mci_mil) * temp.rr.tx_mci_mil)) # convert probability to rate, then multiply with treatment relative risk, then convert to probability
         v.p.mcion_mod <- 1-exp(-(-log(1-p.mci_mod) * temp.rr.tx_mci_mod)) # idem
         v.p.mcion_sev <- 1-exp(-(-log(1-p.mci_sev) * temp.rr.tx_mci_sev)) # idem
         v.p.milon_mod <- 1-exp(-(-log(1-p.mil_mod) * temp.rr.tx_mil_mod)) # idem
+        v.p.milon_sev <- 1-exp(-(-log(1-p.mil_sev) * temp.rr.tx_mil_sev)) # idem
         # update transition probabilities treatment effect: after discontinuation
         v.p.mci_mil <- 1-exp(-(-log(1-p.mci_mil) * temp.rr.tx_mci_mil_dis)) # convert probability to rate, then multiply with treatment relative risk, then convert to probability
         v.p.mci_mod <- 1-exp(-(-log(1-p.mci_mod) * temp.rr.tx_mci_mod_dis)) # idem
         v.p.mci_sev <- 1-exp(-(-log(1-p.mci_sev) * temp.rr.tx_mci_sev_dis)) # idem
         v.p.mil_mod <- 1-exp(-(-log(1-p.mil_mod) * temp.rr.tx_mil_mod_dis)) # idem
+        v.p.mil_sev <- 1-exp(-(-log(1-p.mil_sev) * temp.rr.tx_mil_sev_dis)) # idem
         
         # update transition probabilities of remaining in the same state
         v.p.mcion_mci <- 1 - v.p.mcion_mil - v.p.mcion_mod - v.p.mcion_sev
@@ -459,13 +464,14 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         v.p.mil_mil = v.p.mil_mil, 
         v.p.mod_mod = v.p.mod_mod, 
         v.p.sev_sev = v.p.sev_sev, 
+        v.p.mcion_mci = v.p.mcion_mci, 
         v.p.mcion_mil = v.p.mcion_mil, 
         v.p.mcion_mod = v.p.mcion_mod, 
         v.p.mcion_sev = v.p.mcion_sev, 
         v.p.milon_mci = v.p.milon_mci, 
-        v.p.milon_mod = v.p.milon_mod, 
-        v.p.mcion_mci = v.p.mcion_mci, 
         v.p.milon_mil = v.p.milon_mil, 
+        v.p.milon_mod = v.p.milon_mod,
+        v.p.milon_sev = v.p.milon_sev, 
         v.p.discontinuation = v.p.discontinuation, 
         v.r.dth = v.r.dth, 
         m.trace1 = m.trace1
@@ -1203,6 +1209,10 @@ temp.est2
 
 if(T) {
   
+  # U.S. general population life table
+  m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
+  m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
+  
   # input parameters
   l.inputs_icer_m <- list(
     v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
@@ -1225,25 +1235,27 @@ if(T) {
     p.mil_i = 0.038, 
     p.mod_i = 0.110, 
     p.sev_i = 0.259, 
-    m.r.mortality = m.mortality_rate_US, 
+    m.r.mortality = m.mortality_rate_US_2019_sexcombined, 
     hr.mort_mci = 1.82, 
     hr.mort_mil = 2.92, 
     hr.mort_mod = 3.85, 
     hr.mort_sev = 9.52, 
     rr.tx_mci_mil = 0.69, 
-    rr.tx_mci_mod = 1, 
-    rr.tx_mci_sev = 1, 
+    rr.tx_mci_mod = 0.69, 
+    rr.tx_mci_sev = 0.69, 
     rr.tx_mil_mod = 0.69, 
+    rr.tx_mil_sev = 0.69, 
     rr.tx_mci_mil_dis = 1, 
     rr.tx_mci_mod_dis = 1, 
     rr.tx_mci_sev_dis = 1, 
     rr.tx_mil_mod_dis = 1, 
+    rr.tx_mil_sev_dis = 1, 
     p.tx_discontinuation1 = 0.069, 
     p.tx_discontinuation2 = 0, 
-    tx_discontinuation2_begin = 1, 
+    tx_discontinuation2_begin = 2, 
+    tx_duration = 29, 
     tx_waning = 0, 
     tx_waning_dis = 0, 
-    tx_duration = 29, 
     u.mci_pt = 0.851 - 0.17, 
     u.mil_pt = 0.851 - 0.22, 
     u.mod_pt = 0.851 - 0.36, 
@@ -1291,30 +1303,30 @@ if(T) {
     discount_QALY = 0.03, 
     discount_COST = 0.03, 
     wtp = 100000, 
-    half_cycle_correction = FALSE
+    half_cycle_correction = TRUE
   )
-  l.inputs_icer_f <- l.inputs_icer_m
-  l.inputs_icer_f[["sex"]] <- "female"
+  #l.inputs_icer_f <- l.inputs_icer_m
+  #l.inputs_icer_f[["sex"]] <- "female"
   
   # run the model male and female
   l.out_icer_m <- f.run_scenario(l.inputs = l.inputs_icer_m, detailed = TRUE)
-  l.out_icer_f <- f.run_scenario(l.inputs = l.inputs_icer_f, detailed = TRUE)
+  #l.out_icer_f <- f.run_scenario(l.inputs = l.inputs_icer_f, detailed = TRUE)
     
     round(l.out_icer_m$l.out_strategy$int$m.trace,2)
     round(colSums(l.out_icer_m$l.out_strategy$int$m.trace),2)
-    round(colSums(l.out_icer_f$l.out_strategy$int$m.trace),2)
+    #round(colSums(l.out_icer_f$l.out_strategy$int$m.trace),2)
     sum(l.out_icer_m$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost male
-    sum(l.out_icer_f$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost female
+    #sum(l.out_icer_f$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost female
     sum(l.out_icer_m$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
-    sum(l.out_icer_f$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
+    #sum(l.out_icer_f$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
     
     
   # outcomes
   l.out_icer_prep_m <- f.prepare_outcomes(l.out_scenario = l.out_icer_m, n.cycles = 29)
-  l.out_icer_prep_f <- f.prepare_outcomes(l.out_scenario = l.out_icer_f, n.cycles = 29)
-  print(round(l.out_icer_prep_m[["m.out_short"]],1))
-  print(round(l.out_icer_prep_f[["m.out_short"]],1))
-  print(round((l.out_icer_prep_m[["m.out_short"]] + l.out_icer_prep_f[["m.out_short"]])/2,2))
+  #l.out_icer_prep_f <- f.prepare_outcomes(l.out_scenario = l.out_icer_f, n.cycles = 29)
+  print(round(l.out_icer_prep_m[["m.out_short"]],2))
+  #print(round(l.out_icer_prep_f[["m.out_short"]],1))
+  #print(round((l.out_icer_prep_m[["m.out_short"]] + l.out_icer_prep_f[["m.out_short"]])/2,2))
   
   # icer
   icer_m <- calculate_icers(
@@ -1322,13 +1334,13 @@ if(T) {
     effect = l.out_icer_m[["df.out_sum"]][,"QALY"],
     strategies = l.out_icer_m[["df.out_sum"]][,"strategy"]
   )
-  icer_f <- calculate_icers(
-    cost = l.out_icer_f[["df.out_sum"]][,"COST"],
-    effect = l.out_icer_f[["df.out_sum"]][,"QALY"],
-    strategies = l.out_icer_f[["df.out_sum"]][,"strategy"]
-  )
+  #icer_f <- calculate_icers(
+  #  cost = l.out_icer_f[["df.out_sum"]][,"COST"],
+  #  effect = l.out_icer_f[["df.out_sum"]][,"QALY"],
+  #  strategies = l.out_icer_f[["df.out_sum"]][,"strategy"]
+  #)
   print(icer_m)
-  print(icer_f)
+  #print(icer_f)
   
   
   # discount life years
@@ -1350,8 +1362,8 @@ if(T) {
 if(F) {
   
   # U.S. general population life table
-  m.lifetable_US_herring_2017 <- as.matrix(read.csv(file="life_tables/lifetable_US_herring_2017.csv", header=TRUE))[,c("male","female")] # import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
-  m.mortality_rate_US_herring_2017 <- -log(1-(m.lifetable_US_herring_2017)) # convert probability to rate
+  m.lifetable_US_2017_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2017_sexcombined.csv", header=TRUE))[,c("male","female")] # import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
+  m.mortality_rate_US_2017_sexcombined <- -log(1-(m.lifetable_US_2017_sexcombined)) # convert probability to rate
   
   # input parameters
   l.inputs_icer_m <- list(
@@ -1375,7 +1387,7 @@ if(F) {
     p.mil_i = 0, 
     p.mod_i = 0, 
     p.sev_i = 0, 
-    m.r.mortality = m.mortality_rate_US_herring_2017, 
+    m.r.mortality = m.mortality_rate_US_2017_sexcombined, 
     hr.mort_mci = 1.48, 
     hr.mort_verymilddem = 1, 
     hr.mort_mil = 2.84, 
