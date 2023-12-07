@@ -50,10 +50,9 @@ l.inputs <- list(
   p.sev_i = 0.259, 
   m.r.mortality = m.mortality_rate_US, 
   hr.mort_mci = 1, 
-  hr.mort_verymilddem = 1.82, 
-  hr.mort_mil = 1.318, 
-  hr.mort_mod = 2.419, 
-  hr.mort_sev = 4.267, 
+  hr.mort_mil = 1.318 * 1.82, 
+  hr.mort_mod = 2.419 * 1.82, 
+  hr.mort_sev = 4.267 * 1.82, 
   rr.tx_mci_mil = 0.75, 
   rr.tx_mci_mod = 1, 
   rr.tx_mci_sev = 1, 
@@ -62,9 +61,9 @@ l.inputs <- list(
   rr.tx_mci_mod_dis = 1, 
   rr.tx_mci_sev_dis = 1, 
   rr.tx_mil_mod_dis = 0.75, 
-  p.discontinuation1 = 0.1, 
-  p.discontinuation2 = 0.5, 
-  discontinuation2_start = 2, 
+  p.tx_discontinuation1 = 0.1, 
+  p.tx_discontinuation2 = 0.5, 
+  tx_discontinuation2_begin = 2, 
   tx_waning = 0.05, 
   tx_waning_dis = 0.15, 
   tx_duration = 3, 
@@ -85,7 +84,7 @@ l.inputs <- list(
   u.mil_ic_i = -0.036, 
   u.mod_ic_i = -0.07, 
   u.sev_ic_i = -0.086, 
-  u.sideeffect1 = 0, 
+  u.Tx_start = 0, 
   c.mci_hc = 1254 * 12, 
   c.mil_hc = 1471 * 12, 
   c.mod_hc = 1958 * 12, 
@@ -111,7 +110,7 @@ l.inputs <- list(
   c.mod_i_ic = 1420 * 12, 
   c.sev_i_ic = 2377 * 12, 
   c.Tx = 5000, 
-  c.Tx_diagnostics1 = 2000, 
+  c.Tx_start = 2000, 
   discount_EFFECT = 0, 
   discount_QALY = 0.035, 
   discount_COST = 0.035, 
@@ -157,15 +156,15 @@ f.run_strategy <- function(l.inputs) {
     # TP matrix state: to death
     a.TP["mcion","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
     a.TP["mciof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
-    a.TP["milon","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil * hr.mort_verymilddem))
-    a.TP["milof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil * hr.mort_verymilddem))
-    a.TP["mod",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_mod * hr.mort_verymilddem))
-    a.TP["sev",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_sev * hr.mort_verymilddem))
+    a.TP["milon","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
+    a.TP["milof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
+    a.TP["mod",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_mod))
+    a.TP["sev",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_sev))
     a.TP["dth",  "dth",] <- 1
     a.TP["mci_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
-    a.TP["mil_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil * hr.mort_verymilddem))
-    a.TP["mod_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mod * hr.mort_verymilddem))
-    a.TP["sev_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev * hr.mort_verymilddem))
+    a.TP["mil_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
+    a.TP["mod_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mod))
+    a.TP["sev_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev))
     
     # TP matrix state: from mci-on community-setting
     a.TP["mcion","mcion",] <- v.p.mcion_mci * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
@@ -294,8 +293,8 @@ f.run_strategy <- function(l.inputs) {
     
     # add additional outcomes at cycle 1
     if(strat=="int") {
-      m.out[,"cost_dx"][1] <- m.out[,"cost_dx"][1] + c.Tx_diagnostics1
-      m.out[,"qaly_pt"][1] <- m.out[,"qaly_pt"][1] + u.sideeffect1
+      m.out[,"cost_dx"][1] <- m.out[,"cost_dx"][1] + c.Tx_start
+      m.out[,"qaly_pt"][1] <- m.out[,"qaly_pt"][1] + u.Tx_start
     }
     
     # define vector for discounting QALYs and costs (STEP G8: apply discounting)
@@ -389,8 +388,8 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       
       # discontinuation
       v.p.discontinuation <- rep(x=0, times=n.cycle) # initialize vector
-      v.p.discontinuation[1:(discontinuation2_start-1)] <- p.discontinuation1 # discontinuation up to discontinuation2 start cycle
-      v.p.discontinuation[discontinuation2_start:n.cycle] <- p.discontinuation2 # discontinuation at discontinuation2 start cycle onward
+      v.p.discontinuation[1:(tx_discontinuation2_begin-1)] <- p.tx_discontinuation1 # discontinuation up to discontinuation2 start cycle
+      v.p.discontinuation[tx_discontinuation2_begin:n.cycle] <- p.tx_discontinuation2 # discontinuation at discontinuation2 start cycle onward
       v.p.discontinuation[tx_duration:n.cycle] <- 1 # maximum treatment duration implemented as discontinuation
       
       # death (subset mortality table to obtain age- and sex-specific mortality)
@@ -648,9 +647,9 @@ if(F) {
     rr.tx_mci_mod_dis = 1, 
     rr.tx_mci_sev_dis = 1, 
     rr.tx_mil_mod_dis = 1, 
-    p.discontinuation1 = 0, 
-    p.discontinuation2 = 0.1, 
-    discontinuation2_start = 2, 
+    p.tx_discontinuation1 = 0, 
+    p.tx_discontinuation2 = 0.1, 
+    tx_discontinuation2_begin = 2, 
     tx_waning = 0.05, 
     tx_waning_dis = 0, 
     tx_duration = 7, 
@@ -688,7 +687,7 @@ if(F) {
     c.mod_i_ic = 0, 
     c.sev_i_ic = 0, 
     c.Tx = 10000, 
-    c.Tx_diagnostics1 = 2000, 
+    c.Tx_start = 2000, 
     discount_QALY = 0.035, 
     discount_COST = 0.035, 
     wtp = 40000, 
@@ -999,9 +998,9 @@ if(F) {
     p.mil_i = f.p_time(p = l.inputs[["p.mil_i"]], t = t), 
     p.mod_i = f.p_time(p = l.inputs[["p.mod_i"]], t = t), 
     p.sev_i = f.p_time(p = l.inputs[["p.sev_i"]], t = t), 
-    p.discontinuation1 = f.p_time(p = l.inputs[["p.discontinuation1"]], t = t), 
-    p.discontinuation2 = f.p_time(p = l.inputs[["p.discontinuation2"]], t = t), 
-    discontinuation2_start = l.inputs[["discontinuation2_start"]], 
+    p.tx_discontinuation1 = f.p_time(p = l.inputs[["p.tx_discontinuation1"]], t = t), 
+    p.tx_discontinuation2 = f.p_time(p = l.inputs[["p.tx_discontinuation2"]], t = t), 
+    tx_discontinuation2_begin = l.inputs[["tx_discontinuation2_begin"]], 
     m.r.mortality = m.mortality_rate_US_cycle4, 
     hr.mort_mci = 1, 
     hr.mort_verymilddem = 1.82, 
@@ -1053,7 +1052,7 @@ if(F) {
     c.mod_i_ic = l.inputs[["c.mod_ic"]] * t, 
     c.sev_i_ic = l.inputs[["c.sev_ic"]] * t, 
     c.Tx = l.inputs[["c.Tx"]] * t, 
-    c.Tx_diagnostics1 = 2000, 
+    c.Tx_start = 2000, 
     discount_QALY = f.p_time(p = l.inputs[["discount_QALY"]], t = t), 
     discount_COST = f.p_time(p = l.inputs[["discount_COST"]], t = t), 
     wtp = 40000 
@@ -1209,8 +1208,9 @@ if(T) {
     v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
     v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
     age_start = 71, 
-    n.cycle = 29, 
     sex = "male", 
+    p.starting_state_mci = 0.55, 
+    n.cycle = 29, 
     p.mci_mil = 0.23, 
     p.mci_mod = 0, 
     p.mci_sev = 0, 
@@ -1227,7 +1227,6 @@ if(T) {
     p.sev_i = 0.259, 
     m.r.mortality = m.mortality_rate_US, 
     hr.mort_mci = 1.82, 
-    hr.mort_verymilddem = 1, 
     hr.mort_mil = 2.92, 
     hr.mort_mod = 3.85, 
     hr.mort_sev = 9.52, 
@@ -1239,13 +1238,12 @@ if(T) {
     rr.tx_mci_mod_dis = 1, 
     rr.tx_mci_sev_dis = 1, 
     rr.tx_mil_mod_dis = 1, 
-    p.discontinuation1 = 0.069, 
-    p.discontinuation2 = 0, 
-    discontinuation2_start = 2, 
+    p.tx_discontinuation1 = 0.069, 
+    p.tx_discontinuation2 = 0, 
+    tx_discontinuation2_begin = 1, 
     tx_waning = 0, 
     tx_waning_dis = 0, 
     tx_duration = 29, 
-    p.starting_state_mci = 0.55, 
     u.mci_pt = 0.851 - 0.17, 
     u.mil_pt = 0.851 - 0.22, 
     u.mod_pt = 0.851 - 0.36, 
@@ -1262,7 +1260,7 @@ if(T) {
     u.mil_ic_i = -0.05, 
     u.mod_ic_i = -0.08, 
     u.sev_ic_i = -0.10, 
-    u.sideeffect1 = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
+    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
     c.mci_hc = 6042*1.12 +  460, 
     c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
     c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
@@ -1288,7 +1286,7 @@ if(T) {
     c.mod_i_ic = 169*12*32.46*0.44, 
     c.sev_i_ic = 298*12*32.46*0.44, 
     c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
-    c.Tx_diagnostics1 = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
+    c.Tx_start = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
     discount_EFFECT = 0.03, 
     discount_QALY = 0.03, 
     discount_COST = 0.03, 
@@ -1360,8 +1358,9 @@ if(F) {
     v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
     v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
     age_start = 65, 
-    n.cycle = 29, 
     sex = "male", 
+    p.starting_state_mci = 1, 
+    n.cycle = 29, 
     p.mci_mil = 0.232 * 0.727, 
     p.mci_mod = 0.232 * 0.273, 
     p.mci_sev = 0, 
@@ -1390,13 +1389,12 @@ if(F) {
     rr.tx_mci_mod_dis = 1, 
     rr.tx_mci_sev_dis = 1, 
     rr.tx_mil_mod_dis = 1, 
-    p.discontinuation1 = 0, 
-    p.discontinuation2 = 0, 
-    discontinuation2_start = 2, 
+    p.tx_discontinuation1 = 0, 
+    p.tx_discontinuation2 = 0, 
+    tx_discontinuation2_begin = 2, 
     tx_waning = 0, 
     tx_waning_dis = 0, 
     tx_duration = 29, 
-    p.starting_state_mci = 1, 
     u.mci_pt = 0.851 - 0.17, 
     u.mil_pt = 0.851 - 0.22, 
     u.mod_pt = 0.851 - 0.36, 
@@ -1413,7 +1411,7 @@ if(F) {
     u.mil_ic_i = -0.05, 
     u.mod_ic_i = -0.08, 
     u.sev_ic_i = -0.10, 
-    u.sideeffect1 = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
+    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
     c.mci_hc = 6042*1.12 +  460, 
     c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
     c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
@@ -1439,7 +1437,7 @@ if(F) {
     c.mod_i_ic = 169*12*32.46*0.44, 
     c.sev_i_ic = 298*12*32.46*0.44, 
     c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
-    c.Tx_diagnostics1 = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
+    c.Tx_start = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
     discount_EFFECT = 0, 
     discount_QALY = 0.03, 
     discount_COST = 0.03, 
@@ -1501,9 +1499,9 @@ if(F) {
   l.inputs_s_cdrhr[["rr.tx_mil_mod"]] = 0.66
   l.inputs_s_cdrhr[["rr.tx_mci_mil_dis"]] = 0.66
   l.inputs_s_cdrhr[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_s_cdrhr[["p.discontinuation1"]] = 0.069
-  l.inputs_s_cdrhr[["p.discontinuation2"]] = 0
-  l.inputs_s_cdrhr[["discontinuation2_start"]] = 2
+  l.inputs_s_cdrhr[["p.tx_discontinuation1"]] = 0.069
+  l.inputs_s_cdrhr[["p.tx_discontinuation2"]] = 0
+  l.inputs_s_cdrhr[["tx_discontinuation2_begin"]] = 2
   l.inputs_s_cdrhr[["tx_waning"]] = 0
   l.inputs_s_cdrhr[["tx_waning_dis"]] = 0
   l.inputs_s_cdrhr[["tx_duration"]] = 29
@@ -1525,8 +1523,8 @@ if(F) {
   l.inputs_sA <- l.inputs_s_cdrhr
   l.inputs_sA[["rr.tx_mci_mil_dis"]] = 0.66
   l.inputs_sA[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sA[["p.discontinuation2"]] = 0
-  l.inputs_sA[["discontinuation2_start"]] = 2
+  l.inputs_sA[["p.tx_discontinuation2"]] = 0
+  l.inputs_sA[["tx_discontinuation2_begin"]] = 2
   l.inputs_sA[["tx_waning"]] = 0
   l.inputs_sA[["tx_waning_dis"]] = 0
   out_sA <- f.run_scenario(l.inputs = l.inputs_sA, detailed = TRUE)
@@ -1537,8 +1535,8 @@ if(F) {
   l.inputs_sB <- l.inputs_s_cdrhr
   l.inputs_sB[["rr.tx_mci_mil_dis"]] = 0.66
   l.inputs_sB[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sB[["p.discontinuation2"]] = 0
-  l.inputs_sB[["discontinuation2_start"]] = 2
+  l.inputs_sB[["p.tx_discontinuation2"]] = 0
+  l.inputs_sB[["tx_discontinuation2_begin"]] = 2
   l.inputs_sB[["tx_waning"]] = 0.25
   l.inputs_sB[["tx_waning_dis"]] = 0.25
   l.inputs_sB[["tx_duration"]] = 29
@@ -1549,8 +1547,8 @@ if(F) {
   l.inputs_sC <- l.inputs_s_cdrhr
   l.inputs_sC[["rr.tx_mci_mil_dis"]] = 1
   l.inputs_sC[["rr.tx_mil_mod_dis"]] = 1
-  l.inputs_sC[["p.discontinuation2"]] = 1
-  l.inputs_sC[["discontinuation2_start"]] = 2
+  l.inputs_sC[["p.tx_discontinuation2"]] = 1
+  l.inputs_sC[["tx_discontinuation2_begin"]] = 2
   l.inputs_sC[["tx_waning"]] = 0
   l.inputs_sC[["tx_waning_dis"]] = 0
   l.inputs_sC[["tx_duration"]] = 29
@@ -1561,8 +1559,8 @@ if(F) {
   l.inputs_sD <- l.inputs_s_cdrhr
   l.inputs_sD[["rr.tx_mci_mil_dis"]] = 0.66
   l.inputs_sD[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sD[["p.discontinuation2"]] = 1
-  l.inputs_sD[["discontinuation2_start"]] = 2
+  l.inputs_sD[["p.tx_discontinuation2"]] = 1
+  l.inputs_sD[["tx_discontinuation2_begin"]] = 2
   l.inputs_sD[["tx_waning"]] = 0
   l.inputs_sD[["tx_waning_dis"]] = 0
   l.inputs_sD[["tx_duration"]] = 29
@@ -1573,8 +1571,8 @@ if(F) {
   l.inputs_sE <- l.inputs_s_cdrhr
   l.inputs_sE[["rr.tx_mci_mil_dis"]] = 0.66
   l.inputs_sE[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sE[["p.discontinuation2"]] = 1
-  l.inputs_sE[["discontinuation2_start"]] = 2
+  l.inputs_sE[["p.tx_discontinuation2"]] = 1
+  l.inputs_sE[["tx_discontinuation2_begin"]] = 2
   l.inputs_sE[["tx_waning"]] = 0.25
   l.inputs_sE[["tx_waning_dis"]] = 0.25
   l.inputs_sE[["tx_duration"]] = 29
