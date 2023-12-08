@@ -272,7 +272,7 @@ f.run_strategy <- function(l.inputs) {
     
     # primary economic outputs (STEP G6: multiply states with utility and cost estimates)
     m.out[,colnames(m.trace)] <- m.trace
-    m.out[,"ly"]      <- m.trace %*% c(1       , 1       , 1       , 1       , 1       , 1       , 1           , 1           , 1           , 1           , 0) # must match order of states
+    m.out[,"ly"]      <- m.trace %*% c(1       , 1       , 1       , 1       , 1       , 1       , 1           , 1       , 1         , 1         , 0) # must match order of states
     m.out[,"qaly_pt"] <- m.trace %*% c(u.mci_pt, u.mci_pt, u.mil_pt, u.mil_pt, u.mod_pt, u.sev_pt, u.mci_pt_i, u.mil_pt_i, u.mod_pt_i, u.sev_pt_i, 0) # must match order of states
     m.out[,"qaly_ic"] <- m.trace %*% c(u.mci_ic, u.mci_ic, u.mil_ic, u.mil_ic, u.mod_ic, u.sev_ic, u.mci_ic_i, u.mil_ic_i, u.mod_ic_i, u.sev_ic_i, 0) # must match order of states
     m.out[,"cost_dx"] <- 0
@@ -1214,9 +1214,9 @@ if(T) {
   m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
   
   # input parameters
-  l.inputs_icer_m <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
-    v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
+  l.inputs_icer <- list(
+    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
+    v.names_strat = c("soc","int"), 
     age_start = 71, 
     sex = "male", 
     p.starting_state_mci = 0.55, 
@@ -1277,22 +1277,22 @@ if(T) {
     c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
     c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
     c.sev_hc = 6042*1.93 + 1930, 
-    c.mci_sc = 0, 
-    c.mil_sc = 0, 
-    c.mod_sc = 0, 
-    c.sev_sc = 0, 
-    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
-    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic = 169*12*32.46, 
-    c.sev_ic = 298*12*32.46, 
     c.mci_i_hc = 6042*1.12 +  460, 
     c.mil_i_hc = 6042*1.56 +  965 + 0.21*365*0.333, 
     c.mod_i_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
     c.sev_i_hc = 6042*1.93 + 1930, 
+    c.mci_sc = 0, 
+    c.mil_sc = 0, 
+    c.mod_sc = 0, 
+    c.sev_sc = 0, 
     c.mci_i_sc = 7394*12, 
     c.mil_i_sc = 7394*12, 
     c.mod_i_sc = 7394*12, 
     c.sev_i_sc = 7394*12, 
+    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
+    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
+    c.mod_ic = 169*12*32.46, 
+    c.sev_ic = 298*12*32.46, 
     c.mci_i_ic =  69*12*32.46*0.44 + 0.204*0.049*20*52*32.46, 
     c.mil_i_ic = 113*12*32.46*0.44 + 0.112*0.086*20*52*32.46, 
     c.mod_i_ic = 169*12*32.46*0.44, 
@@ -1305,55 +1305,19 @@ if(T) {
     wtp = 100000, 
     half_cycle_correction = TRUE
   )
-  #l.inputs_icer_f <- l.inputs_icer_m
-  #l.inputs_icer_f[["sex"]] <- "female"
   
-  # run the model male and female
-  l.out_icer_m <- f.run_scenario(l.inputs = l.inputs_icer_m, detailed = TRUE)
-  #l.out_icer_f <- f.run_scenario(l.inputs = l.inputs_icer_f, detailed = TRUE)
-    
-    round(l.out_icer_m$l.out_strategy$int$m.trace,2)
-    round(colSums(l.out_icer_m$l.out_strategy$int$m.trace),2)
-    #round(colSums(l.out_icer_f$l.out_strategy$int$m.trace),2)
-    sum(l.out_icer_m$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost male
-    #sum(l.out_icer_f$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost female
-    sum(l.out_icer_m$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
-    #sum(l.out_icer_f$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
-    
-    
-  # outcomes
-  l.out_icer_prep_m <- f.prepare_outcomes(l.out_scenario = l.out_icer_m, n.cycles = 29)
-  #l.out_icer_prep_f <- f.prepare_outcomes(l.out_scenario = l.out_icer_f, n.cycles = 29)
-  print(round(l.out_icer_prep_m[["m.out_short"]],2))
-  #print(round(l.out_icer_prep_f[["m.out_short"]],1))
-  #print(round((l.out_icer_prep_m[["m.out_short"]] + l.out_icer_prep_f[["m.out_short"]])/2,2))
+  # run the model
+  l.out_icer <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
+  # run outcome preparation
+  l.out_icer_prep <- f.prepare_outcomes(l.out_scenario = l.out_icer, n.cycles = 29)
   
-  # icer
-  icer_m <- calculate_icers(
-    cost = l.out_icer_m[["df.out_sum"]][,"COST"],
-    effect = l.out_icer_m[["df.out_sum"]][,"QALY"],
-    strategies = l.out_icer_m[["df.out_sum"]][,"strategy"]
-  )
-  #icer_f <- calculate_icers(
-  #  cost = l.out_icer_f[["df.out_sum"]][,"COST"],
-  #  effect = l.out_icer_f[["df.out_sum"]][,"QALY"],
-  #  strategies = l.out_icer_f[["df.out_sum"]][,"strategy"]
-  #)
-  print(icer_m)
-  #print(icer_f)
+  # outcomes: life years, QALYs, total costs (societal)
+  print(round(l.out_icer_prep[["m.out_short"]],2))
+  # costs intervention
+  sum(l.out_icer_prep[["a.trace"]][,"cost_tx","int"])
+  # ICER
+  calculate_icers(cost = l.out_icer[["df.out_sum"]][,"COST"], effect = l.out_icer[["df.out_sum"]][,"QALY"], strategies = l.out_icer[["df.out_sum"]][,"strategy"])
   
-  
-  # discount life years
-            # TO-DO
-            # ly_soc <- out_base_m[["l.out_strategy"]][["soc"]][["m.out"]][,"ly"]
-            # ly_int <- out_base[["l.out_strategy"]][["int"]][["m.out"]][,"ly"]
-            # v.discount <- 1 / (( 1 + (0.03)) ^ (0:28))
-            # sum(v.discount * ly_soc)
-            # sum(v.discount * ly_int)
-            # 
-            # sum(v.discount * ly_int) - sum(v.discount * ly_soc)
-  
- 
 }
 
 
