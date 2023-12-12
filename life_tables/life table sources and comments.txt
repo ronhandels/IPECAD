@@ -53,6 +53,21 @@ https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/Li
 https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021
 
 
+
+# SE_2019 (Sweden)
+
+## obtained from
+https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/table/tableViewLayout1/
+
+## retrieved on
+2023-12-11
+
+## notes
+https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021. 
+Sex combined by converting probability to rate (both for male and female) (-ln(1-probability)), taking the mean of male and female for each year, convert back to probability (1-exp(-rate)). 
+
+
+
 # UK (United Kingdom)
 
 ## obtained from
