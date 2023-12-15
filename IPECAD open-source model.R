@@ -575,8 +575,8 @@ f.prepare_outcomes <- function(l.out_scenario, n.cycles) {
     m.out_summary[i,"int"] <- sum(a.trace[,i,"int"])
     m.out_summary[i,"soc_within"] <- sum(a.trace[1:2,i,"soc"])
     m.out_summary[i,"int_within"] <- sum(a.trace[1:2,i,"int"])
-    m.out_summary[i,"soc_extrapolate"] <- sum(a.trace[3:29,i,"soc"])
-    m.out_summary[i,"int_extrapolate"] <- sum(a.trace[3:29,i,"int"])
+    m.out_summary[i,"soc_extrapolate"] <- sum(a.trace[3:n.cycles,i,"soc"])
+    m.out_summary[i,"int_extrapolate"] <- sum(a.trace[3:n.cycles,i,"int"])
   }
   
   # add absolute, relative and proportional difference
@@ -1213,6 +1213,10 @@ if(F) {
   m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
   m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
   
+  # # U.S. general population life table
+  # m.lifetable_US_2017_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2017_sexcombined.csv", header=TRUE))[,c("male","female")]
+  # m.mortality_rate_US_2017_sexcombined <- -log(1-(m.lifetable_US_2017_sexcombined))
+  
   # input parameters
   l.inputs_icer <- list(
     v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
@@ -1318,21 +1322,27 @@ if(F) {
   # ICER
   calculate_icers(cost = l.out_icer[["df.out_sum"]][,"COST"], effect = l.out_icer[["df.out_sum"]][,"QALY"], strategies = l.out_icer[["df.out_sum"]][,"strategy"])
   
+  # state trace
+  round(l.out_icer_prep$a.trace[,,"soc"], 4)
+  
 }
 
 
 ######################################## 5.2.5. REPLICATION: HERRING ########################################
 
+
+
 if(F) {
   
+  
   # U.S. general population life table
-  m.lifetable_US_2017_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2017_sexcombined.csv", header=TRUE))[,c("male","female")] # import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
-  m.mortality_rate_US_2017_sexcombined <- -log(1-(m.lifetable_US_2017_sexcombined)) # convert probability to rate
+  m.lifetable_US_2017_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2017_sexcombined.csv", header=TRUE))[,c("male","female")]
+  m.mortality_rate_US_2017_sexcombined <- -log(1-(m.lifetable_US_2017_sexcombined))
   
   # input parameters
-  l.inputs_icer_m <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
-    v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
+  l.inputs_herring <- list(
+    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
+    v.names_strat = c("soc","int"), 
     age_start = 65, 
     sex = "male", 
     p.starting_state_mci = 1, 
@@ -1353,7 +1363,6 @@ if(F) {
     p.sev_i = 0, 
     m.r.mortality = m.mortality_rate_US_2017_sexcombined, 
     hr.mort_mci = 1.48, 
-    hr.mort_verymilddem = 1, 
     hr.mort_mil = 2.84, 
     hr.mort_mod = 2.84, 
     hr.mort_sev = 2.84, 
@@ -1361,16 +1370,18 @@ if(F) {
     rr.tx_mci_mod = 0.69, 
     rr.tx_mci_sev = 0.69, 
     rr.tx_mil_mod = 0.69, 
+    rr.tx_mil_sev = 0.69, 
     rr.tx_mci_mil_dis = 1, 
     rr.tx_mci_mod_dis = 1, 
     rr.tx_mci_sev_dis = 1, 
     rr.tx_mil_mod_dis = 1, 
+    rr.tx_mil_sev_dis = 1, 
     p.tx_discontinuation1 = 0, 
     p.tx_discontinuation2 = 0, 
     tx_discontinuation2_begin = 2, 
+    tx_duration = 29, 
     tx_waning = 0, 
     tx_waning_dis = 0, 
-    tx_duration = 29, 
     u.mci_pt = 0.851 - 0.17, 
     u.mil_pt = 0.851 - 0.22, 
     u.mod_pt = 0.851 - 0.36, 
@@ -1392,22 +1403,22 @@ if(F) {
     c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
     c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
     c.sev_hc = 6042*1.93 + 1930, 
-    c.mci_sc = 0, 
-    c.mil_sc = 0, 
-    c.mod_sc = 0, 
-    c.sev_sc = 0, 
-    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
-    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic = 169*12*32.46, 
-    c.sev_ic = 298*12*32.46, 
     c.mci_i_hc = 6042*1.12 +  460, 
     c.mil_i_hc = 6042*1.56 +  965 + 0.21*365*0.333, 
     c.mod_i_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
     c.sev_i_hc = 6042*1.93 + 1930, 
+    c.mci_sc = 0, 
+    c.mil_sc = 0, 
+    c.mod_sc = 0, 
+    c.sev_sc = 0, 
     c.mci_i_sc = 7394*12, 
     c.mil_i_sc = 7394*12, 
     c.mod_i_sc = 7394*12, 
     c.sev_i_sc = 7394*12, 
+    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
+    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
+    c.mod_ic = 169*12*32.46, 
+    c.sev_ic = 298*12*32.46, 
     c.mci_i_ic =  69*12*32.46*0.44 + 0.204*0.049*20*52*32.46, 
     c.mil_i_ic = 113*12*32.46*0.44 + 0.112*0.086*20*52*32.46, 
     c.mod_i_ic = 169*12*32.46*0.44, 
@@ -1420,45 +1431,30 @@ if(F) {
     wtp = 100000, 
     half_cycle_correction = TRUE
   )
-  l.inputs_icer_f <- l.inputs_icer_m
-  l.inputs_icer_f[["sex"]] <- "female"
   
-  # run the model male and female
-  l.out_icer_m <- f.run_scenario(l.inputs = l.inputs_icer_m, detailed = TRUE)
-  l.out_icer_f <- f.run_scenario(l.inputs = l.inputs_icer_f, detailed = TRUE)
+  # run the model
+  l.out_herring <- f.run_scenario(l.inputs = l.inputs_herring, detailed = TRUE)
+  # run outcome preparation
+  l.out_herring_prep <- f.prepare_outcomes(l.out_scenario = l.out_herring, n.cycles = 29)
   
-  round(l.out_icer_m$l.out_strategy$int$m.trace,2)
-  round(l.out_icer_m$l.out_strategy$soc$m.trace,2)
-  round(colSums(l.out_icer_m$l.out_strategy$int$m.trace),2)
-  round(colSums(l.out_icer_f$l.out_strategy$int$m.trace),2)
-  sum(l.out_icer_m$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost male
-  sum(l.out_icer_f$l.out_strategy$int$m.out[,"cost_tx"]) # treatment cost female
-  sum(l.out_icer_m$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
-  sum(l.out_icer_f$l.out_strategy$int$m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc")]) # health care sector perspective
-  
-  
-  # outcomes
-  l.out_icer_prep_m <- f.prepare_outcomes(l.out_scenario = l.out_icer_m, n.cycles = 29)
-  l.out_icer_prep_f <- f.prepare_outcomes(l.out_scenario = l.out_icer_f, n.cycles = 29)
-  print(round(l.out_icer_prep_m[["m.out_short"]],2))
-  print(round(l.out_icer_prep_f[["m.out_short"]],2))
-  print(round((l.out_icer_prep_m[["m.out_short"]] + l.out_icer_prep_f[["m.out_short"]])/2,2))
+  # outcomes: life years, QALYs, total costs (societal)
+  print(round(l.out_herring_prep[["m.out_short"]],2))
+  # costs intervention
+  sum(l.out_herring_prep[["a.trace"]][,"cost_tx","int"])
+  # ICER
+  calculate_icers(cost = l.out_herring[["df.out_sum"]][,"COST"], effect = l.out_herring[["df.out_sum"]][,"QALY"], strategies = l.out_herring[["df.out_sum"]][,"strategy"])
   
   matplot(
     x=cbind(
-      rowSums(l.out_icer_m$l.out_strategy$soc$m.trace[,c("mcion","mciof")]), 
-      rowSums(l.out_icer_m$l.out_strategy$int$m.trace[,c("mcion","mciof")]), 
-      rowSums(l.out_icer_f$l.out_strategy$soc$m.trace[,c("mcion","mciof")]), 
-      rowSums(l.out_icer_f$l.out_strategy$int$m.trace[,c("mcion","mciof")]), 
-      l.out_icer_m$l.out_strategy$soc$m.trace[,"dth"], 
-      l.out_icer_m$l.out_strategy$int$m.trace[,"dth"], 
-      l.out_icer_f$l.out_strategy$soc$m.trace[,"dth"], 
-      l.out_icer_f$l.out_strategy$int$m.trace[,"dth"] 
-    ), 
-    xlim = c(1,30), ylim = c(0,1), xaxs = "i", yaxs = "i", 
-    type = "l", 
-    lty = c(1,2,1,2,1,2,1,2), 
-    col = c("blue","blue","red","red","black","black","black","black")
+      rowSums(l.out_herring$l.out_strategy$soc$m.trace[,c("mcion","mciof")]),
+      rowSums(l.out_herring$l.out_strategy$int$m.trace[,c("mcion","mciof")]),
+      l.out_herring$l.out_strategy$soc$m.trace[,"dth"],
+      l.out_herring$l.out_strategy$int$m.trace[,"dth"]
+    ),
+    xlim = c(1,30), ylim = c(0,1), xaxs = "i", yaxs = "i",
+    type = "l",
+    lty = c(1,2,1,2),
+    col = c("blue","blue","black","black")
   )
   grid(ny=10)
 }
@@ -1470,8 +1466,10 @@ if(F) {
 if(T) {
   
   # Sweden general population life table
-  m.lifetable_SE_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_SE_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
-  m.mortality_rate_SE_2019_sexcombined <- -log(1-(m.lifetable_SE_2019_sexcombined))
+  m.lifetable_SE_2021 <- as.matrix(read.csv(file="life_tables/lifetable_SE_2021.csv", header=TRUE))[,c("male","female")]
+  m.mortality_rate_SE_2021_sexcombined <- -log(1-(m.lifetable_SE_2021)) # convert to rate
+  m.mortality_rate_SE_2021_sexcombined[,c("male","female")] <- (m.mortality_rate_SE_2021_sexcombined[,"male"] + m.mortality_rate_SE_2021_sexcombined[,"female"])/2
+    #m.mortality_probability_SE_2021_sexcombined <- 1-exp(-m.mortality_rate_SE_2021_sexcombined)
   
   # input parameters
   l.inputs_car <- list(
@@ -1495,7 +1493,7 @@ if(T) {
     p.mil_i = 0, 
     p.mod_i = 0, 
     p.sev_i = 0, 
-    m.r.mortality = m.mortality_rate_SE_2019_sexcombined, 
+    m.r.mortality = m.mortality_rate_SE_2021_sexcombined, 
     hr.mort_mci = 1, 
     hr.mort_mil = 1.82 * 1.318, 
     hr.mort_mod = 1.82 * 2.419, 
