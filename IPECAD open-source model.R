@@ -1276,7 +1276,7 @@ if(F) {
     u.mil_ic_i = -0.05, 
     u.mod_ic_i = -0.08, 
     u.sev_ic_i = -0.10, 
-    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
+    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%)
     c.mci_hc = 6042*1.12 +  460, 
     c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
     c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
@@ -1328,9 +1328,130 @@ if(F) {
 }
 
 
+######################################## 5.2.5. CROSS-VALIDATE: AD-ACE ########################################
+
+if(T) {
+  
+  # U.S. general population life table
+  m.lifetable_US_2016_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2016_sexcombined.csv", header=TRUE))[,c("male","female")]
+  m.mortality_rate_US_2016_sexcombined <- -log(1-(m.lifetable_US_2016_sexcombined))
+  
+  # input parameters
+  l.inputs_icer <- list(
+    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
+    v.names_strat = c("soc","int"), 
+    age_start = 73, 
+    sex = "male", 
+    p.starting_state_mci = 0.446, 
+    n.cycle = 27, 
+    p.mci_mil = 0.23, 
+    p.mci_mod = 0, 
+    p.mci_sev = 0, 
+    p.mil_mci = 0.03, 
+    p.mil_mod = 0.35, 
+    p.mil_sev = 0.04, 
+    p.mod_mil = 0.03, 
+    p.mod_sev = 0.42, 
+    p.sev_mil = 0, 
+    p.sev_mod = 0.02, 
+    p.mci_i = 0.024, 
+    p.mil_i = 0.038, 
+    p.mod_i = 0.110, 
+    p.sev_i = 0.259, 
+    m.r.mortality = m.mortality_rate_US_2016_sexcombined, 
+    hr.mort_mci = 1.82, 
+    hr.mort_mil = 2.92, 
+    hr.mort_mod = 3.85, 
+    hr.mort_sev = 9.52, 
+    rr.tx_mci_mil = 0.69, 
+    rr.tx_mci_mod = 0.69, 
+    rr.tx_mci_sev = 0.69, 
+    rr.tx_mil_mod = 0.69, 
+    rr.tx_mil_sev = 0.69, 
+    rr.tx_mci_mil_dis = 1, 
+    rr.tx_mci_mod_dis = 1, 
+    rr.tx_mci_sev_dis = 1, 
+    rr.tx_mil_mod_dis = 1, 
+    rr.tx_mil_sev_dis = 1, 
+    p.tx_discontinuation1 = 0.069, 
+    p.tx_discontinuation2 = 0, 
+    tx_discontinuation2_begin = 2, 
+    tx_duration = 27, 
+    tx_waning = 0, 
+    tx_waning_dis = 0, 
+    u.mci_pt = 0.851 - 0.17, 
+    u.mil_pt = 0.851 - 0.22, 
+    u.mod_pt = 0.851 - 0.36, 
+    u.sev_pt = 0.851 - 0.53, 
+    u.mci_pt_i = 0.851 - 0.17, 
+    u.mil_pt_i = 0.851 - 0.19, 
+    u.mod_pt_i = 0.851 - 0.42, 
+    u.sev_pt_i = 0.851 - 0.59, 
+    u.mci_ic = -0.03, 
+    u.mil_ic = -0.05, 
+    u.mod_ic = -0.08, 
+    u.sev_ic = -0.10, 
+    u.mci_ic_i = -0.03, 
+    u.mil_ic_i = -0.05, 
+    u.mod_ic_i = -0.08, 
+    u.sev_ic_i = -0.10, 
+    u.Tx_start = -0.14 * (12/52) * 0.22, # disutility ARIA-E multiplied by average duration (12 weeks) multiplied by prevalence ARIA-E (22%)
+    c.mci_hc = 1254*12, 
+    c.mil_hc = 1471*12, 
+    c.mod_hc = 1958*12, 
+    c.sev_hc = 2250*12, 
+    c.mci_i_hc = 1254*12, 
+    c.mil_i_hc = 1471*12, 
+    c.mod_i_hc = 1958*12, 
+    c.sev_i_hc = 2250*12, 
+    c.mci_sc =  222*12, 
+    c.mil_sc =  410*12, 
+    c.mod_sc =  653*12, 
+    c.sev_sc = 1095*12, 
+    c.mci_i_sc = 8762*12, 
+    c.mil_i_sc = 8762*12, 
+    c.mod_i_sc = 8762*12, 
+    c.sev_i_sc = 8762*12, 
+    c.mci_ic = 754*12 +  988*12, # caregiver healthcare + caregiver informal care
+    c.mil_ic = 781*12 + 2184*12, 
+    c.mod_ic = 799*12 + 3227*12, 
+    c.sev_ic = 811*12 + 5402*12, 
+    c.mci_i_ic = 754*12 +  435*12, 
+    c.mil_i_ic = 781*12 +  961*12, 
+    c.mod_i_ic = 799*12 + 1420*12, 
+    c.sev_i_ic = 811*12 + 2377*12, 
+    c.Tx = 26500, 
+    c.Tx_start = 212.14 * 5, # 5x mri in year 1
+    discount_EFFECT = 0.03, 
+    discount_QALY = 0.03, 
+    discount_COST = 0.03, 
+    wtp = 100000, 
+    half_cycle_correction = TRUE
+  )
+  
+  # run the model
+  l.out_icer <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
+  # run outcome preparation
+  l.out_icer_prep <- f.prepare_outcomes(l.out_scenario = l.out_icer, n.cycles = 27)
+  
+  # outcomes: life years, QALYs, total costs (societal)
+  print(round(l.out_icer_prep[["m.out_short"]],2))
+  # costs intervention
+  sum(l.out_icer_prep[["a.trace"]][,"cost_tx","int"])
+  # ICER
+  calculate_icers(cost = l.out_icer[["df.out_sum"]][,"COST"], effect = l.out_icer[["df.out_sum"]][,"QALY"], strategies = l.out_icer[["df.out_sum"]][,"strategy"])
+  
+  # state trace
+  round(l.out_icer_prep$a.trace[,,"soc"], 4)
+  round(l.out_icer_prep$a.trace[,,"int"], 4)
+  
+  sum(l.out_icer_prep$a.trace[,"qaly_ic","soc"])
+  sum(l.out_icer_prep$a.trace[,"qaly_ic","int"]) - sum(l.out_icer_prep$a.trace[,"qaly_ic","soc"])
+  
+}
+
+
 ######################################## 5.2.5. REPLICATION: HERRING ########################################
-
-
 
 if(F) {
   
@@ -1463,7 +1584,7 @@ if(F) {
 
 ######################################## 5.2.7. REPLICATION: CAR ########################################
 
-if(T) {
+if(F) {
   
   # Sweden general population life table
   m.lifetable_SE_2021 <- as.matrix(read.csv(file="life_tables/lifetable_SE_2021.csv", header=TRUE))[,c("male","female")]
