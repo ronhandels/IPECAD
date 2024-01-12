@@ -27,97 +27,204 @@ m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
 
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
-# input parameters per cycle (unless stated otherwise), see readme.md for a short explanation of each input parameter
-l.inputs <- list(
-  v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
-  v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
-  age_start = 70, 
-  sex = "female", 
-  p.starting_state_mci = 1, 
+######################################## 1.2.1. INPUTS: REPLICATION ICER ########################################
+
+# U.S. general population life table
+m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
+m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
+
+# input parameters
+l.inputs_icer <- list(
+  v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+  v.names_strat = c("soc","int"), 
+  age_start = 71, 
+  sex = "male", 
+  p.starting_state_mci = 0.55, 
   n.cycle = 29, 
-  p.mci_mil = 0.248, 
+  p.mci_mil = 0.23, 
   p.mci_mod = 0, 
   p.mci_sev = 0, 
-  p.mil_mci = 0, 
-  p.mil_mod = 0.293, 
-  p.mil_sev = 0.001, 
-  p.mod_mil = 0.087, 
-  p.mod_sev = 0.109, 
-  p.sev_mil = 0.000, 
-  p.sev_mod = 0.196, 
+  p.mil_mci = 0.03, 
+  p.mil_mod = 0.35, 
+  p.mil_sev = 0.04, 
+  p.mod_mil = 0.03, 
+  p.mod_sev = 0.42, 
+  p.sev_mil = 0, 
+  p.sev_mod = 0.02, 
+  p.mci_i = 0.024, 
+  p.mil_i = 0.038, 
+  p.mod_i = 0.110, 
+  p.sev_i = 0.259, 
+  m.r.mortality = m.mortality_rate_US_2019_sexcombined, 
+  hr.mort_mci = 1.82, 
+  hr.mort_mil = 2.92, 
+  hr.mort_mod = 3.85, 
+  hr.mort_sev = 9.52, 
+  rr.tx_mci_mil = 0.69, 
+  rr.tx_mci_mod = 1, 
+  rr.tx_mci_sev = 1, 
+  rr.tx_mil_mod = 0.69, 
+  rr.tx_mil_sev = 0.69, 
+  rr.tx_mci_mil_dis = 1, 
+  rr.tx_mci_mod_dis = 1, 
+  rr.tx_mci_sev_dis = 1, 
+  rr.tx_mil_mod_dis = 1, 
+  rr.tx_mil_sev_dis = 1, 
+  p.tx_discontinuation1 = 0.069, 
+  p.tx_discontinuation2 = 0, 
+  tx_discontinuation2_begin = 2, 
+  tx_duration = 29, 
+  tx_waning = 0, 
+  tx_waning_dis = 0, 
+  u.mci_pt = 0.851 - 0.17, 
+  u.mil_pt = 0.851 - 0.22, 
+  u.mod_pt = 0.851 - 0.36, 
+  u.sev_pt = 0.851 - 0.53, 
+  u.mci_pt_i = 0.851 - 0.17, 
+  u.mil_pt_i = 0.851 - 0.19, 
+  u.mod_pt_i = 0.851 - 0.42, 
+  u.sev_pt_i = 0.851 - 0.59, 
+  u.mci_ic = -0.03, 
+  u.mil_ic = -0.05, 
+  u.mod_ic = -0.08, 
+  u.sev_ic = -0.10, 
+  u.mci_ic_i = -0.03, 
+  u.mil_ic_i = -0.05, 
+  u.mod_ic_i = -0.08, 
+  u.sev_ic_i = -0.10, 
+  u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%)
+  c.mci_hc = 6042*1.12 +  460, 
+  c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
+  c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
+  c.sev_hc = 6042*1.93 + 1930, 
+  c.mci_hc_i = 6042*1.12 +  460, 
+  c.mil_hc_i = 6042*1.56 +  965 + 0.21*365*0.333, 
+  c.mod_hc_i = 6042*1.93 + 1544 + 0.66*365*0.333, 
+  c.sev_hc_i = 6042*1.93 + 1930, 
+  c.mci_sc = 0, 
+  c.mil_sc = 0, 
+  c.mod_sc = 0, 
+  c.sev_sc = 0, 
+  c.mci_sc_i = 7394*12, 
+  c.mil_sc_i = 7394*12, 
+  c.mod_sc_i = 7394*12, 
+  c.sev_sc_i = 7394*12, 
+  c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
+  c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
+  c.mod_ic = 169*12*32.46, 
+  c.sev_ic = 298*12*32.46, 
+  c.mci_ic_i =  69*12*32.46*0.44 + 0.204*0.049*20*52*32.46, 
+  c.mil_ic_i = 113*12*32.46*0.44 + 0.112*0.086*20*52*32.46, 
+  c.mod_ic_i = 169*12*32.46*0.44, 
+  c.sev_ic_i = 298*12*32.46*0.44, 
+  c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
+  c.Tx_start = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
+  discount_EFFECT = 0.03, 
+  discount_QALY = 0.03, 
+  discount_COST = 0.03, 
+  wtp = 100000, 
+  half_cycle_correction = TRUE #TRUE
+)
+
+
+
+######################################## 1.2.1. INPUTS: CROSS-VALIDATION ADACE ########################################
+
+# U.S. general population life table
+m.lifetable_US_2016_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2016_sexcombined.csv", header=TRUE))[,c("male","female")]
+m.mortality_rate_US_2016_sexcombined <- -log(1-(m.lifetable_US_2016_sexcombined))
+
+# input parameters
+l.inputs_adace <- list(
+  v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+  v.names_strat = c("soc","int"), 
+  age_start = 73, 
+  sex = "male", 
+  p.starting_state_mci = 0.446, 
+  n.cycle = 27, 
+  p.mci_mil = 0.23, 
+  p.mci_mod = 0, 
+  p.mci_sev = 0, 
+  p.mil_mci = 0.03, 
+  p.mil_mod = 0.35, 
+  p.mil_sev = 0.04, 
+  p.mod_mil = 0.03, 
+  p.mod_sev = 0.42, 
+  p.sev_mil = 0, 
+  p.sev_mod = 0.02, 
   p.mci_i = 0, 
   p.mil_i = 0.038, 
   p.mod_i = 0.110, 
   p.sev_i = 0.259, 
-  m.r.mortality = m.mortality_rate_US, 
+  m.r.mortality = m.mortality_rate_US_2016_sexcombined, 
   hr.mort_mci = 1, 
-  hr.mort_mil = 1.318 * 1.82, 
-  hr.mort_mod = 2.419 * 1.82, 
-  hr.mort_sev = 4.267 * 1.82, 
-  rr.tx_mci_mil = 0.75, 
+  hr.mort_mil = 2.92, 
+  hr.mort_mod = 3.85, 
+  hr.mort_sev = 9.52, 
+  rr.tx_mci_mil = 0.69, 
   rr.tx_mci_mod = 1, 
   rr.tx_mci_sev = 1, 
-  rr.tx_mil_mod = 0.75, 
-  rr.tx_mil_sev = 1, 
-  rr.tx_mci_mil_dis = 0.75, 
+  rr.tx_mil_mod = 0.69, 
+  rr.tx_mil_sev = 0.69, 
+  rr.tx_mci_mil_dis = 1, 
   rr.tx_mci_mod_dis = 1, 
   rr.tx_mci_sev_dis = 1, 
-  rr.tx_mil_mod_dis = 0.75, 
+  rr.tx_mil_mod_dis = 1, 
   rr.tx_mil_sev_dis = 1, 
-  p.tx_discontinuation1 = 0.1, 
-  p.tx_discontinuation2 = 0.5, 
-  tx_discontinuation2_begin = 2, 
-  tx_duration = 3, 
-  tx_waning = 0.05, 
-  tx_waning_dis = 0.15, 
-  u.mci_pt = 0.73, 
-  u.mil_pt = 0.69, 
-  u.mod_pt = 0.53, 
-  u.sev_pt = 0.38, 
-  u.mci_pt_i = 0.73, 
-  u.mil_pt_i = 0.69, 
-  u.mod_pt_i = 0.53, 
-  u.sev_pt_i = 0.38, 
-  u.mci_ic = 0, 
+  p.tx_discontinuation1 = 0.13, 
+  p.tx_discontinuation2 = 0, 
+  tx_discontinuation2_begin = 27, 
+  tx_duration = 27, 
+  tx_waning = 0, 
+  tx_waning_dis = 0, 
+  u.mci_pt = 0.80, 
+  u.mil_pt = 0.74, 
+  u.mod_pt = 0.59, 
+  u.sev_pt = 0.36, 
+  u.mci_pt_i = 0.80, 
+  u.mil_pt_i = 0.74, 
+  u.mod_pt_i = 0.59, 
+  u.sev_pt_i = 0.36, 
+  u.mci_ic = -0, 
   u.mil_ic = -0.036, 
-  u.mod_ic = -0.07, 
+  u.mod_ic = -0.070, 
   u.sev_ic = -0.086, 
-  u.mci_ic_i = 0, 
+  u.mci_ic_i = -0, 
   u.mil_ic_i = -0.036, 
-  u.mod_ic_i = -0.07, 
+  u.mod_ic_i = -0.070, 
   u.sev_ic_i = -0.086, 
-  u.Tx_start = 0, 
-  c.mci_hc = 1254 * 12, 
-  c.mil_hc = 1471 * 12, 
-  c.mod_hc = 1958 * 12, 
-  c.sev_hc = 2250 * 12, 
-  c.mci_hc_i = 1254 * 12, 
-  c.mil_hc_i = 1471 * 12, 
-  c.mod_hc_i = 1958 * 12, 
-  c.sev_hc_i = 2250 * 12, 
-  c.mci_sc = 222 * 12, 
-  c.mil_sc = 410 * 12, 
-  c.mod_sc = 653 * 12, 
-  c.sev_sc = 1095 * 12, 
-  c.mci_sc_i = 8762 * 12, 
-  c.mil_sc_i = 8762 * 12, 
-  c.mod_sc_i = 8762 * 12, 
-  c.sev_sc_i = 8762 * 12, 
-  c.mci_ic =  988 * 12, 
-  c.mil_ic = 2184 * 12, 
-  c.mod_ic = 3227 * 12, 
-  c.sev_ic = 5402 * 12, 
-  c.mci_ic_i =  435 * 12, 
-  c.mil_ic_i =  961 * 12, 
-  c.mod_ic_i = 1420 * 12, 
-  c.sev_ic_i = 2377 * 12, 
-  c.Tx = 5000, 
-  c.Tx_start = 2000, 
-  discount_EFFECT = 0, 
-  discount_QALY = 0.035, 
-  discount_COST = 0.035, 
-  wtp = 40000, 
-  half_cycle_correction = FALSE
+  u.Tx_start = -0.14 * (12/52) * 0.22, # disutility ARIA-E multiplied by average duration (12 weeks) multiplied by prevalence ARIA-E (22%)
+  c.mci_hc = 1254*12, 
+  c.mil_hc = 1471*12, 
+  c.mod_hc = 1958*12, 
+  c.sev_hc = 2250*12, 
+  c.mci_hc_i = 1254*12, 
+  c.mil_hc_i = 1471*12, 
+  c.mod_hc_i = 1958*12, 
+  c.sev_hc_i = 2250*12, 
+  c.mci_sc =  222*12, 
+  c.mil_sc =  410*12, 
+  c.mod_sc =  653*12, 
+  c.sev_sc = 1095*12, 
+  c.mci_sc_i = 8762*12, 
+  c.mil_sc_i = 8762*12, 
+  c.mod_sc_i = 8762*12, 
+  c.sev_sc_i = 8762*12, 
+  c.mci_ic = 754*12 +  988*12, # caregiver healthcare + caregiver informal care
+  c.mil_ic = 781*12 + 2184*12, 
+  c.mod_ic = 799*12 + 3227*12, 
+  c.sev_ic = 811*12 + 5402*12, 
+  c.mci_ic_i = 754*12 +  435*12, 
+  c.mil_ic_i = 781*12 +  961*12, 
+  c.mod_ic_i = 799*12 + 1420*12, 
+  c.sev_ic_i = 811*12 + 2377*12, 
+  c.Tx = 26500, 
+  c.Tx_start = 212.14 * 5, # 5x mri in year 1
+  discount_EFFECT = 0.03, 
+  discount_QALY = 0.03, 
+  discount_COST = 0.03, 
+  wtp = 100000, 
+  half_cycle_correction = TRUE
 )
 
 
@@ -156,99 +263,99 @@ f.run_strategy <- function(l.inputs) {
     a.TP <- array(data = 0, dim = c(n.state, n.state, n.cycle), dimnames = list(v.names_state,v.names_state,NULL))
     
     # TP matrix state: to death
-    a.TP["mcion","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
-    a.TP["mciof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
-    a.TP["milon","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
-    a.TP["milof","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
-    a.TP["mod",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_mod))
-    a.TP["sev",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_sev))
-    a.TP["dth",  "dth",] <- 1
-    a.TP["mci_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
-    a.TP["mil_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
-    a.TP["mod_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_mod))
-    a.TP["sev_i","dth",] <- 1-exp(-(v.r.dth * hr.mort_sev))
+    a.TP["mcion_c","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
+    a.TP["mciof_c","dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
+    a.TP["milon_c","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
+    a.TP["milof_c","dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
+    a.TP["mod_c",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_mod))
+    a.TP["sev_c",  "dth",] <- 1-exp(-(v.r.dth * hr.mort_sev))
+    a.TP["dth"  ,  "dth",] <- 1
+    a.TP["mci_i"  ,"dth",] <- 1-exp(-(v.r.dth * hr.mort_mci))
+    a.TP["mil_i"  ,"dth",] <- 1-exp(-(v.r.dth * hr.mort_mil))
+    a.TP["mod_i"  ,"dth",] <- 1-exp(-(v.r.dth * hr.mort_mod))
+    a.TP["sev_i"  ,"dth",] <- 1-exp(-(v.r.dth * hr.mort_sev))
     
     # TP matrix state: from mci-on community-setting
-    a.TP["mcion","mcion",] <- v.p.mcion_mci * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mciof",] <- v.p.mcion_mci * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
-    a.TP["mcion","milon",] <- v.p.mcion_mil * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion","dth",])
-    a.TP["mcion","milof",] <- v.p.mcion_mil * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mod",]   <- v.p.mcion_mod * (1-p.mci_i)                           * (1-a.TP["mcion","dth",])
-    a.TP["mcion","sev",]   <- v.p.mcion_sev * (1-p.mci_i)                           * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mci_i",] <- v.p.mcion_mci *    p.mci_i                            * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mil_i",] <- v.p.mcion_mil *    p.mci_i                            * (1-a.TP["mcion","dth",])
-    a.TP["mcion","mod_i",] <- v.p.mcion_mod *    p.mci_i                            * (1-a.TP["mcion","dth",])
-    a.TP["mcion","sev_i",] <- v.p.mcion_sev *    p.mci_i                            * (1-a.TP["mcion","dth",])
+    a.TP["mcion_c","mcion_c",] <- v.p.mcion_mci * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","mciof_c",] <- v.p.mcion_mci * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","milon_c",] <- v.p.mcion_mil * (1-p.mci_i) * (1-v.p.discontinuation) * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","milof_c",] <- v.p.mcion_mil * (1-p.mci_i) *    v.p.discontinuation  * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","mod_c",]   <- v.p.mcion_mod * (1-p.mci_i)                           * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","sev_c",]   <- v.p.mcion_sev * (1-p.mci_i)                           * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","mci_i",]   <- v.p.mcion_mci *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","mil_i",]   <- v.p.mcion_mil *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","mod_i",]   <- v.p.mcion_mod *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
+    a.TP["mcion_c","sev_i",]   <- v.p.mcion_sev *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
 
     # TP matrix state: from mci-off community-setting
-    a.TP["mciof","mciof",] <- v.p.mci_mci   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","milof",] <- v.p.mci_mil   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mod",]   <- v.p.mci_mod   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","sev",]   <- v.p.mci_sev   * (1-p.mci_i)                           * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mci_i",] <- v.p.mci_mci   *    p.mci_i                            * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mil_i",] <- v.p.mci_mil   *    p.mci_i                            * (1-a.TP["mciof","dth",])
-    a.TP["mciof","mod_i",] <- v.p.mci_mod   *    p.mci_i                            * (1-a.TP["mciof","dth",])
-    a.TP["mciof","sev_i",] <- v.p.mci_sev   *    p.mci_i                            * (1-a.TP["mciof","dth",])
+    a.TP["mciof_c","mciof_c",] <- v.p.mci_mci   * (1-p.mci_i)                           * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","milof_c",] <- v.p.mci_mil   * (1-p.mci_i)                           * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","mod_c",]   <- v.p.mci_mod   * (1-p.mci_i)                           * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","sev_c",]   <- v.p.mci_sev   * (1-p.mci_i)                           * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","mci_i",]   <- v.p.mci_mci   *    p.mci_i                            * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","mil_i",]   <- v.p.mci_mil   *    p.mci_i                            * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","mod_i",]   <- v.p.mci_mod   *    p.mci_i                            * (1-a.TP["mciof_c","dth",])
+    a.TP["mciof_c","sev_i",]   <- v.p.mci_sev   *    p.mci_i                            * (1-a.TP["mciof_c","dth",])
     
     # TP matrix state: from mild-on community-setting
-    a.TP["milon","mcion",] <- v.p.milon_mci * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
-    a.TP["milon","mciof",] <- v.p.milon_mci * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
-    a.TP["milon","milon",] <- v.p.milon_mil * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon","dth",])
-    a.TP["milon","milof",] <- v.p.milon_mil * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon","dth",])
-    a.TP["milon","mod",]   <- v.p.milon_mod * (1-p.mil_i)                           * (1-a.TP["milon","dth",])
-    a.TP["milon","sev",]   <- v.p.milon_sev   * (1-p.mil_i)                           * (1-a.TP["milon","dth",])
-    a.TP["milon","mci_i",] <- v.p.milon_mci *    p.mil_i                            * (1-a.TP["milon","dth",])
-    a.TP["milon","mil_i",] <- v.p.milon_mil *    p.mil_i                            * (1-a.TP["milon","dth",])
-    a.TP["milon","mod_i",] <- v.p.milon_mod *    p.mil_i                            * (1-a.TP["milon","dth",])
-    a.TP["milon","sev_i",] <- v.p.milon_sev   *    p.mil_i                            * (1-a.TP["milon","dth",])
+    a.TP["milon_c","mcion_c",] <- v.p.milon_mci * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","mciof_c",] <- v.p.milon_mci * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","milon_c",] <- v.p.milon_mil * (1-p.mil_i) * (1-v.p.discontinuation) * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","milof_c",] <- v.p.milon_mil * (1-p.mil_i) *    v.p.discontinuation  * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","mod_c",]   <- v.p.milon_mod * (1-p.mil_i)                           * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","sev_c",]   <- v.p.milon_sev * (1-p.mil_i)                           * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","mci_i",]   <- v.p.milon_mci *    p.mil_i                            * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","mil_i",]   <- v.p.milon_mil *    p.mil_i                            * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","mod_i",]   <- v.p.milon_mod *    p.mil_i                            * (1-a.TP["milon_c","dth",])
+    a.TP["milon_c","sev_i",]   <- v.p.milon_sev *    p.mil_i                            * (1-a.TP["milon_c","dth",])
     
     # TP matrix state: from mild-off community-setting
-    a.TP["milof","mciof",] <- v.p.mil_mci   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","milof",] <- v.p.mil_mil   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","mod",]   <- v.p.mil_mod   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","sev",]   <- v.p.mil_sev   * (1-p.mil_i)                           * (1-a.TP["milof","dth",])
-    a.TP["milof","mci_i",] <- v.p.mil_mci   *    p.mil_i                            * (1-a.TP["milof","dth",])
-    a.TP["milof","mil_i",] <- v.p.mil_mil   *    p.mil_i                            * (1-a.TP["milof","dth",])
-    a.TP["milof","mod_i",] <- v.p.mil_mod   *    p.mil_i                            * (1-a.TP["milof","dth",])
-    a.TP["milof","sev_i",] <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milof","dth",])
+    a.TP["milof_c","mciof_c",] <- v.p.mil_mci   * (1-p.mil_i)                           * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","milof_c",] <- v.p.mil_mil   * (1-p.mil_i)                           * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","mod_c",]   <- v.p.mil_mod   * (1-p.mil_i)                           * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","sev_c",]   <- v.p.mil_sev   * (1-p.mil_i)                           * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","mci_i",]   <- v.p.mil_mci   *    p.mil_i                            * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","mil_i",]   <- v.p.mil_mil   *    p.mil_i                            * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","mod_i",]   <- v.p.mil_mod   *    p.mil_i                            * (1-a.TP["milof_c","dth",])
+    a.TP["milof_c","sev_i",]   <- v.p.mil_sev   *    p.mil_i                            * (1-a.TP["milof_c","dth",])
     
     # TP matrix state: from moderate community-setting
-    a.TP["mod","milof",] <- v.p.mod_mil     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
-    a.TP["mod","mod",]   <- v.p.mod_mod     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
-    a.TP["mod","sev",]   <- v.p.mod_sev     * (1-p.mod_i)                           * (1-a.TP["mod","dth",])
-    a.TP["mod","mil_i",] <- v.p.mod_mil     *    p.mod_i                            * (1-a.TP["mod","dth",])
-    a.TP["mod","mod_i",] <- v.p.mod_mod     *    p.mod_i                            * (1-a.TP["mod","dth",])
-    a.TP["mod","sev_i",] <- v.p.mod_sev     *    p.mod_i                            * (1-a.TP["mod","dth",])
+    a.TP["mod_c","milof_c",] <- v.p.mod_mil     * (1-p.mod_i)                           * (1-a.TP["mod_c","dth",])
+    a.TP["mod_c","mod_c",]   <- v.p.mod_mod     * (1-p.mod_i)                           * (1-a.TP["mod_c","dth",])
+    a.TP["mod_c","sev_c",]   <- v.p.mod_sev     * (1-p.mod_i)                           * (1-a.TP["mod_c","dth",])
+    a.TP["mod_c","mil_i",]   <- v.p.mod_mil     *    p.mod_i                            * (1-a.TP["mod_c","dth",])
+    a.TP["mod_c","mod_i",]   <- v.p.mod_mod     *    p.mod_i                            * (1-a.TP["mod_c","dth",])
+    a.TP["mod_c","sev_i",]   <- v.p.mod_sev     *    p.mod_i                            * (1-a.TP["mod_c","dth",])
     
     # TP matrix state: from severe community-setting
-    a.TP["sev","milof",] <- v.p.sev_mil     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
-    a.TP["sev","mod",]   <- v.p.sev_mod     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
-    a.TP["sev","sev",]   <- v.p.sev_sev     * (1-p.sev_i)                           * (1-a.TP["sev","dth",])
-    a.TP["sev","mil_i",] <- v.p.sev_mil     *    p.sev_i                            * (1-a.TP["sev","dth",])
-    a.TP["sev","mod_i",] <- v.p.sev_mod     *    p.sev_i                            * (1-a.TP["sev","dth",])
-    a.TP["sev","sev_i",] <- v.p.sev_sev     *    p.sev_i                            * (1-a.TP["sev","dth",])
+    a.TP["sev_c","milof_c",] <- v.p.sev_mil     * (1-p.sev_i)                           * (1-a.TP["sev_c","dth",])
+    a.TP["sev_c","mod_c",]   <- v.p.sev_mod     * (1-p.sev_i)                           * (1-a.TP["sev_c","dth",])
+    a.TP["sev_c","sev_c",]   <- v.p.sev_sev     * (1-p.sev_i)                           * (1-a.TP["sev_c","dth",])
+    a.TP["sev_c","mil_i",]   <- v.p.sev_mil     *    p.sev_i                            * (1-a.TP["sev_c","dth",])
+    a.TP["sev_c","mod_i",]   <- v.p.sev_mod     *    p.sev_i                            * (1-a.TP["sev_c","dth",])
+    a.TP["sev_c","sev_i",]   <- v.p.sev_sev     *    p.sev_i                            * (1-a.TP["sev_c","dth",])
 
     # TP matrix state: from mci institutionalized-setting
-    a.TP["mci_i","mci_i",] <- v.p.mci_mci                                           * (1-a.TP["mci_i","dth",])
-    a.TP["mci_i","mil_i",] <- v.p.mci_mil                                           * (1-a.TP["mci_i","dth",])
-    a.TP["mci_i","mod_i",] <- v.p.mci_mod                                           * (1-a.TP["mci_i","dth",])
-    a.TP["mci_i","sev_i",] <- v.p.mci_sev                                           * (1-a.TP["mci_i","dth",])
+    a.TP["mci_i","mci_i",] <- v.p.mci_mci                                               * (1-a.TP["mci_i","dth",])
+    a.TP["mci_i","mil_i",] <- v.p.mci_mil                                               * (1-a.TP["mci_i","dth",])
+    a.TP["mci_i","mod_i",] <- v.p.mci_mod                                               * (1-a.TP["mci_i","dth",])
+    a.TP["mci_i","sev_i",] <- v.p.mci_sev                                               * (1-a.TP["mci_i","dth",])
   
     # TP matrix state: from mild institutionalized-setting
-    a.TP["mil_i","mci_i",] <- v.p.mil_mci                                           * (1-a.TP["mil_i","dth",])
-    a.TP["mil_i","mil_i",] <- v.p.mil_mil                                           * (1-a.TP["mil_i","dth",])
-    a.TP["mil_i","mod_i",] <- v.p.mil_mod                                           * (1-a.TP["mil_i","dth",])
-    a.TP["mil_i","sev_i",] <- v.p.mil_sev                                           * (1-a.TP["mil_i","dth",])
+    a.TP["mil_i","mci_i",] <- v.p.mil_mci                                               * (1-a.TP["mil_i","dth",])
+    a.TP["mil_i","mil_i",] <- v.p.mil_mil                                               * (1-a.TP["mil_i","dth",])
+    a.TP["mil_i","mod_i",] <- v.p.mil_mod                                               * (1-a.TP["mil_i","dth",])
+    a.TP["mil_i","sev_i",] <- v.p.mil_sev                                               * (1-a.TP["mil_i","dth",])
     
     # TP matrix state: from moderate institutionalized-setting
-    a.TP["mod_i","mil_i",] <- v.p.mod_mil                                           * (1-a.TP["mod_i","dth",])
-    a.TP["mod_i","mod_i",] <- v.p.mod_mod                                           * (1-a.TP["mod_i","dth",])
-    a.TP["mod_i","sev_i",] <- v.p.mod_sev                                           * (1-a.TP["mod_i","dth",])
+    a.TP["mod_i","mil_i",] <- v.p.mod_mil                                               * (1-a.TP["mod_i","dth",])
+    a.TP["mod_i","mod_i",] <- v.p.mod_mod                                               * (1-a.TP["mod_i","dth",])
+    a.TP["mod_i","sev_i",] <- v.p.mod_sev                                               * (1-a.TP["mod_i","dth",])
     
     # TP matrix state: from severe institutionalized-setting
-    a.TP["sev_i","mil_i",] <- v.p.sev_mil                                           * (1-a.TP["sev_i","dth",])
-    a.TP["sev_i","mod_i",] <- v.p.sev_mod                                           * (1-a.TP["sev_i","dth",])
-    a.TP["sev_i","sev_i",] <- v.p.sev_sev                                           * (1-a.TP["sev_i","dth",])  
+    a.TP["sev_i","mil_i",] <- v.p.sev_mil                                               * (1-a.TP["sev_i","dth",])
+    a.TP["sev_i","mod_i",] <- v.p.sev_mod                                               * (1-a.TP["sev_i","dth",])
+    a.TP["sev_i","sev_i",] <- v.p.sev_sev                                               * (1-a.TP["sev_i","dth",])  
     
     # check TPs sum to 1 for each cycle (STEP G2: some checks)
     for(i in v.names_state) {
@@ -262,7 +369,7 @@ f.run_strategy <- function(l.inputs) {
     m.trace <- matrix(data = NA, nrow = n.cycle, ncol = n.state, dimnames = list(NULL,v.names_state))
     
     # initialize output table
-    m.out <- matrix(data = NA, nrow = n.cycle, ncol = 22, dimnames = list(NULL, c(colnames(m.trace),"qaly_pt","qaly_ic","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic","cost","ly","nhb")))
+    m.out <- matrix(data = NA, nrow = n.cycle, ncol = 29, dimnames = list(NULL, c(colnames(m.trace),"qaly_pt","qaly_ic","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic","mci","mil","mod","sev","commun","instit","ontx","ly","qaly","cost","nhb")))
     
     # set starting state distribution (STEP G4: starting state)
     m.trace[1,] <- m.trace1
@@ -274,7 +381,6 @@ f.run_strategy <- function(l.inputs) {
     
     # primary economic outputs (STEP G6: multiply states with utility and cost estimates)
     m.out[,colnames(m.trace)] <- m.trace
-    m.out[,"ly"]      <- m.trace %*% c(1       , 1       , 1       , 1       , 1       , 1       , 1           , 1       , 1         , 1         , 0) # must match order of states
     m.out[,"qaly_pt"] <- m.trace %*% c(u.mci_pt, u.mci_pt, u.mil_pt, u.mil_pt, u.mod_pt, u.sev_pt, u.mci_pt_i, u.mil_pt_i, u.mod_pt_i, u.sev_pt_i, 0) # must match order of states
     m.out[,"qaly_ic"] <- m.trace %*% c(u.mci_ic, u.mci_ic, u.mil_ic, u.mil_ic, u.mod_ic, u.sev_ic, u.mci_ic_i, u.mil_ic_i, u.mod_ic_i, u.sev_ic_i, 0) # must match order of states
     m.out[,"cost_dx"] <- 0
@@ -290,8 +396,8 @@ f.run_strategy <- function(l.inputs) {
           m.out[i,j]   <- (m.out[i,j]   + m.out[i+1,j])   * 0.5
         }
       }
+      m.out <- m.out[-n.cycle,]
     }
-    m.out[n.cycle,] <- 0
     
     # add additional outcomes at cycle 1
     if(strat=="int") {
@@ -300,12 +406,13 @@ f.run_strategy <- function(l.inputs) {
     }
     
     # define vector for discounting QALYs and costs (STEP G8: apply discounting)
-    v.discount_EFFECT <- 1 / (( 1 + (discount_EFFECT)) ^ (0 : (n.cycle-1)))
-    v.discount_QALY <- 1 / (( 1 + (discount_QALY)) ^ (0 : (n.cycle-1)))
-    v.discount_COST <- 1 / (( 1 + (discount_COST)) ^ (0 : (n.cycle-1)))
+    n <- ifelse(test=half_cycle_correction, yes=2, no=1)
+    v.discount_EFFECT <- 1 / (( 1 + (discount_EFFECT)) ^ (0 : (n.cycle-n)))
+    v.discount_QALY   <- 1 / (( 1 + (discount_QALY))   ^ (0 : (n.cycle-n)))
+    v.discount_COST   <- 1 / (( 1 + (discount_COST))   ^ (0 : (n.cycle-n)))
     
     # apply discounting
-    for(i in colnames(m.trace)) {
+    for(i in c(colnames(m.trace),"ly")) {
       m.out[,i] <- m.out[,i]*v.discount_EFFECT
     }
     for(i in c("qaly_pt","qaly_ic")) {
@@ -316,8 +423,17 @@ f.run_strategy <- function(l.inputs) {
     }
     
     # totals
+    m.out[,"mci"] <- rowSums(m.out[,c("mcion_c","mciof_c","mci_i")])
+    m.out[,"mil"] <- rowSums(m.out[,c("milon_c","milof_c","mil_i")])
+    m.out[,"mod"] <- rowSums(m.out[,c("mod_c","mod_i")])
+    m.out[,"sev"] <- rowSums(m.out[,c("sev_c","sev_i")])
+    m.out[,"commun"] <- rowSums(m.out[,c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c")])
+    m.out[,"instit"] <- rowSums(m.out[,c("mci_i","mil_i","mod_i","sev_i")])
+    m.out[,"ontx"] <- rowSums(m.out[,c("mcion_c","milon_c")])
     m.out[,"qaly"] <- rowSums(m.out[,c("qaly_pt","qaly_ic")])
     m.out[,"cost"] <- rowSums(m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")])
+    m.out[,"ly"] <- rowSums(m.out[,c("mci","mil","mod","sev")])
+    
     
     # calculate net health benefit
     m.out[,"nhb"] <- m.out[,"qaly"] - (m.out[,"cost"] / wtp)
@@ -344,7 +460,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
     n.state <- length(v.names_state) # number of states
     n.strat <- length(v.names_strat) # number of strategies
 
-    # initialize output matrix (create an empty dataframe to store outcomes of a scenario)
+    # initialize output dataframe (create an empty dataframe to store outcomes of a scenario)
     df.out <- data.frame(
       strategy = v.names_strat,
       QALY = numeric(n.strat),
@@ -400,8 +516,8 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       
       # starting states
       m.trace1 <- matrix(data=0, nrow=1, ncol=n.state, dimnames=list(NULL,v.names_state))
-      m.trace1[,"mciof"] <- p.starting_state_mci
-      m.trace1[,"milof"] <- 1-p.starting_state_mci
+      m.trace1[,"mciof_c"] <- p.starting_state_mci
+      m.trace1[,"milof_c"] <- 1-p.starting_state_mci
       
       # strategy-specific inputs (STEP E: run preparations specific for the intervention strategy)
       if(strat=="int") {
@@ -441,8 +557,8 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         
         # starting states
         m.trace1 <- matrix(data=0, nrow=1, ncol=n.state, dimnames=list(NULL,v.names_state))
-        m.trace1[,"mcion"] <- p.starting_state_mci
-        m.trace1[,"milon"] <- 1-p.starting_state_mci
+        m.trace1[,"mcion_c"] <- p.starting_state_mci
+        m.trace1[,"milon_c"] <- 1-p.starting_state_mci
         
       }
       
@@ -512,73 +628,30 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 2.3. PREPARE RESULTS ########################################
 
-f.result <- function(l.out_scenario, n.cycles) {
-
-  # trace with aggregated results
-  m.result_soc <- cbind(
-    mci     = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("mcion","mciof","mci_i")]), 
-    mil     = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("milon","milof","mil_i")]), 
-    mod     = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("mod","mod_i")]), 
-    sev     = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("sev","sev_i")]), 
-    alv     = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i")]), 
-    dth     =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("dth")], 
-    home    = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
-    instit  = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
-    ontx    = rowSums(l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("mcion","milon")]), 
-    qaly_pt =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("qaly_pt")], 
-    qaly_ic =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("qaly_ic")], 
-    qaly    =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("qaly")], 
-    cost_dx =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("cost_dx")], 
-    cost_tx =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("cost_tx")], 
-    cost_hc =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("cost_hc")], 
-    cost_sc =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("cost_sc")], 
-    cost_ic =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("cost_ic")], 
-    cost    =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("cost")], 
-    nhb     =         l.out_scenario[["l.out"]][["soc"]][["m.out"]][,c("nhb")]
-  )
-  m.out_int <- cbind(
-    mci     = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("mcion","mciof","mci_i")]), 
-    mil     = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("milon","milof","mil_i")]), 
-    mod     = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("mod","mod_i")]), 
-    sev     = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("sev","sev_i")]), 
-    alv     = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i")]), 
-    dth     =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("dth")], 
-    home    = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("mcion","mciof","milon","milof","mod","sev")]), 
-    instit  = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("mci_i","mil_i","mod_i","sev_i")]), 
-    ontx    = rowSums(l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("mcion","milon")]), 
-    qaly_pt =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("qaly_pt")], 
-    qaly_ic =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("qaly_ic")], 
-    qaly    =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("qaly")], 
-    cost_dx =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("cost_dx")], 
-    cost_tx =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("cost_tx")], 
-    cost_hc =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("cost_hc")], 
-    cost_sc =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("cost_sc")], 
-    cost_ic =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("cost_ic")], 
-    cost    =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("cost")], 
-    nhb     =         l.out_scenario[["l.out"]][["int"]][["m.out"]][,c("nhb")]
-  )
-  a.result <- array(data=c(m.result_soc,m.out_int), dim=c(nrow(m.result_soc),ncol(m.result_soc),2), dimnames=list(NULL,colnames(m.result_soc),c("soc","int")))
+f.result <- function(l.out_scenario, within) {
+  
+  m.out_soc <- l.out_scenario$l.out$soc$m.out
+  m.out_int <- l.out_scenario$l.out$int$m.out
   
   # initialize matrix for summary outcomes
   m.result <- matrix(
     data = NA, 
-    nrow = ncol(m.result_soc), 
+    nrow = ncol(m.out_soc), 
     ncol = 11, 
     dimnames = list(
-      colnames(m.result_soc),
+      colnames(m.out_soc),
       c("soc","int","dif","dif_relative","soc_within","int_within","soc_extrapolate","int_extrapolate","dif_within","dif_extrapolate","dif_p_extrapolate")
     )
   )
-  m.result
-  
+
   # fill matrix
-  for(i in colnames(m.result_soc)) {
-    m.result[i,"soc"] <- sum(a.result[,i,"soc"])
-    m.result[i,"int"] <- sum(a.result[,i,"int"])
-    m.result[i,"soc_within"] <- sum(a.result[1:2,i,"soc"])
-    m.result[i,"int_within"] <- sum(a.result[1:2,i,"int"])
-    m.result[i,"soc_extrapolate"] <- sum(a.result[3:n.cycles,i,"soc"])
-    m.result[i,"int_extrapolate"] <- sum(a.result[3:n.cycles,i,"int"])
+  for(i in rownames(m.result)) {
+    m.result[i,"soc"] <- sum(m.out_soc[,i])
+    m.result[i,"int"] <- sum(m.out_int[,i])
+    m.result[i,"soc_within"] <- sum(m.out_soc[1:within,i])
+    m.result[i,"int_within"] <- sum(m.out_int[1:within,i])
+    m.result[i,"soc_extrapolate"] <- sum(m.out_soc[(within+1):nrow(m.out_soc),i])
+    m.result[i,"int_extrapolate"] <- sum(m.out_int[(within+1):nrow(m.out_soc),i])
   }
   
   # add absolute, relative and proportional difference
@@ -589,22 +662,10 @@ f.result <- function(l.out_scenario, n.cycles) {
   m.result[,"dif_extrapolate"] <- m.result[,"int_extrapolate"] - m.result[,"soc_extrapolate"]
   m.result[,"dif_p_extrapolate"] <- m.result[,"dif_extrapolate"] / m.result[,"dif"]
   round(m.result, digits=2)
-    # proportional difference is invalid for outcomes with negative values
-  
-  # short outcomes
-  m.resultselect <- matrix(data=NA, nrow=11, ncol=3, dimnames=list(c("mci","mil","mod","sev","alv","home","instit","ontx","cost","qaly","nhb"),c("soc","int","dif")))
-  for(i in rownames(m.resultselect)) {
-    m.resultselect[i,"soc"] <- sum(a.result[1:n.cycles,i,"soc"])
-    m.resultselect[i,"int"] <- sum(a.result[1:n.cycles,i,"int"])
-  }
-  m.resultselect[,"dif"] <- m.resultselect[,"int"] - m.resultselect[,"soc"]
+    # note: proportional difference is invalid for outcomes with negative values
   
   # return
-  return(list(
-    a.result = a.result, 
-    m.result = m.result, 
-    m.resultselect = m.resultselect
-  ))
+  return(m.result)
   
 }
 
@@ -729,310 +790,183 @@ if(F) {
 
 if(T) {
   
-  # U.S. general population life table
-  m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
-  m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
-  
-  # # U.S. general population life table
-  # m.lifetable_US_2017_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2017_sexcombined.csv", header=TRUE))[,c("male","female")]
-  # m.mortality_rate_US_2017_sexcombined <- -log(1-(m.lifetable_US_2017_sexcombined))
-  
-  # input parameters
-  l.inputs_icer <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
-    v.names_strat = c("soc","int"), 
-    age_start = 71, 
-    sex = "male", 
-    p.starting_state_mci = 0.55, 
-    n.cycle = 29, 
-    p.mci_mil = 0.23, 
-    p.mci_mod = 0, 
-    p.mci_sev = 0, 
-    p.mil_mci = 0.03, 
-    p.mil_mod = 0.35, 
-    p.mil_sev = 0.04, 
-    p.mod_mil = 0.03, 
-    p.mod_sev = 0.42, 
-    p.sev_mil = 0, 
-    p.sev_mod = 0.02, 
-    p.mci_i = 0.024, 
-    p.mil_i = 0.038, 
-    p.mod_i = 0.110, 
-    p.sev_i = 0.259, 
-    m.r.mortality = m.mortality_rate_US_2019_sexcombined, 
-    hr.mort_mci = 1.82, 
-    hr.mort_mil = 2.92, 
-    hr.mort_mod = 3.85, 
-    hr.mort_sev = 9.52, 
-    rr.tx_mci_mil = 0.69, 
-    rr.tx_mci_mod = 1, 
-    rr.tx_mci_sev = 1, 
-    rr.tx_mil_mod = 0.69, 
-    rr.tx_mil_sev = 0.69, 
-    rr.tx_mci_mil_dis = 1, 
-    rr.tx_mci_mod_dis = 1, 
-    rr.tx_mci_sev_dis = 1, 
-    rr.tx_mil_mod_dis = 1, 
-    rr.tx_mil_sev_dis = 1, 
-    p.tx_discontinuation1 = 0.069, 
-    p.tx_discontinuation2 = 0, 
-    tx_discontinuation2_begin = 2, 
-    tx_duration = 29, 
-    tx_waning = 0, 
-    tx_waning_dis = 0, 
-    u.mci_pt = 0.851 - 0.17, 
-    u.mil_pt = 0.851 - 0.22, 
-    u.mod_pt = 0.851 - 0.36, 
-    u.sev_pt = 0.851 - 0.53, 
-    u.mci_pt_i = 0.851 - 0.17, 
-    u.mil_pt_i = 0.851 - 0.19, 
-    u.mod_pt_i = 0.851 - 0.42, 
-    u.sev_pt_i = 0.851 - 0.59, 
-    u.mci_ic = -0.03, 
-    u.mil_ic = -0.05, 
-    u.mod_ic = -0.08, 
-    u.sev_ic = -0.10, 
-    u.mci_ic_i = -0.03, 
-    u.mil_ic_i = -0.05, 
-    u.mod_ic_i = -0.08, 
-    u.sev_ic_i = -0.10, 
-    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%)
-    c.mci_hc = 6042*1.12 +  460, 
-    c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
-    c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
-    c.sev_hc = 6042*1.93 + 1930, 
-    c.mci_hc_i = 6042*1.12 +  460, 
-    c.mil_hc_i = 6042*1.56 +  965 + 0.21*365*0.333, 
-    c.mod_hc_i = 6042*1.93 + 1544 + 0.66*365*0.333, 
-    c.sev_hc_i = 6042*1.93 + 1930, 
-    c.mci_sc = 0, 
-    c.mil_sc = 0, 
-    c.mod_sc = 0, 
-    c.sev_sc = 0, 
-    c.mci_sc_i = 7394*12, 
-    c.mil_sc_i = 7394*12, 
-    c.mod_sc_i = 7394*12, 
-    c.sev_sc_i = 7394*12, 
-    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
-    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic = 169*12*32.46, 
-    c.sev_ic = 298*12*32.46, 
-    c.mci_ic_i =  69*12*32.46*0.44 + 0.204*0.049*20*52*32.46, 
-    c.mil_ic_i = 113*12*32.46*0.44 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic_i = 169*12*32.46*0.44, 
-    c.sev_ic_i = 298*12*32.46*0.44, 
-    c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
-    c.Tx_start = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
-    discount_EFFECT = 0.03, 
-    discount_QALY = 0.03, 
-    discount_COST = 0.03, 
-    wtp = 100000, 
-    half_cycle_correction = TRUE #TRUE
-  )
-  
-  # run scenario
+  # run scenario and results
   l.out_icer <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
-  # run prepare outcomes
-  l.out_icer_result <- f.result(l.out_scenario = l.out_icer, n.cycles = 29)
+  m.result_icer <- f.result(l.out_scenario = l.out_icer, within = 2)
   
-    str(l.out_icer)
-    str(l.out_icer_result)
-    
-    l.out_icer$l.out$soc$m.out[1:5,]
-    l.out_icer_result$a.result[,,"soc"][1:5,]
-      
-    l.out_icer_result
-    
-    
-  # outcomes: life years, QALYs, total costs (societal)
-  print(round(l.out_icer_result[["m.resultselect"]],2))
-  # costs intervention
-  l.out_icer_result[["m.result"]]["cost_tx","int"]
-  # ICER
-  calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"])
+  # compare to publication
+  print(round(m.result_icer[c("ly","qaly","cost"),c("soc","int","dif")],2))
+  icer_icer <- calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"])
+  icer_icer
   
-  ## figure: state trace
-  windows(width=4, height=3, pointsize=10)
-  v.age_range <- c(l.inputs_icer[["age_start"]]:(l.inputs_icer[["age_start"]]+l.inputs_icer[["n.cycle"]]-1)) # store age range
-  xx <- c(v.age_range, rev(v.age_range)) # prepare polygon x-values
-  a.result <- l.out_icer_result[["a.result"]]
-  yy_mci <- c(a.result[,"mci","soc"], rev(a.result[,"mci","int"])) # polygon y-values
-  yy_mil <- c(a.result[,"mil","soc"], rev(a.result[,"mil","int"])) # idem
-  yy_mod <- c(a.result[,"mod","soc"], rev(a.result[,"mod","int"])) # idem
-  yy_sev <- c(a.result[,"sev","soc"], rev(a.result[,"sev","int"])) # idem
-  yy_dth <- c(a.result[,"dth","soc"], rev(a.result[,"dth","int"])) # idem
-  par(mar=c(4, 4, 2, 1)+0.1, xpd=FALSE)
-  matplot(
-    x = v.age_range, 
-    y = a.result[,,"soc"], 
-    type = "n", 
-    xlab = "age", 
-    ylab = "proportion in state", 
-    ylim = c(0,1), 
-    main = "state trace"
-  )
-  polygon(xx, yy_mci, col = "gray95", border = FALSE)
-  polygon(xx, yy_mil, col = "gray95", border = FALSE)
-  polygon(xx, yy_mod, col = "gray95", border = FALSE)
-  polygon(xx, yy_sev, col = "gray95", border = FALSE)
-  polygon(xx, yy_dth, col = "gray95", border = FALSE)
-  matlines(
-    x = v.age_range, 
-    y = a.result[,c("mci","mil","mod","sev","dth"),"soc"], 
-    type = "l",
-    lty = 1,
-    col = c("green","yellow","orange","red","black")
-  )
-  matlines(
-    x = v.age_range, 
-    y = a.result[,c("mci","mil","mod","sev","dth"),"int"], 
-    type = "l",
-    lty = 2,
-    col = c("green","yellow","orange","red","black")
-  )
-  legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1, bg="white")
-  legend(x="bottomright", legend=c("soc","int"), col="black", lty=c(1,2), bg="white")
+  # standard tables/plots
   
-  ## figure: mean time in state
-  m.time_state2 <- l.out_icer_result[["m.resultselect"]][c("mci","mil","mod","sev"),c("soc","int")]
-  windows(width=4, height=3, pointsize=10)
-  par(mar=c(7, 4, 4, 2), xpd=TRUE)
-  barplot(
-    height = m.time_state2, 
-    horiz = TRUE, 
-    xaxt = "n", 
-    xlab = "time (years)", 
-    ylab = "strategy", 
-    col=c("green","yellow","orange","red"), 
-    space = 0.2, 
-    main = "mean time in state"
-  )
-  axis(side = 1, at = 0:7)
-  legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-1), horiz=TRUE, fill=c("green","yellow","orange","red"))
-  text(x=c(0,cumsum(m.time_state2[1:3,"soc"])), y=1, labels=round(m.time_state2[,"soc"],1), pos=4)
-  text(x=c(0,cumsum(m.time_state2[1:3,"int"])), y=2, labels=round(m.time_state2[,"int"],1), pos=4)
+  if(F) {
+    
+    # all outcomes
+    # str(l.out_icer) # show structure of output
+    # l.out_icer[["df.out"]]
+    # l.out_icer # all detailed output
+    # l.out_icer[["l.out"]] # strategy details
+    # l.out_icer[["l.out"]][["soc"]] # strategy 'soc' details
+    # l.out_icer[["l.out"]][["int"]] # strategy 'int' details
+    # l.out_icer[["l.out"]][["soc"]][["a.TP"]] # strategy 'soc' transition probability matrix
+    # l.out_icer[["l.out"]][["soc"]][["m.trace"]] # strategy 'soc' state trace
+    # l.out_icer[["l.out"]][["soc"]][["m.out"]] # strategy 'soc' outcomes per cycle
+    # l.out_icer[["l.out"]][["int"]][["a.TP"]] # idem for 'int'
+    # l.out_icer[["l.out"]][["int"]][["m.trace"]]
+    # l.out_icer[["l.out"]][["int"]][["m.out"]]
+    
+    # table: summary results
+    table.summary_result_data <- m.result_icer[c("mci","mil","mod","sev","ly","qaly","cost"),c("soc","int","dif")]
+    table.summary_result <- format(
+      table.summary_result_data, 
+      digits=2, 
+      scientific=FALSE, 
+      big.mark=","
+    )
+    
+    print(round(table.summary_result_data,2))
+    print(table.summary_result)
+    
+    # plot: time in state
+    plot.timestate_data <- m.result_icer[c("mci","mil","mod","sev"),c("int","soc")]
+    
+    windows(width=7, height=4, pointsize=12)
+    par(mar=c(5, 4, 4, 1), xpd=TRUE)
+    barplot(
+      height = plot.timestate_data, 
+      horiz = TRUE, 
+      xaxt = "n", 
+      xlim = c(0,ceiling(max(colSums(plot.timestate_data)))), 
+      xlab = "time (years)", 
+      ylab = "strategy", 
+      col=c("green","yellow","orange","red"), 
+      space = 0.2, 
+      main = "mean time in state"
+    )
+    axis(side = 1, at = 0:ceiling(max(colSums(plot.timestate_data))))
+    text(x=c(0,cumsum(plot.timestate_data[1:3,"int"])), y=1, labels=round(plot.timestate_data[,"int"],1), pos=4)
+    text(x=c(0,cumsum(plot.timestate_data[1:3,"soc"])), y=2, labels=round(plot.timestate_data[,"soc"],1), pos=4)
+    text(x=c(0,cumsum(plot.timestate_data[1:3,"int"])), y=0.5, labels=c("mci","mil","mod","sev"), pos=4)
+    #legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.6), horiz=TRUE, fill=c("green","yellow","orange","red"))
+    
+    # table: state trace
+    tableplot.statetracesoc_data <- cbind(
+      mci = rowSums(l.out_icer[["l.out"]][["soc"]][["m.trace"]][,c("mcion_c","mciof_c","mci_i")]), 
+      mil = rowSums(l.out_icer[["l.out"]][["soc"]][["m.trace"]][,c("milon_c","milof_c","mil_i")]),
+      mod = rowSums(l.out_icer[["l.out"]][["soc"]][["m.trace"]][,c("mod_c","mod_i")]), 
+      sev = rowSums(l.out_icer[["l.out"]][["soc"]][["m.trace"]][,c("sev_c","sev_i")]), 
+      dth =         l.out_icer[["l.out"]][["soc"]][["m.trace"]][,c("dth")]
+    )
+    tableplot.statetraceint_data <- cbind(
+      mci = rowSums(l.out_icer[["l.out"]][["int"]][["m.trace"]][,c("mcion_c","mciof_c","mci_i")]), 
+      mil = rowSums(l.out_icer[["l.out"]][["int"]][["m.trace"]][,c("milon_c","milof_c","mil_i")]),
+      mod = rowSums(l.out_icer[["l.out"]][["int"]][["m.trace"]][,c("mod_c","mod_i")]), 
+      sev = rowSums(l.out_icer[["l.out"]][["int"]][["m.trace"]][,c("sev_c","sev_i")]), 
+      dth =         l.out_icer[["l.out"]][["int"]][["m.trace"]][,c("dth")]
+    )
+    
+    print(round(tableplot.statetracesoc_data[1:min(nrow(tableplot.statetracesoc_data),10),],2))
+    print(round(tableplot.statetraceint_data[1:min(nrow(tableplot.statetracesoc_data),10),],2))
+    
+    # plot: state trace
+    v.age_range <- c(l.inputs_icer[["age_start"]]:(l.inputs_icer[["age_start"]]+l.inputs_icer[["n.cycle"]]-1)) # store age range
+    xx <- c(v.age_range, rev(v.age_range)) # prepare polygon x-values
+    yy_mci <- c(tableplot.statetracesoc_data[,"mci"], rev(tableplot.statetraceint_data[,"mci"])) # polygon y-values
+    yy_mil <- c(tableplot.statetracesoc_data[,"mil"], rev(tableplot.statetraceint_data[,"mil"])) # idem
+    yy_mod <- c(tableplot.statetracesoc_data[,"mod"], rev(tableplot.statetraceint_data[,"mod"])) # idem
+    yy_sev <- c(tableplot.statetracesoc_data[,"sev"], rev(tableplot.statetraceint_data[,"sev"])) # idem
+    yy_dth <- c(tableplot.statetracesoc_data[,"dth"], rev(tableplot.statetraceint_data[,"dth"])) # idem
+    
+    windows(width=7, height=7, pointsize=12)
+    par(mar=c(5, 4, 4, 1)+0.1, xpd=FALSE)
+    matplot(
+      x = v.age_range, 
+      y = cbind(tableplot.statetracesoc_data,tableplot.statetraceint_data), 
+      type = "n", 
+      xlab = "age", 
+      ylab = "proportion in state", 
+      ylim = c(0,1), 
+      main = "state trace"
+    )
+    polygon(xx, yy_mci, col = "gray95", border = FALSE)
+    polygon(xx, yy_mil, col = "gray95", border = FALSE)
+    polygon(xx, yy_mod, col = "gray95", border = FALSE)
+    polygon(xx, yy_sev, col = "gray95", border = FALSE)
+    polygon(xx, yy_dth, col = "gray95", border = FALSE)
+    matlines(
+      x = v.age_range, 
+      y = tableplot.statetracesoc_data, 
+      type = "l",
+      lty = 1,
+      col = c("green","yellow","orange","red","black")
+    )
+    matlines(
+      x = v.age_range, 
+      y = tableplot.statetraceint_data, 
+      type = "l",
+      lty = 2,
+      col = c("green","yellow","orange","red","black")
+    )
+    legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1, bg="white")
+    legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2), bg="white")
+    
+    # plot: incremental cost-effectiveness plane
+    par(mar=c(5, 4, 4, 1)+0.1, xpd=FALSE)
+    windows(width=7, height=7, pointsize=12)
+    print(plot(icer, label="all"))
+    
+    # table: incremental cost-effectiveness ratio
+    print(as.data.frame(icer))
+    
+    # figure: annual cost difference by sector over time
+    m.cost_incr.pos <- m.cost_incr.neg <- l.out_icer[["l.out"]][["int"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] - l.out_icer[["l.out"]][["soc"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] # split positive and negative
+    m.cost_incr.pos[m.cost_incr.pos<0] <- 0
+    m.cost_incr.neg[m.cost_incr.neg>=0] <- 0
+    
+    windows(width=7, height=7, pointsize=12)
+    par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
+    barplot(
+      height = t(m.cost_incr.pos),
+      beside = F,
+      xlab = "time (years)",
+      ylab = "annual incremental costs",
+      ylim = c(
+        min(m.cost_incr.neg) + min(m.cost_incr.neg)*0.10, 
+        max(m.cost_incr.pos) + max(m.cost_incr.pos)*0.10
+        ),
+      col = rainbow(5), 
+      names.arg = 1:nrow(m.cost_incr.pos),
+      main = "costs by sector over time"
+    )
+    barplot(
+      height = t(m.cost_incr.neg),
+      beside = F,
+      col = rainbow(5),
+      add = T
+    )
+    legend(x = "topright", legend = c("diagnostic","treatment","health","social","informal"), fill = rainbow(5))
+    
+  }
 
-  # state trace
-  round(l.out_icer_result$a.result[,,"soc"], 4)
-  
-    # TEMP
-    aperm(l.out_icer$l.out$soc$a.TP, c(3,1,2))[,,"sev_i"]
-    aperm(l.out_icer$l.out$int$a.TP, c(3,1,2))[5,,"mcion"]
-    t(round(aperm(l.out_icer$l.out$int$a.TP, c(3,1,2))[5,,],7))
-    
-    l.out_icer$l.out$soc$m.trace
-    l.out_icer$l.out$int$m.trace
-    round(colSums(l.out_icer$l.out$soc$m.trace),6)
-    round(colSums(l.out_icer$l.out$int$m.trace),6)
-    colSums(l.out_icer_result[["a.result"]][,,"soc"])
-    colSums(l.out_icer_result[["a.result"]][,,"int"])
-    
 }
 
 
 
 ######################################## 5.2. CROSS-VALIDATE: AD-ACE ########################################
 
-if(F) {
+if(T) {
   
-  # U.S. general population life table
-  m.lifetable_US_2016_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2016_sexcombined.csv", header=TRUE))[,c("male","female")]
-  m.mortality_rate_US_2016_sexcombined <- -log(1-(m.lifetable_US_2016_sexcombined))
+  # run scenario and results
+  l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
+  m.result_adace <- f.result(l.out_scenario = l.out_adace, within = 2)
   
-  # input parameters
-  l.inputs_adace <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
-    v.names_strat = c("soc","int"), 
-    age_start = 73, 
-    sex = "male", 
-    p.starting_state_mci = 0.446, 
-    n.cycle = 27, 
-    p.mci_mil = 0.23, 
-    p.mci_mod = 0, 
-    p.mci_sev = 0, 
-    p.mil_mci = 0.03, 
-    p.mil_mod = 0.35, 
-    p.mil_sev = 0.04, 
-    p.mod_mil = 0.03, 
-    p.mod_sev = 0.42, 
-    p.sev_mil = 0, 
-    p.sev_mod = 0.02, 
-    p.mci_i = 0, 
-    p.mil_i = 0.038, 
-    p.mod_i = 0.110, 
-    p.sev_i = 0.259, 
-    m.r.mortality = m.mortality_rate_US_2016_sexcombined, 
-    hr.mort_mci = 1, 
-    hr.mort_mil = 2.92, 
-    hr.mort_mod = 3.85, 
-    hr.mort_sev = 9.52, 
-    rr.tx_mci_mil = 0.69, 
-    rr.tx_mci_mod = 1, 
-    rr.tx_mci_sev = 1, 
-    rr.tx_mil_mod = 0.69, 
-    rr.tx_mil_sev = 0.69, 
-    rr.tx_mci_mil_dis = 1, 
-    rr.tx_mci_mod_dis = 1, 
-    rr.tx_mci_sev_dis = 1, 
-    rr.tx_mil_mod_dis = 1, 
-    rr.tx_mil_sev_dis = 1, 
-    p.tx_discontinuation1 = 0.13, 
-    p.tx_discontinuation2 = 0, 
-    tx_discontinuation2_begin = 27, 
-    tx_duration = 27, 
-    tx_waning = 0, 
-    tx_waning_dis = 0, 
-    u.mci_pt = 0.80, 
-    u.mil_pt = 0.74, 
-    u.mod_pt = 0.59, 
-    u.sev_pt = 0.36, 
-    u.mci_pt_i = 0.80, 
-    u.mil_pt_i = 0.74, 
-    u.mod_pt_i = 0.59, 
-    u.sev_pt_i = 0.36, 
-    u.mci_ic = -0, 
-    u.mil_ic = -0.036, 
-    u.mod_ic = -0.070, 
-    u.sev_ic = -0.086, 
-    u.mci_ic_i = -0, 
-    u.mil_ic_i = -0.036, 
-    u.mod_ic_i = -0.070, 
-    u.sev_ic_i = -0.086, 
-    u.Tx_start = -0.14 * (12/52) * 0.22, # disutility ARIA-E multiplied by average duration (12 weeks) multiplied by prevalence ARIA-E (22%)
-    c.mci_hc = 1254*12, 
-    c.mil_hc = 1471*12, 
-    c.mod_hc = 1958*12, 
-    c.sev_hc = 2250*12, 
-    c.mci_hc_i = 1254*12, 
-    c.mil_hc_i = 1471*12, 
-    c.mod_hc_i = 1958*12, 
-    c.sev_hc_i = 2250*12, 
-    c.mci_sc =  222*12, 
-    c.mil_sc =  410*12, 
-    c.mod_sc =  653*12, 
-    c.sev_sc = 1095*12, 
-    c.mci_sc_i = 8762*12, 
-    c.mil_sc_i = 8762*12, 
-    c.mod_sc_i = 8762*12, 
-    c.sev_sc_i = 8762*12, 
-    c.mci_ic = 754*12 +  988*12, # caregiver healthcare + caregiver informal care
-    c.mil_ic = 781*12 + 2184*12, 
-    c.mod_ic = 799*12 + 3227*12, 
-    c.sev_ic = 811*12 + 5402*12, 
-    c.mci_ic_i = 754*12 +  435*12, 
-    c.mil_ic_i = 781*12 +  961*12, 
-    c.mod_ic_i = 799*12 + 1420*12, 
-    c.sev_ic_i = 811*12 + 2377*12, 
-    c.Tx = 26500, 
-    c.Tx_start = 212.14 * 5, # 5x mri in year 1
-    discount_EFFECT = 0.03, 
-    discount_QALY = 0.03, 
-    discount_COST = 0.03, 
-    wtp = 100000, 
-    half_cycle_correction = TRUE
-  )
+  # compare to publication
+  print(round(m.result_adace[c("ly","qaly","cost"),c("soc","int","dif")],2))
+  icer_adace <- calculate_icers(cost = l.out_adace[["df.out"]][,"COST"], effect = l.out_adace[["df.out"]][,"QALY"], strategies = l.out_adace[["df.out"]][,"strategy"])
+  icer_adace
   
-
 }
 
 
@@ -1042,36 +976,11 @@ if(F) {
 if(F) {
   
   # base case
-  round(l.out_icer_result[["m.result"]],2)
-  # within trial
-  m.proportional_effect <- matrix(data = NA, nrow = 4, ncol = 2, dimnames = list(c("hb","se","cs","ic"),c("within","extrapolate")))
-  m.proportional_effect["hb","within"] <- l.out_icer_result[["m.result"]]["qaly","dif_within"] # health benefit
-  m.proportional_effect["se","within"] <- 0.001 # side effect
-  m.proportional_effect["cs","within"] <- sum(l.out_icer_result[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif_within"]) # care saving
-  m.proportional_effect["ic","within"] <- sum(l.out_icer_result[["m.result"]][c("cost_dx","cost_tx"),"dif_within"]) # intervention cost
-  # extrapolated beyond trial
-  m.proportional_effect["hb","extrapolate"] <- l.out_icer_result[["m.result"]]["qaly","dif_extrapolate"]
-  m.proportional_effect["se","extrapolate"] <- 0
-  m.proportional_effect["cs","extrapolate"] <- sum(l.out_icer_result[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif_extrapolate"]) # care saving
-  m.proportional_effect["ic","extrapolate"] <- sum(l.out_icer_result[["m.result"]][c("cost_dx","cost_tx"),"dif_extrapolate"]) # intervention cost
-  # proportion extrapolated
-  m.proportional_effect[,2] / rowSums(m.proportional_effect)
-  sum(l.out_icer_result[["m.result"]][c("mci","mil"),"dif_extrapolate"]) / sum(l.out_icer_result[["m.result"]][c("mci","mil"),c("dif_within","dif_extrapolate")])
-  sum(l.out_icer_result[["m.result"]]["alv","dif_extrapolate"]) / sum(l.out_icer_result[["m.result"]]["alv",c("dif_within","dif_extrapolate")])
-  # divide by WTP
-  round(m.proportional_effect,3)
-  m.proportional_effect[c("cs","ic"),] <- m.proportional_effect[c("cs","ic"),] / 100000
-  round(m.proportional_effect,2)
-  # radius circle
-  r = sqrt(opp/pi)
-  round(sqrt(abs(m.proportional_effect)/pi) * 10,1)
-  
+    # icer (already defined)
   
   # CDR-SB RR=23%
   l.inputs_icer_1 <- l.inputs_icer
   l.inputs_icer_1[["rr.tx_mci_mil"]] <- 1-0.23
-  l.inputs_icer_1[["rr.tx_mci_mod"]] <- 1-0.23
-  l.inputs_icer_1[["rr.tx_mci_sev"]] <- 1-0.23
   l.inputs_icer_1[["rr.tx_mil_mod"]] <- 1-0.23
   l.inputs_icer_1[["rr.tx_mil_sev"]] <- 1-0.23
   
@@ -1079,19 +988,8 @@ if(F) {
   l.inputs_icer_2 <- l.inputs_icer # to-do
   
   # MMSE progression (Vos & SveDem)
-  
     ## source: [Vos, 2015: https://doi.org/10.1093/brain/awv029]
-    
-    ## Amyloid positive & neuronal loss positive
-    ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+)
-    ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text)
-    ### This results into a weighted 3-year cumulative incidence of:
-    temp.est1 <- 1-exp(- (-log(1-0.59) + -log(1-0.04)) )
-    ## and corresponding 1-year probability of 
-    temp.est1 <- 1-exp(- -log(1-temp.est1)/3)
-    temp.est1
-    
-    ## Amyloid positive & neuronal loss undetermined
+    ## option: Amyloid positive & neuronal loss undetermined
     ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+) and 'conflicting IAP' (Amyloid+, Injury-)
     ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text), and 22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text) with prevalence of 353 and 49 respectively (respectively)
     ### This results into a weighted 3-year cumulative incidence of (converting all 4 probabilities to rates before weighting and averaging):
@@ -1099,9 +997,17 @@ if(F) {
     ## and corresponding 1-year probability of 
     temp.est2 <- 1-exp(- -log(1-temp.est2)/3)
     temp.est2
+    ## alternative option: Amyloid positive & neuronal loss positive
+    ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+)
+    ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text)
+    ### This results into a weighted 3-year cumulative incidence of:
+    temp.est1 <- 1-exp(- (-log(1-0.59) + -log(1-0.04)) )
+    ## and corresponding 1-year probability of 
+    temp.est1 <- 1-exp(- -log(1-temp.est1)/3)
+    temp.est1
   
   l.inputs_icer_3 <- l.inputs_icer
-  l.inputs_icer_3[["p.mci_mil"]] <- 0.248
+  l.inputs_icer_3[["p.mci_mil"]] <- round(temp.est2,3) # 0.248
   l.inputs_icer_3[["p.mci_mod"]] <- 0
   l.inputs_icer_3[["p.mci_sev"]] <- 0
   l.inputs_icer_3[["p.mil_mci"]] <- 0
@@ -1126,990 +1032,67 @@ if(F) {
   l.inputs_icer_5[["hr.mort_mod"]] <- 2.419 * 1.82
   l.inputs_icer_5[["hr.mort_sev"]] <- 4.267 * 1.82
   
-  # MMSE progression and mortality (Vos & SveDem) and MMSE RR=16.1%
-  l.inputs_icer_6 <- l.inputs_icer_5
-  l.inputs_icer_6[["rr.tx_mci_mil"]] <- 1-0.161
-  l.inputs_icer_6[["rr.tx_mci_mod"]] <- 1-0.161
-  l.inputs_icer_6[["rr.tx_mci_sev"]] <- 1-0.161
-  l.inputs_icer_6[["rr.tx_mil_mod"]] <- 1-0.161
-  l.inputs_icer_6[["rr.tx_mil_sev"]] <- 1-0.161
+  # A: continue treatment & no waning during treatment
+    # n/a: identical to base case
   
-  # A treat & full effect
-  l.inputs_icer_A <- l.inputs_icer
-  
-  # B treat & effect waning
+  # B: continue treatment & waning during treatment
   l.inputs_icer_B <- l.inputs_icer
-  0.7^0.7^5 # 25% waning reduces effect to 17% after 5 years
-  l.inputs_icer_B[["tx_waning"]] <- 0.25
-  l.inputs_icer_B[["tx_waning_dis"]] <- 0.25
+  0.69^(1-0.30)^5 # 30% waning reduces RR to 0.94 (compared to 0.69) after 5 years
+  l.inputs_icer_B[["tx_waning"]] <- 0.30
   
-  # C stop & no effect
+  # C: stop treatment & no waning after treatment stop
   l.inputs_icer_C <- l.inputs_icer
+  l.inputs_icer_C[["rr.tx_mci_mil_dis"]] <- l.inputs_icer_C[["rr.tx_mci_mil"]]
+  l.inputs_icer_C[["rr.tx_mil_mod_dis"]] <- l.inputs_icer_C[["rr.tx_mil_mod"]]
+  l.inputs_icer_C[["rr.tx_mil_sev_dis"]] <- l.inputs_icer_C[["rr.tx_mil_sev"]]
   l.inputs_icer_C[["p.tx_discontinuation2"]] <- 1
   l.inputs_icer_C[["tx_discontinuation2_begin"]] <- 2
   
-  # D stop & full effect 
-  l.inputs_icer_D <- l.inputs_icer
-  l.inputs_icer_D[["p.tx_discontinuation2"]] <- 1
-  l.inputs_icer_D[["tx_discontinuation2_begin"]] <- 2
-  l.inputs_icer_D[["rr.tx_mci_mil_dis"]] <- l.inputs_icer_D[["rr.tx_mci_mil"]]
-  l.inputs_icer_D[["rr.tx_mci_mod_dis"]] <- l.inputs_icer_D[["rr.tx_mci_mod"]]
-  l.inputs_icer_D[["rr.tx_mci_sev_dis"]] <- l.inputs_icer_D[["rr.tx_mci_sev"]]
-  l.inputs_icer_D[["rr.tx_mil_mod_dis"]] <- l.inputs_icer_D[["rr.tx_mil_mod"]]
-  l.inputs_icer_D[["rr.tx_mil_sev_dis"]] <- l.inputs_icer_D[["rr.tx_mil_sev"]]
+  # D: stop treatment & waning after treatment stop
+  l.inputs_icer_D <- l.inputs_icer_C
+  l.inputs_icer_D[["tx_waning_dis"]] <- 0.30
   
-  # E stop & effect waning
+  # E: stop treatment & no effect after treatment stop
   l.inputs_icer_E <- l.inputs_icer
   l.inputs_icer_E[["p.tx_discontinuation2"]] <- 1
   l.inputs_icer_E[["tx_discontinuation2_begin"]] <- 2
-  l.inputs_icer_E[["rr.tx_mci_mil_dis"]] <- l.inputs_icer_D[["rr.tx_mci_mil"]]
-  l.inputs_icer_E[["rr.tx_mci_mod_dis"]] <- l.inputs_icer_D[["rr.tx_mci_mod"]]
-  l.inputs_icer_E[["rr.tx_mci_sev_dis"]] <- l.inputs_icer_D[["rr.tx_mci_sev"]]
-  l.inputs_icer_E[["rr.tx_mil_mod_dis"]] <- l.inputs_icer_D[["rr.tx_mil_mod"]]
-  l.inputs_icer_E[["rr.tx_mil_sev_dis"]] <- l.inputs_icer_D[["rr.tx_mil_sev"]]
-  l.inputs_icer_E[["tx_waning"]] <- 0.25
-  l.inputs_icer_E[["tx_waning_dis"]] <- 0.25
   
   # run models
   
   ## initialize outcomes table
   l.out_scenario <- list()
   l.out_scenario_prep <- list()
-  m.table1 <- matrix(data = NA, nrow = 11, ncol = 7, dimnames = list(NULL,c("mci_mil","alv","qaly","cost_dx_tx","cost_care","nhb","icer")))
+  m.table1 <- matrix(data = NA, nrow = 10, ncol = 7, dimnames = list(NULL,c("mcimil","ly","qaly","cost_dxtx","cost_care","nhb","icer")))
   
   ## run models
-  l.out_scenario[[1]] <- f.run_scenario(l.inputs = l.inputs_icer_1, detailed = TRUE)
-  l.out_scenario[[2]] <- f.run_scenario(l.inputs = l.inputs_icer_2, detailed = TRUE)
-  l.out_scenario[[3]] <- f.run_scenario(l.inputs = l.inputs_icer_3, detailed = TRUE)
-  l.out_scenario[[4]] <- f.run_scenario(l.inputs = l.inputs_icer_4, detailed = TRUE)
-  l.out_scenario[[5]] <- f.run_scenario(l.inputs = l.inputs_icer_5, detailed = TRUE)
-  l.out_scenario[[6]] <- f.run_scenario(l.inputs = l.inputs_icer_6, detailed = TRUE)
-  l.out_scenario[[7]] <- f.run_scenario(l.inputs = l.inputs_icer_A, detailed = TRUE)
-  l.out_scenario[[8]] <- f.run_scenario(l.inputs = l.inputs_icer_B, detailed = TRUE)
-  l.out_scenario[[9]] <- f.run_scenario(l.inputs = l.inputs_icer_C, detailed = TRUE)
-  l.out_scenario[[10]] <- f.run_scenario(l.inputs = l.inputs_icer_D, detailed = TRUE)
-  l.out_scenario[[11]] <- f.run_scenario(l.inputs = l.inputs_icer_E, detailed = TRUE)
-  
-    # TEMP
-    f.result(l.out_scenario = l.out_scenario[[1]], n.cycles = 29)
-    calculate_icers(cost = l.out_scenario[[1]][["df.out"]][,"COST"], effect = l.out_scenario[[1]][["df.out"]][,"QALY"], strategies = l.out_scenario[[1]][["df.out"]][,"strategy"])
-    calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"])
-  
+  l.out_scenario[[1]] <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
+  l.out_scenario[[2]] <- f.run_scenario(l.inputs = l.inputs_icer_1, detailed = TRUE)
+  l.out_scenario[[3]] <- f.run_scenario(l.inputs = l.inputs_icer_2, detailed = TRUE)
+  l.out_scenario[[4]] <- f.run_scenario(l.inputs = l.inputs_icer_3, detailed = TRUE)
+  l.out_scenario[[5]] <- f.run_scenario(l.inputs = l.inputs_icer_4, detailed = TRUE)
+  l.out_scenario[[6]] <- f.run_scenario(l.inputs = l.inputs_icer_5, detailed = TRUE)
+  l.out_scenario[[7]] <- f.run_scenario(l.inputs = l.inputs_icer_B, detailed = TRUE)
+  l.out_scenario[[8]] <- f.run_scenario(l.inputs = l.inputs_icer_C, detailed = TRUE)
+  l.out_scenario[[9]] <- f.run_scenario(l.inputs = l.inputs_icer_D, detailed = TRUE)
+  l.out_scenario[[10]] <- f.run_scenario(l.inputs = l.inputs_icer_E, detailed = TRUE)
+
   ## store results
   i=1
-  for(i in 1:11) {
-    l.out_scenario_prep[[i]] <- f.result(l.out_scenario = l.out_scenario[[i]], n.cycles = 29)
-    if(l.out_scenario_prep[[i]][["m.result"]]["mci","dif"]<0) stop("lower person years")
-    if(l.out_scenario_prep[[i]][["m.result"]]["mil","dif"]<0) stop("lower person years")
-    m.table1[i,"mci_mil"] <- sum(l.out_scenario_prep[[i]][["m.result"]][c("mci","mil"),"dif"])
-    m.table1[i,"alv"] <- l.out_scenario_prep[[i]][["m.result"]]["alv","dif"]
-    m.table1[i,"qaly"] <- l.out_scenario_prep[[i]][["m.result"]]["qaly","dif"]
-    m.table1[i,"cost_dx_tx"] <- sum(l.out_scenario_prep[[i]][["m.result"]][c("cost_dx","cost_tx"),"dif"])
-    m.table1[i,"cost_care"] <- sum(l.out_scenario_prep[[i]][["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
-    m.table1[i,"nhb"] <- sum(l.out_scenario_prep[[i]][["m.result"]]["nhb","dif"])
+  for(i in 1:10) {
+    l.out_scenario_prep[[i]] <- f.result(l.out_scenario = l.out_scenario[[i]], within = 2)
+    if(l.out_scenario_prep[[i]]["mci","dif"]<0) stop("lower person years")
+    if(l.out_scenario_prep[[i]]["mil","dif"]<0) stop("lower person years")
+    m.table1[i,"mcimil"] <- sum(l.out_scenario_prep[[i]][c("mci","mil"),"dif"])
+    m.table1[i,"ly"] <- l.out_scenario_prep[[i]]["ly","dif"]
+    m.table1[i,"qaly"] <- l.out_scenario_prep[[i]]["qaly","dif"]
+    m.table1[i,"cost_dxtx"] <- sum(l.out_scenario_prep[[i]][c("cost_dx","cost_tx"),"dif"])
+    m.table1[i,"cost_care"] <- sum(l.out_scenario_prep[[i]][c("cost_hc","cost_sc","cost_ic"),"dif"])
+    m.table1[i,"nhb"] <- sum(l.out_scenario_prep[[i]]["nhb","dif"])
     m.table1[i,"icer"] <- calculate_icers(cost = l.out_scenario[[i]][["df.out"]][,"COST"], effect = l.out_scenario[[i]][["df.out"]][,"QALY"], strategies = l.out_scenario[[i]][["df.out"]][,"strategy"])[2,"ICER"]
   }
   print(round(m.table1,2))
-  write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = TRUE, col.names = TRUE)
-  
-    # temporary to show total costs
-    l.inputs_icer[["c.mci_hc"]] + l.inputs_icer[["c.mci_sc"]] + l.inputs_icer[["c.mci_ic"]]
-    l.inputs_icer[["c.mil_hc"]] + l.inputs_icer[["c.mil_sc"]] + l.inputs_icer[["c.mil_ic"]]
-    l.inputs_icer[["c.mod_hc"]] + l.inputs_icer[["c.mod_sc"]] + l.inputs_icer[["c.mod_ic"]]
-    l.inputs_icer[["c.sev_hc"]] + l.inputs_icer[["c.sev_sc"]] + l.inputs_icer[["c.sev_ic"]]
-    l.inputs_icer[["c.mci_hc_i"]] + l.inputs_icer[["c.mci_sc_i"]] + l.inputs_icer[["c.mci_ic_i"]]
-    l.inputs_icer[["c.mil_hc_i"]] + l.inputs_icer[["c.mil_sc_i"]] + l.inputs_icer[["c.mil_ic_i"]]
-    l.inputs_icer[["c.mod_hc_i"]] + l.inputs_icer[["c.mod_sc_i"]] + l.inputs_icer[["c.mod_ic_i"]]
-    l.inputs_icer[["c.sev_hc_i"]] + l.inputs_icer[["c.sev_sc_i"]] + l.inputs_icer[["c.sev_ic_i"]]
-  
-  # headroom analysis
-  l.inputs_icer_c.Tx <- l.inputs_icer
-  l.inputs_icer_c.Tx[["c.Tx"]] <- 10000
-  l.out_scenario_icer_c.Tx <- f.run_scenario(l.inputs = l.inputs_icer_c.Tx, detailed = TRUE)
-  calculate_icers(cost = l.out_scenario_icer_c.Tx[["df.out"]][,"COST"], effect = l.out_scenario_icer_c.Tx[["df.out"]][,"QALY"], strategies = l.out_scenario_icer_c.Tx[["df.out"]][,"strategy"])
-  
-  l.inputs_icer_c.Tx_B <- l.inputs_icer_B
-  l.inputs_icer_c.Tx_B[["c.Tx"]] <- 7000
-  l.out_scenario_icer_c.Tx_B <- f.run_scenario(l.inputs = l.inputs_icer_c.Tx_B, detailed = TRUE)
-  calculate_icers(cost = l.out_scenario_icer_c.Tx_B[["df.out"]][,"COST"], effect = l.out_scenario_icer_c.Tx_B[["df.out"]][,"QALY"], strategies = l.out_scenario_icer_c.Tx_B[["df.out"]][,"strategy"])
-  
-  l.inputs_icer_p.starting_state_mci <- l.inputs_icer
-  l.inputs_icer_p.starting_state_mci[["p.starting_state_mci"]] <- 0
-  l.out_scenario_icer_p.starting_state_mci <- f.run_scenario(l.inputs = l.inputs_icer_p.starting_state_mci, detailed = TRUE)
-  calculate_icers(cost = l.out_scenario_icer_p.starting_state_mci[["df.out"]][,"COST"], effect = l.out_scenario_icer_p.starting_state_mci[["df.out"]][,"QALY"], strategies = l.out_scenario_icer_p.starting_state_mci[["df.out"]][,"strategy"])
-  
-  l.inputs_icer_rr.tx <- l.inputs_icer
-  l.inputs_icer_rr.tx[["rr.tx_mci_mil"]] <- 0.59
-  l.inputs_icer_rr.tx[["rr.tx_mci_mod"]] <- 0.59
-  l.inputs_icer_rr.tx[["rr.tx_mci_sev"]] <- 0.59
-  l.inputs_icer_rr.tx[["rr.tx_mil_mod"]] <- 0.59
-  l.inputs_icer_rr.tx[["rr.tx_mil_sev"]] <- 0.59
-  l.inputs_icer_rr.tx[["age_start"]] <- 50
-  l.inputs_icer_rr.tx[["n.cycle"]] <- 29-0
-  l.inputs_icer_rr.tx[["tx_duration"]] <- 29-0
-  l.out_scenario_icer_rr.tx <- f.run_scenario(l.inputs = l.inputs_icer_rr.tx, detailed = TRUE)
-  calculate_icers(cost = l.out_scenario_icer_rr.tx[["df.out"]][,"COST"], effect = l.out_scenario_icer_rr.tx[["df.out"]][,"QALY"], strategies = l.out_scenario_icer_rr.tx[["df.out"]][,"strategy"])
-  
-  l.inputs_icer_p.mci_mil_mod <- l.inputs_icer
-  l.inputs_icer_p.mci_mil_mod[["p.mci_mil"]] <- l.inputs_icer_p.mci_mil_mod[["p.mci_mil"]]+0.20
-  l.inputs_icer_p.mci_mil_mod[["p.mil_mod"]] <- l.inputs_icer_p.mci_mil_mod[["p.mil_mod"]]+0.20
-  l.out_scenario_icer_p.mci_mil_mod <- f.run_scenario(l.inputs = l.inputs_icer_p.mci_mil_mod, detailed = TRUE)
-  calculate_icers(cost = l.out_scenario_icer_p.mci_mil_mod[["df.out"]][,"COST"], effect = l.out_scenario_icer_p.mci_mil_mod[["df.out"]][,"QALY"], strategies = l.out_scenario_icer_p.mci_mil_mod[["df.out"]][,"strategy"])
+  write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
 }
-
-
-
-######################################## 5.2.3. (DETERMINISTIC SENSITIVITY ANALYSIS) ########################################
-
-if(F) {
-  
-  # list parameters for DSA
-  dsa_pars <- c(
-    "age_start",
-    "hr.mort_verymilddem",
-    "hr.mort_mil",
-    "hr.mort_mod",
-    "hr.mort_sev",
-    "p.mci_mil",
-    "rr.tx_mci_mil",
-    "rr.tx_mil_mod",
-    "tx_duration",
-    "c.Tx"
-  )
-  
-  # list minimum values
-  dsa_min <- c(
-    60,
-    1.55,
-    1.153,
-    2.122,
-    3.610,
-    l.inputs[["p.mci_mil"]]/2,
-    l.inputs[["rr.tx_mci_mil"]]^2,
-    l.inputs[["rr.tx_mil_mod"]]^2,
-    l.inputs[["tx_duration"]]/2,
-    l.inputs[["c.Tx"]]/5
-  )
-  
-  # list maximum values
-  dsa_max <- c(
-    80,
-    2.14,
-    1.507,
-    2.757,
-    5.043,
-    l.inputs[["p.mci_mil"]]*2,
-    l.inputs[["rr.tx_mci_mil"]]^0.5,
-    l.inputs[["rr.tx_mil_mod"]]^0.5,
-    l.inputs[["tx_duration"]]*2,
-    l.inputs[["c.Tx"]]*5
-  )
-  
-  # define sensitivity analysis range
-  df.owsa_params_range <- data.frame(
-    pars = dsa_pars,
-    min = dsa_min,
-    max = dsa_max
-  ); df.owsa_params_range
-  
-  # run DSA
-  out_owsa_det <- run_owsa_det(
-    params_range = df.owsa_params_range,
-    params_basecase = l.inputs,
-    nsamp = 25, # n equally-spaced samples
-    FUN = f.run_scenario, # make sure the f.run_scenario function only returns a single dataframe with aggregated outcomes (not detailed outcomes)
-    outcomes = NULL, # NULL for all outcomes (requires to select specific outcome for plotting the tornado graph later)
-    strategies = NULL, # NULL for all strategies
-    progress = TRUE
-  )
-  str(out_owsa_det) # show structure of result
-  out_owsa_det # show results
-  
-  # !! IMPORTANT: the function 'owsa_tornado' omits parameters with negative values due to the 'min_rel_diff' option. Therefore, you need to manually adjust the function. The following is suggested: 
-  # step 1: run the following code: trace("owsa_tornado", edit=TRUE)
-  # step 2: manually adjust the code line 20 by adding 'abs()' function: 'abs(.data$outcome_val.low)' instead of '.data$outcome_val.low'
-  
-  # plot tornado graph of DSA outcome 'NMB' (fyi: not incremental)
-  select_owsa <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_int") # select outcome and from which strategy
-  owsa_tornado(select_owsa)
-  
-  # plot tornado graph of incremental outcome (only use when there are 2 strategies, in case of more than 2 strategies see 'dampack' vignette for notes on tornado limitation: https://cran.r-project.org/web/packages/dampack/)
-  out_owsa_det_NHB_soc <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_soc") # select outcome and from which strategy
-  out_owsa_det_NHB_int <- subset(x=out_owsa_det$owsa_NHB, subset=strategy=="st_int") # select outcome and from alternative strategy
-  if(!all(out_owsa_det_NHB_soc[,c("parameter","param_val")]==out_owsa_det_NHB_int[,c("parameter","param_val")])) stop("error") # check to determine if data is correctly compared
-  out_owsa_det_iNHB <- out_owsa_det_NHB_int
-  out_owsa_det_iNHB[,"outcome_val"] <- NA
-  out_owsa_det_iNHB[,"outcome_val"] <- out_owsa_det_NHB_int[,"outcome_val"] - out_owsa_det_NHB_soc[,"outcome_val"]
-  owsa_tornado(out_owsa_det_iNHB, n_y_ticks=4, return = "data")
-  owsa_tornado(out_owsa_det_iNHB, n_y_ticks=4, return = "plot")
-  
-  # plot optimal strategy (outcome over each parameter range for each strategy)
-  plot(out_owsa_det$owsa_NHB, n_x_ticks = 3)
-  # Visualize optimal strategy (max NMB) over each parameter range
-  owsa_opt_strat(out_owsa_det$owsa_NHB, return="data")
-  #windows()
-  owsa_opt_strat(out_owsa_det$owsa_NHB, return="plot")
-  
-}
-
-
-
-# [to be implemented in updated version]
-
-
-
-
-
-
-######################################## 5.2.4. (HEADROOM) ########################################
-# to be developed for this version, see release '2.1.0 ISPOR Europe 2023 abstract' for an older version
-
-
-
-######################################## 5.2.5. (REPLICATION: HERRING) ########################################
-
-if(F) {
-  
-  
-  # U.S. general population life table
-  m.lifetable_US_2017_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2017_sexcombined.csv", header=TRUE))[,c("male","female")]
-  m.mortality_rate_US_2017_sexcombined <- -log(1-(m.lifetable_US_2017_sexcombined))
-  
-  # input parameters
-  l.inputs_herring <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
-    v.names_strat = c("soc","int"), 
-    age_start = 65, 
-    sex = "male", 
-    p.starting_state_mci = 1, 
-    n.cycle = 29, 
-    p.mci_mil = 0.232 * 0.727, 
-    p.mci_mod = 0.232 * 0.273, 
-    p.mci_sev = 0, 
-    p.mil_mci = 0.033, 
-    p.mil_mod = 0.352, 
-    p.mil_sev = 0.044, 
-    p.mod_mil = 0.029, 
-    p.mod_sev = 0.42, 
-    p.sev_mil = 0, 
-    p.sev_mod = 0.019, 
-    p.mci_i = 0, 
-    p.mil_i = 0, 
-    p.mod_i = 0, 
-    p.sev_i = 0, 
-    m.r.mortality = m.mortality_rate_US_2017_sexcombined, 
-    hr.mort_mci = 1.48, 
-    hr.mort_mil = 2.84, 
-    hr.mort_mod = 2.84, 
-    hr.mort_sev = 2.84, 
-    rr.tx_mci_mil = 0.69, 
-    rr.tx_mci_mod = 0.69, 
-    rr.tx_mci_sev = 0.69, 
-    rr.tx_mil_mod = 0.69, 
-    rr.tx_mil_sev = 0.69, 
-    rr.tx_mci_mil_dis = 1, 
-    rr.tx_mci_mod_dis = 1, 
-    rr.tx_mci_sev_dis = 1, 
-    rr.tx_mil_mod_dis = 1, 
-    rr.tx_mil_sev_dis = 1, 
-    p.tx_discontinuation1 = 0, 
-    p.tx_discontinuation2 = 0, 
-    tx_discontinuation2_begin = 2, 
-    tx_duration = 29, 
-    tx_waning = 0, 
-    tx_waning_dis = 0, 
-    u.mci_pt = 0.851 - 0.17, 
-    u.mil_pt = 0.851 - 0.22, 
-    u.mod_pt = 0.851 - 0.36, 
-    u.sev_pt = 0.851 - 0.53, 
-    u.mci_pt_i = 0.851 - 0.17, 
-    u.mil_pt_i = 0.851 - 0.19, 
-    u.mod_pt_i = 0.851 - 0.42, 
-    u.sev_pt_i = 0.851 - 0.59, 
-    u.mci_ic = -0.03, 
-    u.mil_ic = -0.05, 
-    u.mod_ic = -0.08, 
-    u.sev_ic = -0.10, 
-    u.mci_ic_i = -0.03, 
-    u.mil_ic_i = -0.05, 
-    u.mod_ic_i = -0.08, 
-    u.sev_ic_i = -0.10, 
-    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
-    c.mci_hc = 6042*1.12 +  460, 
-    c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
-    c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
-    c.sev_hc = 6042*1.93 + 1930, 
-    c.mci_hc_i = 6042*1.12 +  460, 
-    c.mil_hc_i = 6042*1.56 +  965 + 0.21*365*0.333, 
-    c.mod_hc_i = 6042*1.93 + 1544 + 0.66*365*0.333, 
-    c.sev_hc_i = 6042*1.93 + 1930, 
-    c.mci_sc = 0, 
-    c.mil_sc = 0, 
-    c.mod_sc = 0, 
-    c.sev_sc = 0, 
-    c.mci_sc_i = 7394*12, 
-    c.mil_sc_i = 7394*12, 
-    c.mod_sc_i = 7394*12, 
-    c.sev_sc_i = 7394*12, 
-    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
-    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic = 169*12*32.46, 
-    c.sev_ic = 298*12*32.46, 
-    c.mci_ic_i =  69*12*32.46*0.44 + 0.204*0.049*20*52*32.46, 
-    c.mil_ic_i = 113*12*32.46*0.44 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic_i = 169*12*32.46*0.44, 
-    c.sev_ic_i = 298*12*32.46*0.44, 
-    c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
-    c.Tx_start = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
-    discount_EFFECT = 0, 
-    discount_QALY = 0.03, 
-    discount_COST = 0.03, 
-    wtp = 100000, 
-    half_cycle_correction = TRUE
-  )
-  
-  # run scenario
-  l.out_herring <- f.run_scenario(l.inputs = l.inputs_herring, detailed = TRUE)
-  # run prepare outcomes
-  l.out_herring_prep <- f.result(l.out_scenario = l.out_herring, n.cycles = 29)
-  
-  # outcomes: life years, QALYs, total costs (societal)
-  print(round(l.out_herring_prep[["m.resultselect"]],2))
-  # costs intervention
-  sum(l.out_herring_prep[["a.out"]][,"cost_tx","int"])
-  # ICER
-  calculate_icers(cost = l.out_herring[["df.out"]][,"COST"], effect = l.out_herring[["df.out"]][,"QALY"], strategies = l.out_herring[["df.out"]][,"strategy"])
-  
-  matplot(
-    x=cbind(
-      rowSums(l.out_herring$l.out$soc$m.trace[,c("mcion","mciof")]),
-      rowSums(l.out_herring$l.out$int$m.trace[,c("mcion","mciof")]),
-      l.out_herring$l.out$soc$m.trace[,"dth"],
-      l.out_herring$l.out$int$m.trace[,"dth"]
-    ),
-    xlim = c(1,30), ylim = c(0,1), xaxs = "i", yaxs = "i",
-    type = "l",
-    lty = c(1,2,1,2),
-    col = c("blue","blue","black","black")
-  )
-  grid(ny=10)
-}
-
-
-
-######################################## 5.2.7. (REPLICATION: CAR) ########################################
-
-if(F) {
-  
-  # Sweden general population life table
-  m.lifetable_SE_2021 <- as.matrix(read.csv(file="life_tables/lifetable_SE_2021.csv", header=TRUE))[,c("male","female")]
-  m.mortality_rate_SE_2021_sexcombined <- -log(1-(m.lifetable_SE_2021)) # convert to rate
-  m.mortality_rate_SE_2021_sexcombined[,c("male","female")] <- (m.mortality_rate_SE_2021_sexcombined[,"male"] + m.mortality_rate_SE_2021_sexcombined[,"female"])/2
-    #m.mortality_probability_SE_2021_sexcombined <- 1-exp(-m.mortality_rate_SE_2021_sexcombined)
-  
-  # input parameters
-  l.inputs_car <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
-    v.names_strat = c("soc","int"), 
-    age_start = 70, 
-    sex = "male", 
-    p.starting_state_mci = 1, 
-    n.cycle = 29, 
-    p.mci_mil = 0.248, 
-    p.mci_mod = 0, 
-    p.mci_sev = 0, 
-    p.mil_mci = 0, 
-    p.mil_mod = 0.293, 
-    p.mil_sev = 0.001, 
-    p.mod_mil = 0.087, # 1 - 0.804 - 0.1092, 
-    p.mod_sev = 0.1092, 
-    p.sev_mil = 0, 
-    p.sev_mod = 0.196, 
-    p.mci_i = 0, 
-    p.mil_i = 0, 
-    p.mod_i = 0, 
-    p.sev_i = 0, 
-    m.r.mortality = m.mortality_rate_SE_2021_sexcombined, 
-    hr.mort_mci = 1, 
-    hr.mort_mil = 1.82 * 1.318, 
-    hr.mort_mod = 1.82 * 2.419, 
-    hr.mort_sev = 1.82 * 4.267, 
-    rr.tx_mci_mil = 0.70, 
-    rr.tx_mci_mod = 1, 
-    rr.tx_mci_sev = 1, 
-    rr.tx_mil_mod = 0.70, 
-    rr.tx_mil_sev = 1, 
-    rr.tx_mci_mil_dis = 0.70, 
-    rr.tx_mci_mod_dis = 1, 
-    rr.tx_mci_sev_dis = 1, 
-    rr.tx_mil_mod_dis = 0.70, 
-    rr.tx_mil_sev_dis = 1, 
-    p.tx_discontinuation1 = 0.1, 
-    p.tx_discontinuation2 = 0, 
-    tx_discontinuation2_begin = 2, 
-    tx_duration = 29, 
-    tx_waning = 0, 
-    tx_waning_dis = 0, 
-    u.mci_pt = 0.851 - 0.17, 
-    u.mil_pt = 0.851 - 0.22, 
-    u.mod_pt = 0.851 - 0.36, 
-    u.sev_pt = 0.851 - 0.53, 
-    u.mci_pt_i = 0.851 - 0.17, 
-    u.mil_pt_i = 0.851 - 0.19, 
-    u.mod_pt_i = 0.851 - 0.42, 
-    u.sev_pt_i = 0.851 - 0.59, 
-    u.mci_ic = -0.03, 
-    u.mil_ic = -0.05, 
-    u.mod_ic = -0.08, 
-    u.sev_ic = -0.10, 
-    u.mci_ic_i = -0.03, 
-    u.mil_ic_i = -0.05, 
-    u.mod_ic_i = -0.08, 
-    u.sev_ic_i = -0.10, 
-    u.Tx_start = -0.14 * (12/52) * 0.035, # disutility symptomatic ARIA multiplied by average duration (12 weeks) multiplied by prevalence symptomatic ARIA (3.5%) #!!!
-    c.mci_hc = 6042*1.12 +  460, 
-    c.mil_hc = 6042*1.56 +  965 + 0.21*365*0.333, # patient medical + informal carer medical + ChEI
-    c.mod_hc = 6042*1.93 + 1544 + 0.66*365*0.333, 
-    c.sev_hc = 6042*1.93 + 1930, 
-    c.mci_hc_i = 6042*1.12 +  460, 
-    c.mil_hc_i = 6042*1.56 +  965 + 0.21*365*0.333, 
-    c.mod_hc_i = 6042*1.93 + 1544 + 0.66*365*0.333, 
-    c.sev_hc_i = 6042*1.93 + 1930, 
-    c.mci_sc = 0, 
-    c.mil_sc = 0, 
-    c.mod_sc = 0, 
-    c.sev_sc = 0, 
-    c.mci_sc_i = 7394*12, 
-    c.mil_sc_i = 7394*12, 
-    c.mod_sc_i = 7394*12, 
-    c.sev_sc_i = 7394*12, 
-    c.mci_ic =  69*12*32.46 + 0.204*0.049*20*52*32.46, # informal care + patient productivity loss
-    c.mil_ic = 113*12*32.46 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic = 169*12*32.46, 
-    c.sev_ic = 298*12*32.46, 
-    c.mci_ic_i =  69*12*32.46*0.44 + 0.204*0.049*20*52*32.46, 
-    c.mil_ic_i = 113*12*32.46*0.44 + 0.112*0.086*20*52*32.46, 
-    c.mod_ic_i = 169*12*32.46*0.44, 
-    c.sev_ic_i = 298*12*32.46*0.44, 
-    c.Tx = 26500 + (52/2)*78.35, # drug annual wholesale acquisition cost + treatment administration frequency * administration cost
-    c.Tx_start = 261.10*4 + 261.10*3*0.215, # mri cost * 3-month monitoring in year 1 + mri cost * 3 times * proportion aria
-    discount_EFFECT = 0, 
-    discount_QALY = 0.03, 
-    discount_COST = 0.03, 
-    wtp = 100000, 
-    half_cycle_correction = TRUE
-  )
-  
-  # run scenario
-  l.out_car <- f.run_scenario(l.inputs = l.inputs_car, detailed = TRUE)
-  # run prepare outcomes
-  l.out_car_prep <- f.result(l.out_scenario = l.out_car, n.cycles = 29)
-  
-  # outcomes: state trace
-  str(l.out_car_prep)
-  l.out_car_prep$a.out[,,"soc"]
-  l.out_car_prep$a.out[,,"int"]
-  str(l.out_car)
-  l.out_car$l.out$soc$a.TP
-  l.out_car$l.out$soc$m.trace
-  
-  
-  # outcomes: life years, QALYs, total costs (societal)
-  print(round(l.out_car_prep[["m.resultselect"]],2))
-  # costs intervention
-  sum(l.out_car_prep[["a.out"]][,"cost_tx","int"])
-  # ICER
-  calculate_icers(cost = l.out_car[["df.out"]][,"COST"], effect = l.out_car[["df.out"]][,"QALY"], strategies = l.out_car[["df.out"]][,"strategy"])
-  
-}
-
-
-
-######################################## 5.2.6. (PREPARE SENSITIVITY ANALYSIS) ########################################
-
-if(F) {
-
-  # s_cdrhr
-  l.inputs_s_cdrhr <- l.inputs_icer
-  l.inputs_s_cdrhr[["rr.tx_mci_mil"]] = 0.66
-  l.inputs_s_cdrhr[["rr.tx_mil_mod"]] = 0.66
-  l.inputs_s_cdrhr[["rr.tx_mci_mil_dis"]] = 0.66
-  l.inputs_s_cdrhr[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_s_cdrhr[["p.tx_discontinuation1"]] = 0.069
-  l.inputs_s_cdrhr[["p.tx_discontinuation2"]] = 0
-  l.inputs_s_cdrhr[["tx_discontinuation2_begin"]] = 2
-  l.inputs_s_cdrhr[["tx_waning"]] = 0
-  l.inputs_s_cdrhr[["tx_waning_dis"]] = 0
-  l.inputs_s_cdrhr[["tx_duration"]] = 29
-  l.inputs_s_cdrhr[["p.starting_state_mci"]] = 0.55
-  
-  # run scenario
-  out_s_cdrhr <- f.run_scenario(l.inputs = l.inputs_s_cdrhr, detailed = TRUE)
-  
-  # run results
-  out_s_cdrhr_prepared <- f.result(l.out_scenario = out_s_cdrhr, n.cycles = 29)
-  
-  # s_cdr_%
-  # s_cdr_timeshift
-  # s_mmse_hr
-  # s_mmse_%
-  # s_mmse_time
-  
-  # sA (= cdrhr)
-  l.inputs_sA <- l.inputs_s_cdrhr
-  l.inputs_sA[["rr.tx_mci_mil_dis"]] = 0.66
-  l.inputs_sA[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sA[["p.tx_discontinuation2"]] = 0
-  l.inputs_sA[["tx_discontinuation2_begin"]] = 2
-  l.inputs_sA[["tx_waning"]] = 0
-  l.inputs_sA[["tx_waning_dis"]] = 0
-  out_sA <- f.run_scenario(l.inputs = l.inputs_sA, detailed = TRUE)
-  out_sA_prepared <- f.result(l.out_scenario = out_sA, n.cycles = 29)
-  
-  # sB
-  round((1-0.25)^c(0:7),2) # reflects decrease to relatively small treatment effect over 7 years
-  l.inputs_sB <- l.inputs_s_cdrhr
-  l.inputs_sB[["rr.tx_mci_mil_dis"]] = 0.66
-  l.inputs_sB[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sB[["p.tx_discontinuation2"]] = 0
-  l.inputs_sB[["tx_discontinuation2_begin"]] = 2
-  l.inputs_sB[["tx_waning"]] = 0.25
-  l.inputs_sB[["tx_waning_dis"]] = 0.25
-  l.inputs_sB[["tx_duration"]] = 29
-  out_sB <- f.run_scenario(l.inputs = l.inputs_sB, detailed = TRUE)
-  out_sB_prepared <- f.result(l.out_scenario = out_sB, n.cycles = 29)
-  
-  # sC
-  l.inputs_sC <- l.inputs_s_cdrhr
-  l.inputs_sC[["rr.tx_mci_mil_dis"]] = 1
-  l.inputs_sC[["rr.tx_mil_mod_dis"]] = 1
-  l.inputs_sC[["p.tx_discontinuation2"]] = 1
-  l.inputs_sC[["tx_discontinuation2_begin"]] = 2
-  l.inputs_sC[["tx_waning"]] = 0
-  l.inputs_sC[["tx_waning_dis"]] = 0
-  l.inputs_sC[["tx_duration"]] = 29
-  out_sC <- f.run_scenario(l.inputs = l.inputs_sC, detailed = TRUE)
-  out_sC_prepared <- f.result(l.out_scenario = out_sC, n.cycles = 29)
-  
-  # sD
-  l.inputs_sD <- l.inputs_s_cdrhr
-  l.inputs_sD[["rr.tx_mci_mil_dis"]] = 0.66
-  l.inputs_sD[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sD[["p.tx_discontinuation2"]] = 1
-  l.inputs_sD[["tx_discontinuation2_begin"]] = 2
-  l.inputs_sD[["tx_waning"]] = 0
-  l.inputs_sD[["tx_waning_dis"]] = 0
-  l.inputs_sD[["tx_duration"]] = 29
-  out_sD <- f.run_scenario(l.inputs = l.inputs_sD, detailed = TRUE)
-  out_sD_prepared <- f.result(l.out_scenario = out_sD, n.cycles = 29)
-  
-  # sE
-  l.inputs_sE <- l.inputs_s_cdrhr
-  l.inputs_sE[["rr.tx_mci_mil_dis"]] = 0.66
-  l.inputs_sE[["rr.tx_mil_mod_dis"]] = 0.66
-  l.inputs_sE[["p.tx_discontinuation2"]] = 1
-  l.inputs_sE[["tx_discontinuation2_begin"]] = 2
-  l.inputs_sE[["tx_waning"]] = 0.25
-  l.inputs_sE[["tx_waning_dis"]] = 0.25
-  l.inputs_sE[["tx_duration"]] = 29
-  out_sE <- f.run_scenario(l.inputs = l.inputs_sE, detailed = TRUE)
-  out_sE_prepared <- f.result(l.out_scenario = out_sE, n.cycles = 29)
-  
-  # initialize: summary incremental outcomes
-  m.sABCDE <- matrix(data = NA, nrow = 5, ncol = 6, dimnames = list(c("A","B","C","D","E"),c("mcimil","alv","qaly_pt","cost_dxtx","cost_hcscic","nhb")))
-  # fill
-  m.sABCDE["A","mcimil"]      <- sum(out_sA_prepared[["m.result"]][c("mci","mil"),"dif"])
-  m.sABCDE["A","alv"]         <-     out_sA_prepared[["m.result"]]["alv","dif"]
-  m.sABCDE["A","qaly_pt"]     <-     out_sA_prepared[["m.result"]]["qaly_pt","dif"]
-  m.sABCDE["A","cost_dxtx"]   <- sum(out_sA_prepared[["m.result"]][c("cost_dx","cost_tx"),"dif"])
-  m.sABCDE["A","cost_hcscic"] <- sum(out_sA_prepared[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
-  m.sABCDE["A","nhb"]         <-     out_sA_prepared[["m.result"]][c("nhb"),"dif"]
-  
-  m.sABCDE["B","mcimil"]      <- sum(out_sB_prepared[["m.result"]][c("mci","mil"),"dif"])
-  m.sABCDE["B","alv"]         <-     out_sB_prepared[["m.result"]]["alv","dif"]
-  m.sABCDE["B","qaly_pt"]     <-     out_sB_prepared[["m.result"]]["qaly_pt","dif"]
-  m.sABCDE["B","cost_dxtx"]   <- sum(out_sB_prepared[["m.result"]][c("cost_dx","cost_tx"),"dif"])
-  m.sABCDE["B","cost_hcscic"] <- sum(out_sB_prepared[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
-  m.sABCDE["B","nhb"]         <-     out_sB_prepared[["m.result"]][c("nhb"),"dif"]
-  
-  m.sABCDE["C","mcimil"]      <- sum(out_sC_prepared[["m.result"]][c("mci","mil"),"dif"])
-  m.sABCDE["C","alv"]         <-     out_sC_prepared[["m.result"]]["alv","dif"]
-  m.sABCDE["C","qaly_pt"]     <-     out_sC_prepared[["m.result"]]["qaly_pt","dif"]
-  m.sABCDE["C","cost_dxtx"]   <- sum(out_sC_prepared[["m.result"]][c("cost_dx","cost_tx"),"dif"])
-  m.sABCDE["C","cost_hcscic"] <- sum(out_sC_prepared[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
-  m.sABCDE["C","nhb"]         <-     out_sC_prepared[["m.result"]][c("nhb"),"dif"]
-  
-  m.sABCDE["D","mcimil"]      <- sum(out_sD_prepared[["m.result"]][c("mci","mil"),"dif"])
-  m.sABCDE["D","alv"]         <-     out_sD_prepared[["m.result"]]["alv","dif"]
-  m.sABCDE["D","qaly_pt"]     <-     out_sD_prepared[["m.result"]]["qaly_pt","dif"]
-  m.sABCDE["D","cost_dxtx"]   <- sum(out_sD_prepared[["m.result"]][c("cost_dx","cost_tx"),"dif"])
-  m.sABCDE["D","cost_hcscic"] <- sum(out_sD_prepared[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
-  m.sABCDE["D","nhb"]         <-     out_sD_prepared[["m.result"]][c("nhb"),"dif"]
-  
-  m.sABCDE["E","mcimil"]      <- sum(out_sE_prepared[["m.result"]][c("mci","mil"),"dif"])
-  m.sABCDE["E","alv"]         <-     out_sE_prepared[["m.result"]]["alv","dif"]
-  m.sABCDE["E","qaly_pt"]     <-     out_sE_prepared[["m.result"]]["qaly_pt","dif"]
-  m.sABCDE["E","cost_dxtx"]   <- sum(out_sE_prepared[["m.result"]][c("cost_dx","cost_tx"),"dif"])
-  m.sABCDE["E","cost_hcscic"] <- sum(out_sE_prepared[["m.result"]][c("cost_hc","cost_sc","cost_ic"),"dif"])
-  m.sABCDE["E","nhb"]         <-     out_sE_prepared[["m.result"]][c("nhb"),"dif"]
-  
-  print(round(m.sABCDE,2))
-
-}
-
-
-
-######################################## 5.2.1. (BASE CASE) ########################################
-
-if(F) {
-  # run scenario
-  out_base <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
-  
-  # all outcomes
-  # str(out_base) # show structure of output
-  # out_base # all output
-  # out_base[["l.out"]] # strategy details
-  # out_base[["l.out"]][["soc"]] # strategy 'soc' details
-  # out_base[["l.out"]][["int"]] # strategy 'int' details
-  # out_base[["l.out"]][["soc"]][["a.TP"]] # strategy 'soc' transition probability matrix
-  # out_base[["l.out"]][["soc"]][["m.trace"]] # strategy 'soc' state trace
-  # out_base[["l.out"]][["soc"]][["m.out"]] # strategy 'soc' outcomes per cycle
-  # out_base[["l.out"]][["int"]][["a.TP"]] # idem for 'int'
-  # out_base[["l.out"]][["int"]][["m.trace"]]
-  # out_base[["l.out"]][["int"]][["m.out"]]
-  # out_base[["df.out"]] # scenario results
-  
-  
-  round(out_base[["l.out"]][["soc"]][["m.trace"]],3)
-  round(colSums(out_base[["l.out"]][["soc"]][["m.trace"]]),2)
-  print(round(colSums(out_base[["l.out"]][["int"]][["m.trace"]]),2))
-  
-  # summary outcomes
-  out_base_prepared <- f.result(l.out_scenario = out_base, n.cycles = 29)
-  print(round(out_base_prepared[["m.resultselect"]],5))
-  
-  # prepare: icer
-  icer <- calculate_icers(
-    cost = out_base[["df.out"]][,"COST"],
-    effect = out_base[["df.out"]][,"QALY"],
-    strategies = out_base[["df.out"]][,"strategy"]
-  )
-  print(icer)
-  
-  # optional: copy outcomes to clipboard
-  # temp.trace_soc <- out_base[["l.out"]][["soc"]][["m.trace"]]
-  # write.table(x = temp.trace_soc, file = "clipboard", sep = "\t", row.names = FALSE)
-  # temp.trace_int <- out_base[["l.out"]][["int"]][["m.trace"]]
-  # write.table(x = temp.trace_int, file = "clipboard", sep = "\t", row.names = FALSE)
-  
-  
-  # print tables/plots
-  
-  if(F) {
-    
-    ## table: summary outcomes
-    table.out_summary <- format(out_base_prepared[["m.resultselect"]], digits=2, scientific=FALSE, big.mark=",")
-    print(table.out_summary)
-    
-    ## figure: state trace
-    v.age_range <- c(l.inputs[["age_start"]]:(l.inputs[["age_start"]]+l.inputs[["n.cycle"]]-1)) # store age range
-    xx <- c(v.age_range, rev(v.age_range)) # prepare polygon x-values
-    a.out <- out_base_prepared[["a.out"]]
-    yy_mci <- c(a.out[,"mci","soc"], rev(a.out[,"mci","int"])) # polygon y-values
-    yy_mil <- c(a.out[,"mil","soc"], rev(a.out[,"mil","int"])) # idem
-    yy_mod <- c(a.out[,"mod","soc"], rev(a.out[,"mod","int"])) # idem
-    yy_sev <- c(a.out[,"sev","soc"], rev(a.out[,"sev","int"])) # idem
-    yy_dth <- c(a.out[,"dth","soc"], rev(a.out[,"dth","int"])) # idem
-    par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
-    matplot(
-      x = v.age_range, 
-      y = a.out[,,"soc"], 
-      type = "n", 
-      xlab = "age", 
-      ylab = "proportion in state", 
-      ylim = c(0,1), 
-      main = "state trace"
-    )
-    polygon(xx, yy_mci, col = "gray95", border = FALSE)
-    polygon(xx, yy_mil, col = "gray95", border = FALSE)
-    polygon(xx, yy_mod, col = "gray95", border = FALSE)
-    polygon(xx, yy_sev, col = "gray95", border = FALSE)
-    polygon(xx, yy_dth, col = "gray95", border = FALSE)
-    matlines(
-      x = v.age_range, 
-      y = a.out[,c("mci","mil","mod","sev","dth"),"soc"], 
-      type = "l",
-      lty = 1,
-      col = c("green","yellow","orange","red","black")
-    )
-    matlines(
-      x = v.age_range, 
-      y = a.out[,c("mci","mil","mod","sev","dth"),"int"], 
-      type = "l",
-      lty = 2,
-      col = c("green","yellow","orange","red","black")
-    )
-    legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1)
-    legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2))
-    
-    ## figure: mean time in state
-    m.time_state2 <- m.result[c("mci","mil","mod","sev"),c("soc","int")]
-    par(mar=c(8, 4, 4, 2), xpd=TRUE)
-    barplot(
-      height = m.time_state2, 
-      horiz = TRUE, 
-      xlab = "time (years)", 
-      ylab = "strategy", 
-      col=c("green","yellow","orange","red"), 
-      space = 0.2, 
-      main = "mean time in state"
-    )
-    legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.5), horiz=TRUE, fill=c("green","yellow","orange","red"))
-    text(x=c(0,cumsum(m.time_state2[1:3,"soc"])), y=1, labels=round(m.time_state2[,"soc"],1), pos=4)
-    text(x=c(0,cumsum(m.time_state2[1:3,"int"])), y=2, labels=round(m.time_state2[,"int"],1), pos=4)
-    
-    ## table: proportion in state
-    print(round(a.out[1:10,c("mci","mil","mod","sev"),"soc"], 2)) # state trace standard of care strategy
-    print(round(a.out[1:10,c("mci","mil","mod","sev"),"int"], 2)) # state trace intervention strategy
-    
-    ## figure: icer
-    par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
-    #print(plot(icer, label="all"))
-    
-    ## table: icer
-    print(as.data.frame(t(icer)))
-    
-    ## figure: annual cost difference by sector over time
-    m.cost_incr.pos <- m.cost_incr.neg <- m.trace_int[,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] - m.trace_soc[,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] # split positive and negative
-    m.cost_incr.pos[m.cost_incr.pos<0] <- 0
-    m.cost_incr.neg[m.cost_incr.neg>=0] <- 0
-    par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
-    barplot(
-      height = t(m.cost_incr.pos),
-      beside = F,
-      xlab = "time (years)",
-      ylab = "annual incremental costs",
-      ylim = c(-5000, 6000),
-      col = rainbow(5), 
-      names.arg = c(NA,NA,NA,NA,5,NA,NA,NA,NA,10,NA,NA,NA,NA,15,NA,NA,NA,NA,20,NA,NA,NA,NA,25,NA,NA,NA,NA),
-      main = "costs by sector over time"
-    )
-    barplot(
-      height = t(m.cost_incr.neg),
-      beside = F,
-      col = rainbow(5),
-      add = T
-    )
-    legend(x = "topright", legend = c("health","social","informal","treatment","diagnostic"), fill = rainbow(5))
-    
-  }
-  
-}
-
-
-######################################## 5.2.2. (CYCLE TIME) ########################################
-
-if(F) {
-  
-  # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
-  
-  # function to convert probability (p) to a different cycle time (t=time proportional to current 1-year cycle length)
-  f.p_time <- function(p, t) 1-(1-p)^(t)
-  
-  # proportion of the 1-year cycle length
-  t <- 6/12
-  
-  # simultaneously convert matrix of dementia transition probabilities to new cycle length
-  ## temporary matrix of dementia transition probabilities
-  t.TP <- matrix(data=NA, nrow=3, ncol=3, dimnames=list(c("mil","mod","sev"),c("mil","mod","sev")))
-  t.TP["mil","mod"] <- l.inputs[["p.mil_mod"]]
-  t.TP["mil","sev"] <- l.inputs[["p.mil_sev"]]
-  t.TP["mod","mil"] <- l.inputs[["p.mod_mil"]]
-  t.TP["mod","sev"] <- l.inputs[["p.mod_sev"]]
-  t.TP["sev","mil"] <- l.inputs[["p.sev_mil"]]
-  t.TP["sev","mod"] <- l.inputs[["p.sev_mod"]]
-  t.TP[1,1] <- 1-sum(t.TP[1,-1])
-  t.TP[2,2] <- 1-sum(t.TP[2,-2])
-  t.TP[3,3] <- 1-sum(t.TP[3,-3])
-  t.TP
-  
-  ## convert TPs using eigenvalues
-  D <- diag(x=eigen(t.TP)$values); D
-  V <- eigen(t.TP)$vectors; V
-  t.TP2 <- V %*% D^(t) %*% solve(V); t.TP2
-  ## manually check for non-numbers or negative values (if very small, might be rounded to 0)
-  t.TP2
-  t.TP2[t.TP2 < 0] <- 0 #convert small negative values to 0
-  t.TP2 <- round(t.TP2, 3) # round
-  dimnames(t.TP2) <- dimnames(t.TP) # add names
-  rowSums(t.TP2) # check if rowsums add up to 1
-  diag(t.TP2) <- NA # remove matrix diagonal (probability of remaining in the same state)
-  t.TP2[1,1] <- 1-sum(t.TP2[1,-1]) # calculate probability of remaining in the same state as '1-(other probabilities)'
-  t.TP2[2,2] <- 1-sum(t.TP2[2,-2])
-  t.TP2[3,3] <- 1-sum(t.TP2[3,-3])
-  t.TP2
-  
-  # check: compare p.mci_mil handled separately versus handled simultaneously with dementia transition probabilities
-  ## handled separately
-  t.TP2_mci <- rbind(0,cbind(0,t.TP2))
-  rownames(t.TP2_mci)[1] <- "mci"
-  colnames(t.TP2_mci)[1] <- "mci"
-  t.TP2_mci["mci","mil"] <- f.p_time(p = l.inputs[["p.mci_mil"]], t = t)
-  diag(t.TP2_mci) <- NA
-  t.TP2_mci[1,1] <- 1-sum(t.TP2_mci[1,-1])
-  t.TP2_mci[2,2] <- 1-sum(t.TP2_mci[2,-2])
-  t.TP2_mci[3,3] <- 1-sum(t.TP2_mci[3,-3])
-  t.TP2_mci[4,4] <- 1-sum(t.TP2_mci[4,-4])
-  t.TP2_mci
-  ## simple markov chain
-  TP2_mci_st <- c(1,0,0,0)
-  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
-  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
-  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
-  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
-  round(TP2_mci_st,3)
-  
-  ## handled simultaneously
-  t.TP_mci <- rbind(0,cbind(0,t.TP))
-  rownames(t.TP_mci)[1] <- "mci"
-  colnames(t.TP_mci)[1] <- "mci"
-  t.TP_mci["mci","mil"] <- l.inputs[["p.mci_mil"]]
-  diag(t.TP_mci) <- NA
-  t.TP_mci[1,1] <- 1-sum(t.TP_mci[1,-1])
-  t.TP_mci[2,2] <- 1-sum(t.TP_mci[2,-2])
-  t.TP_mci[3,3] <- 1-sum(t.TP_mci[3,-3])
-  t.TP_mci[4,4] <- 1-sum(t.TP_mci[4,-4])
-  t.TP_mci
-  D_mci <- diag(x=eigen(t.TP_mci)$values)
-  V_mci <- eigen(t.TP_mci)$vectors
-  t.TP_mci <- V_mci %*% D_mci^(t) %*% solve(V_mci); t.TP_mci
-  round(t.TP_mci,3)
-  t.TP_mci[t.TP_mci < 0] <- 0
-  t.TP_mci <- round(t.TP_mci, 3)
-  colnames(t.TP_mci) <- c("mci",colnames(t.TP))
-  rownames(t.TP_mci) <- c("mci",rownames(t.TP))
-  rowSums(t.TP_mci)
-  diag(t.TP_mci) <- NA
-  t.TP_mci[1,1] <- 1-sum(t.TP_mci[1,-1])
-  t.TP_mci[2,2] <- 1-sum(t.TP_mci[2,-2])
-  t.TP_mci[3,3] <- 1-sum(t.TP_mci[3,-3])
-  t.TP_mci[4,4] <- 1-sum(t.TP_mci[4,-4])
-  t.TP_mci
-  ## simple markov chain
-  TP_mci_st <- c(1,0,0,0)
-  TP_mci_st <- TP_mci_st %*% t.TP_mci
-  TP_mci_st <- TP_mci_st %*% t.TP_mci
-  TP_mci_st <- TP_mci_st %*% t.TP_mci
-  TP_mci_st <- TP_mci_st %*% t.TP_mci
-  round(TP_mci_st,3)
-  ## compare 2 methods
-  round(t.TP2_mci, 3) # TP
-  round(t.TP_mci, 3)
-  round(TP2_mci_st,3) # markov chain at cycle n
-  round(TP_mci_st,3)
-  
-  # adjust mortality table
-  m.mortality_rate_US_cycle4 <- m.mortality_rate_US * t # mortality table is rate, which can be multiplied rather than 
-  t.rows <- rep(x = 1:nrow(m.mortality_rate_US_cycle4), each = 1/t) # create vector for row numbers and repeat each row multiple times
-  m.mortality_rate_US_cycle4 <- m.mortality_rate_US_cycle4[t.rows,] # select each row multiple times
-  
-  # adjust inputs to cycle time (list is duplicated to force check all parameters for adjustment)
-  l.inputs_c4 <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), 
-    v.names_strat = c("soc","int"), 
-    age_start = 70/t, 
-    n.cycle = 29/t, 
-    sex = "female", 
-    p.mci_mil = f.p_time(p = l.inputs[["p.mci_mil"]], t = t), 
-    p.mci_mod = 0, # if this probability is different from 0, we think it is better to include it in the simultaneous conversion of transition probabilities to cycle time (as done for dementia transitions above)
-    p.mci_sev = 0, # idem
-    p.mil_mci = 0, # idem
-    p.mil_mod = t.TP2["mil","mod"], 
-    p.mil_sev = t.TP2["mil","sev"], 
-    p.mod_mil = t.TP2["mod","mil"], 
-    p.mod_sev = t.TP2["mod","sev"], 
-    p.sev_mil = t.TP2["sev","mil"], 
-    p.sev_mod = t.TP2["sev","mod"], 
-    p.mci_i = f.p_time(p = l.inputs[["p.mci_i"]], t = t), 
-    p.mil_i = f.p_time(p = l.inputs[["p.mil_i"]], t = t), 
-    p.mod_i = f.p_time(p = l.inputs[["p.mod_i"]], t = t), 
-    p.sev_i = f.p_time(p = l.inputs[["p.sev_i"]], t = t), 
-    p.tx_discontinuation1 = f.p_time(p = l.inputs[["p.tx_discontinuation1"]], t = t), 
-    p.tx_discontinuation2 = f.p_time(p = l.inputs[["p.tx_discontinuation2"]], t = t), 
-    tx_discontinuation2_begin = l.inputs[["tx_discontinuation2_begin"]], 
-    m.r.mortality = m.mortality_rate_US_cycle4, 
-    hr.mort_mci = 1, 
-    hr.mort_verymilddem = 1.82, 
-    hr.mort_mil = 1.318, 
-    hr.mort_mod = 2.419, 
-    hr.mort_sev = 4.267, 
-    rr.tx_mci_mil = 0.75, 
-    rr.tx_mci_mod = 1, 
-    rr.tx_mci_sev = 1, 
-    rr.tx_mil_mod = 0.75, 
-    rr.tx_mci_mil_dis = 0.75, 
-    rr.tx_mci_mod_dis = 1, 
-    rr.tx_mci_sev_dis = 1, 
-    rr.tx_mil_mod_dis = 0.75, 
-    tx_waning = f.p_time(p = l.inputs[["tx_waning"]], t = t), 
-    tx_waning_dis = f.p_time(p = l.inputs[["tx_waning_dis"]], t = t), 
-    tx_duration = l.inputs[["tx_duration"]] * (1/t), 
-    p.starting_state_mci = 1, 
-    u.mci_pt = l.inputs[["u.mci_pt"]] * t, # adjusted as summing of QALYs is not adjusted for cycle length in the model code
-    u.mil_pt = l.inputs[["u.mil_pt"]] * t, # idem
-    u.mod_pt = l.inputs[["u.mod_pt"]] * t, # idem
-    u.sev_pt = l.inputs[["u.sev_pt"]] * t, # idem
-    u.mci_ic = l.inputs[["u.mci_ic"]] * t, # idem
-    u.mil_ic = l.inputs[["u.mil_ic"]] * t, # idem
-    u.mod_ic = l.inputs[["u.mod_ic"]] * t, # idem
-    u.sev_ic = l.inputs[["u.sev_ic"]] * t, # idem
-    c.mci_hc = l.inputs[["c.mci_hc"]] * t, 
-    c.mil_hc = l.inputs[["c.mil_hc"]] * t, 
-    c.mod_hc = l.inputs[["c.mod_hc"]] * t, 
-    c.sev_hc = l.inputs[["c.sev_hc"]] * t, 
-    c.mci_sc = l.inputs[["c.mci_sc"]] * t, 
-    c.mil_sc = l.inputs[["c.mil_sc"]] * t, 
-    c.mod_sc = l.inputs[["c.mod_sc"]] * t, 
-    c.sev_sc = l.inputs[["c.sev_sc"]] * t, 
-    c.mci_ic = l.inputs[["c.mci_ic"]] * t, 
-    c.mil_ic = l.inputs[["c.mil_ic"]] * t, 
-    c.mod_ic = l.inputs[["c.mod_ic"]] * t, 
-    c.sev_ic = l.inputs[["c.sev_ic"]] * t, 
-    c.mci_hc_i = l.inputs[["c.mci_hc"]] * t, 
-    c.mil_hc_i = l.inputs[["c.mil_hc"]] * t, 
-    c.mod_hc_i = l.inputs[["c.mod_hc"]] * t, 
-    c.sev_hc_i = l.inputs[["c.sev_hc"]] * t, 
-    c.mci_sc_i = l.inputs[["c.mci_sc"]] * t, 
-    c.mil_sc_i = l.inputs[["c.mil_sc"]] * t, 
-    c.mod_sc_i = l.inputs[["c.mod_sc"]] * t, 
-    c.sev_sc_i = l.inputs[["c.sev_sc"]] * t, 
-    c.mci_ic_i = l.inputs[["c.mci_ic"]] * t, 
-    c.mil_ic_i = l.inputs[["c.mil_ic"]] * t, 
-    c.mod_ic_i = l.inputs[["c.mod_ic"]] * t, 
-    c.sev_ic_i = l.inputs[["c.sev_ic"]] * t, 
-    c.Tx = l.inputs[["c.Tx"]] * t, 
-    c.Tx_start = 2000, 
-    discount_QALY = f.p_time(p = l.inputs[["discount_QALY"]], t = t), 
-    discount_COST = f.p_time(p = l.inputs[["discount_COST"]], t = t), 
-    wtp = 40000 
-  )
-  
-  # run scenario
-  out_c4 <- f.run_scenario(l.inputs = l.inputs_c4, detailed = TRUE)
-  
-  # compare state trace
-  round(out_base[["l.out"]][["soc"]][["m.trace"]][c(1:5,20),],2)
-  round(out_c4  [["l.out"]][["soc"]][["m.trace"]][c(1:5,20)*(1/t)-1,],2)
-  # compare health-economic outcomes
-  out_base[["df.out"]]
-  out_c4[["df.out"]] # !!!TO-DO: life years must be corrected for different cycle time
-  # !!!TO-DO: these results need to be further validated
-  
-}
-
-
-######################################## 5.1. (PROBABILISTIC) ########################################
-# to be developed for this version, see release '2.1.0 ISPOR Europe 2023 abstract' for an older version
 
 
