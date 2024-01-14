@@ -20,18 +20,20 @@ setwd("~/GitHub/IPECAD")
 ######################################## 1.1. ESTIMATED ########################################
 
 # U.S. general population life table
-m.lifetable_US <- as.matrix(read.csv(file="life_tables/lifetable_US.csv", header=TRUE))[,c("male","female")] # import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
-m.mortality_rate_US <- -log(1-(m.lifetable_US)) # convert probability to rate
+## import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
+m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
+## convert probability to rate
+m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
+
+# U.S. general population life table (idem)
+m.lifetable_US_2016_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2016_sexcombined.csv", header=TRUE))[,c("male","female")]
+m.mortality_rate_US_2016_sexcombined <- -log(1-(m.lifetable_US_2016_sexcombined))
 
 
 
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
 ######################################## 1.2.1. INPUTS: REPLICATION ICER ########################################
-
-# U.S. general population life table
-m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
-m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
 
 # input parameters
 l.inputs_icer <- list(
@@ -123,16 +125,12 @@ l.inputs_icer <- list(
   discount_QALY = 0.03, 
   discount_COST = 0.03, 
   wtp = 100000, 
-  half_cycle_correction = TRUE #TRUE
+  half_cycle_correction = TRUE
 )
 
 
 
 ######################################## 1.2.1. INPUTS: CROSS-VALIDATION ADACE ########################################
-
-# U.S. general population life table
-m.lifetable_US_2016_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2016_sexcombined.csv", header=TRUE))[,c("male","female")]
-m.mortality_rate_US_2016_sexcombined <- -log(1-(m.lifetable_US_2016_sexcombined))
 
 # input parameters
 l.inputs_adace <- list(
@@ -782,7 +780,25 @@ if(F) {
 
 
 ######################################## 4.1. EXTREME SCENARIOS ########################################
-# to-do
+
+if(F) {
+
+  # identical scenarios
+  l.inputs_icer_extr1 <- l.inputs_icer
+  l.inputs_icer_extr1[["rr.tx_mci_mil"]] <- 1
+  l.inputs_icer_extr1[["rr.tx_mil_mod"]] <- 1
+  l.inputs_icer_extr1[["rr.tx_mil_sev"]] <- 1
+  l.inputs_icer_extr1[["u.Tx_start"]] <- 0
+  l.inputs_icer_extr1[["c.Tx"]] <- 0
+  l.inputs_icer_extr1[["c.Tx_start"]] <- 0
+  ## run scenario and results
+  l.out_icer_extr1 <- f.run_scenario(l.inputs = l.inputs_icer_extr1, detailed = TRUE)
+  m.result_icer_extr1 <- f.result(l.out_scenario = l.out_icer_extr1, within = 2)
+  ## print results
+  round(m.result_icer_extr1,2)
+  
+}
+
 
 ######################################## 5. ANALYSIS ########################################
 
@@ -956,7 +972,7 @@ if(T) {
 
 ######################################## 5.2. CROSS-VALIDATE: AD-ACE ########################################
 
-if(T) {
+if(F) {
   
   # run scenario and results
   l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
@@ -985,7 +1001,10 @@ if(F) {
   l.inputs_icer_1[["rr.tx_mil_sev"]] <- 1-0.23
   
   # CDR-SB time shift, calibrate
-  l.inputs_icer_2 <- l.inputs_icer # to-do
+  l.inputs_icer_2 <- l.inputs_icer
+  
+  # headroom function
+    # see specific code chapter below (due to use of different cycle length)
   
   # MMSE progression (Vos & SveDem)
     ## source: [Vos, 2015: https://doi.org/10.1093/brain/awv029]
@@ -1057,6 +1076,9 @@ if(F) {
   l.inputs_icer_E[["p.tx_discontinuation2"]] <- 1
   l.inputs_icer_E[["tx_discontinuation2_begin"]] <- 2
   
+  # methodology: cycle lengths 
+    # see specific code chapter below
+  
   # run models
   
   ## initialize outcomes table
@@ -1092,6 +1114,239 @@ if(F) {
   }
   print(round(m.table1,2))
   write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  
+  # proportion results extrapolated
+  round(m.result_icer[c("mci","mil","ly","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic"),c("dif_within","dif_extrapolate","dif_p_extrapolate")],2)
+  
+  
+}
+
+
+######################################## 5.3.1. CYCLE TIME ########################################
+
+if(T) {
+  
+  # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
+  
+  # model inputs list
+  l.inputs_cycle <- l.inputs_icer
+  
+  # function to convert probability (p) to a different (cycle) time period (t=time proportional to current 1-year cycle length)
+  f.p_time <- function(p, t) 1-(1-p)^(t)
+  
+  # proportion of the 1-year cycle length
+  t <- 1/12
+  
+  # simultaneously convert matrix of dementia transition probabilities to new cycle length
+  ## temporary matrix of dementia transition probabilities
+  t.TP <- matrix(data=NA, nrow=3, ncol=3, dimnames=list(c("mil","mod","sev"),c("mil","mod","sev")))
+  t.TP["mil","mod"] <- l.inputs_cycle[["p.mil_mod"]]
+  t.TP["mil","sev"] <- l.inputs_cycle[["p.mil_sev"]]
+  t.TP["mod","mil"] <- l.inputs_cycle[["p.mod_mil"]]
+  t.TP["mod","sev"] <- l.inputs_cycle[["p.mod_sev"]]
+  t.TP["sev","mil"] <- l.inputs_cycle[["p.sev_mil"]]
+  t.TP["sev","mod"] <- l.inputs_cycle[["p.sev_mod"]]
+  t.TP[1,1] <- 1-sum(t.TP[1,-1])
+  t.TP[2,2] <- 1-sum(t.TP[2,-2])
+  t.TP[3,3] <- 1-sum(t.TP[3,-3])
+  t.TP
+  
+  ## convert TPs using eigenvalues
+  D <- diag(x=eigen(t.TP)$values); D
+  V <- eigen(t.TP)$vectors; V
+  t.TP2 <- V %*% D^(t) %*% solve(V); t.TP2
+  ## manually check for non-numbers or negative values (if very small, might be rounded to 0)
+  t.TP2
+  t.TP2[t.TP2 < 0] <- 0 # convert small negative values to 0
+  t.TP2 <- round(t.TP2, 3) # round
+  dimnames(t.TP2) <- dimnames(t.TP) # add names
+  rowSums(t.TP2) # check if rowsums add up to 1
+  diag(t.TP2) <- NA # remove matrix diagonal (probability of remaining in the same state)
+  t.TP2[1,1] <- 1-sum(t.TP2[1,-1]) # calculate probability of remaining in the same state as '1-(other probabilities)'
+  t.TP2[2,2] <- 1-sum(t.TP2[2,-2])
+  t.TP2[3,3] <- 1-sum(t.TP2[3,-3])
+  t.TP2
+  
+  # check: convert back to 1-year cycle to estimate the difference with the original estimates
+  D2 <- diag(x=eigen(t.TP2)$values); D2
+  V2 <- eigen(t.TP2)$vectors; V2
+  t.TP22 <- V2 %*% D2^(1/t) %*% solve(V2); t.TP22
+  round(t.TP22,2)
+  round(t.TP,2)
+  round(t.TP - t.TP22,2)
+  
+  # check: compare p.mci_mil handled separately versus handled simultaneously with dementia transition probabilities (backtransitions from dementia to mci are assumed 0)
+  ## handled separately
+  t.TP2_mci <- rbind(0,cbind(0,t.TP2))
+  rownames(t.TP2_mci)[1] <- "mci"
+  colnames(t.TP2_mci)[1] <- "mci"
+  t.TP2_mci["mci","mil"] <- f.p_time(p = l.inputs_cycle[["p.mci_mil"]], t = t)
+  diag(t.TP2_mci) <- NA
+  t.TP2_mci[1,1] <- 1-sum(t.TP2_mci[1,-1])
+  t.TP2_mci[2,2] <- 1-sum(t.TP2_mci[2,-2])
+  t.TP2_mci[3,3] <- 1-sum(t.TP2_mci[3,-3])
+  t.TP2_mci[4,4] <- 1-sum(t.TP2_mci[4,-4])
+  t.TP2_mci
+  ## simple markov chain
+  TP2_mci_st <- c(1,0,0,0)
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  TP2_mci_st <- TP2_mci_st %*% t.TP2_mci
+  round(TP2_mci_st,3)
+  
+  ## handled simultaneously
+  t.TP_mci <- rbind(0,cbind(0,t.TP))
+  rownames(t.TP_mci)[1] <- "mci"
+  colnames(t.TP_mci)[1] <- "mci"
+  t.TP_mci["mci","mil"] <- l.inputs_cycle[["p.mci_mil"]]
+  diag(t.TP_mci) <- NA
+  t.TP_mci[1,1] <- 1-sum(t.TP_mci[1,-1])
+  t.TP_mci[2,2] <- 1-sum(t.TP_mci[2,-2])
+  t.TP_mci[3,3] <- 1-sum(t.TP_mci[3,-3])
+  t.TP_mci[4,4] <- 1-sum(t.TP_mci[4,-4])
+  t.TP_mci
+  D_mci <- diag(x=eigen(t.TP_mci)$values)
+  V_mci <- eigen(t.TP_mci)$vectors
+  t.TP_mci <- V_mci %*% D_mci^(t) %*% solve(V_mci); t.TP_mci
+  round(t.TP_mci,3)
+  t.TP_mci[t.TP_mci < 0] <- 0
+  t.TP_mci <- round(t.TP_mci, 3)
+  colnames(t.TP_mci) <- c("mci",colnames(t.TP))
+  rownames(t.TP_mci) <- c("mci",rownames(t.TP))
+  rowSums(t.TP_mci)
+  diag(t.TP_mci) <- NA
+  t.TP_mci[1,1] <- 1-sum(t.TP_mci[1,-1])
+  t.TP_mci[2,2] <- 1-sum(t.TP_mci[2,-2])
+  t.TP_mci[3,3] <- 1-sum(t.TP_mci[3,-3])
+  t.TP_mci[4,4] <- 1-sum(t.TP_mci[4,-4])
+  t.TP_mci
+  ## simple markov chain
+  TP_mci_st <- c(1,0,0,0)
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  TP_mci_st <- TP_mci_st %*% t.TP_mci
+  round(TP_mci_st,3)
+  ## compare 2 methods
+  round(t.TP2_mci, 3) # TP
+  round(t.TP_mci, 3)
+  round(TP2_mci_st,3) # markov chain at cycle n
+  round(TP_mci_st,3)
+  round(TP2_mci_st - TP_mci_st,2)
+  
+  # adjust mortality table
+  m.mortality_rate_US_2019_sexcombined_cycle <- m.mortality_rate_US_2019_sexcombined * t # mortality table is rate, which can be multiplied (as compared to probability)
+  t.rows <- rep(x = 1:nrow(m.mortality_rate_US_2019_sexcombined_cycle), each = 1/t) # create vector for age row numbers and repeat each age row multiple times
+  m.mortality_rate_US_2019_sexcombined_cycle <- m.mortality_rate_US_2019_sexcombined_cycle[t.rows,] # select each row multiple times
+  
+  # adjust inputs to cycle time (list is duplicated to force check all parameters for adjustment)
+  l.inputs_cycle2 <- l.inputs_cycle
+  
+  l.inputs_cycle2<- list(
+    v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+    v.names_strat = c("soc","int"), 
+    age_start = l.inputs_cycle2[["age_start"]] / t, 
+    sex = "male", 
+    p.starting_state_mci = 0.55, 
+    n.cycle = l.inputs_cycle2[["n.cycle"]] / t, 
+    p.mci_mil = f.p_time(p = l.inputs_cycle2[["p.mci_mil"]], t = t), 
+    p.mci_mod = f.p_time(p = l.inputs_cycle2[["p.mci_mod"]], t = t), 
+    p.mci_sev = f.p_time(p = l.inputs_cycle2[["p.mci_sev"]], t = t), 
+    p.mil_mci = 0, # assumption: changed to 0
+    p.mil_mod = t.TP2["mil","mod"], 
+    p.mil_sev = t.TP2["mil","sev"], 
+    p.mod_mil = t.TP2["mod","mil"], 
+    p.mod_sev = t.TP2["mod","sev"], 
+    p.sev_mil = t.TP2["sev","mil"], 
+    p.sev_mod = t.TP2["sev","mod"], 
+    p.mci_i = f.p_time(p = l.inputs_cycle2[["p.mci_i"]], t = t), 
+    p.mil_i = f.p_time(p = l.inputs_cycle2[["p.mil_i"]], t = t), 
+    p.mod_i = f.p_time(p = l.inputs_cycle2[["p.mod_i"]], t = t), 
+    p.sev_i = f.p_time(p = l.inputs_cycle2[["p.sev_i"]], t = t), 
+    m.r.mortality = m.mortality_rate_US_2019_sexcombined_cycle, 
+    hr.mort_mci = 1.82, 
+    hr.mort_mil = 2.92, 
+    hr.mort_mod = 3.85, 
+    hr.mort_sev = 9.52, 
+    rr.tx_mci_mil = 0.69, 
+    rr.tx_mci_mod = 1, 
+    rr.tx_mci_sev = 1, 
+    rr.tx_mil_mod = 0.69, 
+    rr.tx_mil_sev = 0.69, 
+    rr.tx_mci_mil_dis = 1, 
+    rr.tx_mci_mod_dis = 1, 
+    rr.tx_mci_sev_dis = 1, 
+    rr.tx_mil_mod_dis = 1, 
+    rr.tx_mil_sev_dis = 1, 
+    p.tx_discontinuation1 = f.p_time(p = l.inputs_cycle2[["p.tx_discontinuation1"]], t = t), 
+    p.tx_discontinuation2 = f.p_time(p = l.inputs_cycle2[["p.tx_discontinuation2"]], t = t), 
+    tx_discontinuation2_begin = l.inputs_cycle2[["tx_discontinuation2_begin"]] / t, 
+    tx_duration = l.inputs_cycle2[["tx_duration"]] / t, 
+    tx_waning = f.p_time(p = l.inputs_cycle2[["tx_waning"]], t = t), 
+    tx_waning_dis = f.p_time(p = l.inputs_cycle2[["tx_waning_dis"]], t = t), 
+    u.mci_pt = l.inputs_cycle2[["u.mci_pt"]] * t, 
+    u.mil_pt = l.inputs_cycle2[["u.mil_pt"]] * t, 
+    u.mod_pt = l.inputs_cycle2[["u.mod_pt"]] * t, 
+    u.sev_pt = l.inputs_cycle2[["u.sev_pt"]] * t, 
+    u.mci_pt_i = l.inputs_cycle2[["u.mci_pt_i"]] * t, 
+    u.mil_pt_i = l.inputs_cycle2[["u.mil_pt_i"]] * t, 
+    u.mod_pt_i = l.inputs_cycle2[["u.mod_pt_i"]] * t, 
+    u.sev_pt_i = l.inputs_cycle2[["u.sev_pt_i"]] * t, 
+    u.mci_ic = l.inputs_cycle2[["u.mci_ic"]] * t, 
+    u.mil_ic = l.inputs_cycle2[["u.mil_ic"]] * t, 
+    u.mod_ic = l.inputs_cycle2[["u.mod_ic"]] * t, 
+    u.sev_ic = l.inputs_cycle2[["u.sev_ic"]] * t, 
+    u.mci_ic_i = l.inputs_cycle2[["u.mci_ic_i"]] * t, 
+    u.mil_ic_i = l.inputs_cycle2[["u.mil_ic_i"]] * t, 
+    u.mod_ic_i = l.inputs_cycle2[["u.mod_ic_i"]] * t, 
+    u.sev_ic_i = l.inputs_cycle2[["u.sev_ic_i"]] * t, 
+    u.Tx_start = l.inputs_cycle2[["u.Tx_start"]], # not affected by cycle time
+    c.mci_hc = l.inputs_cycle2[["c.mci_hc"]] * t, 
+    c.mil_hc = l.inputs_cycle2[["c.mil_hc"]] * t, 
+    c.mod_hc = l.inputs_cycle2[["c.mod_hc"]] * t, 
+    c.sev_hc = l.inputs_cycle2[["c.sev_hc"]] * t, 
+    c.mci_hc_i = l.inputs_cycle2[["c.mci_hc_i"]] * t, 
+    c.mil_hc_i = l.inputs_cycle2[["c.mil_hc_i"]] * t, 
+    c.mod_hc_i = l.inputs_cycle2[["c.mod_hc_i"]] * t, 
+    c.sev_hc_i = l.inputs_cycle2[["c.sev_hc_i"]] * t, 
+    c.mci_sc = l.inputs_cycle2[["c.mci_sc"]] * t, 
+    c.mil_sc = l.inputs_cycle2[["c.mil_sc"]] * t, 
+    c.mod_sc = l.inputs_cycle2[["c.mod_sc"]] * t, 
+    c.sev_sc = l.inputs_cycle2[["c.sev_sc"]] * t, 
+    c.mci_sc_i = l.inputs_cycle2[["c.mci_sc_i"]] * t, 
+    c.mil_sc_i = l.inputs_cycle2[["c.mil_sc_i"]] * t, 
+    c.mod_sc_i = l.inputs_cycle2[["c.mod_sc_i"]] * t, 
+    c.sev_sc_i = l.inputs_cycle2[["c.sev_sc_i"]] * t, 
+    c.mci_ic =  l.inputs_cycle2[["c.mci_ic"]] * t, 
+    c.mil_ic = l.inputs_cycle2[["c.mil_ic"]] * t, 
+    c.mod_ic = l.inputs_cycle2[["c.mod_ic"]] * t, 
+    c.sev_ic = l.inputs_cycle2[["c.sev_ic"]] * t, 
+    c.mci_ic_i = l.inputs_cycle2[["c.mci_ic_i"]] * t, 
+    c.mil_ic_i = l.inputs_cycle2[["c.mil_ic_i"]] * t, 
+    c.mod_ic_i = l.inputs_cycle2[["c.mod_ic_i"]] * t, 
+    c.sev_ic_i = l.inputs_cycle2[["c.sev_ic_i"]] * t, 
+    c.Tx = l.inputs_cycle2[["c.Tx"]] * t, 
+    c.Tx_start = l.inputs_cycle2[["c.Tx_start"]], # not affected by cycle time
+    discount_EFFECT = l.inputs_cycle2[["discount_EFFECT"]] * t, 
+    discount_QALY = l.inputs_cycle2[["discount_QALY"]] * t, 
+    discount_COST = l.inputs_cycle2[["discount_COST"]] * t, 
+    wtp = l.inputs_cycle2[["wtp"]], # not affected by cycle time
+    half_cycle_correction = FALSE # could be no longer needed with small cycle time
+  )
+  
+  # run scenario
+  l.out_cycle2 <- f.run_scenario(l.inputs = l.inputs_cycle2, detailed = TRUE)
+  m.result_cycle2 <- f.result(l.out_scenario = l.out_cycle2, within = 4)
+  
+  # compare state trace
+  round(l.out_icer  [["l.out"]][["soc"]][["m.trace"]][c(1:5,10,20),],2)
+  round(l.out_cycle2[["l.out"]][["soc"]][["m.trace"]][c(1:5,10,20)*(1/t)-1,],2)
+  # compare health-economic outcomes
+  l.out_icer[["df.out"]]
+  l.out_cycle2[["df.out"]]
+  icer_icer <- calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"]); print(icer_icer, digits=2)
+  icer_cycle2 <- calculate_icers(cost = l.out_cycle2[["df.out"]][,"COST"], effect = l.out_cycle2[["df.out"]][,"QALY"], strategies = l.out_cycle2[["df.out"]][,"strategy"]); print(icer_cycle2, digits=2)
   
 }
 
