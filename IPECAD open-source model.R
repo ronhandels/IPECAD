@@ -817,7 +817,7 @@ if(T) {
   
   # standard tables/plots
   
-  if(F) {
+  if(T) {
     
     # all outcomes
     # str(l.out_icer) # show structure of output
@@ -989,22 +989,19 @@ if(F) {
 
 ######################################## 5.3. SENSITIVITY ANALYSIS ########################################
 
-if(F) {
+if(T) {
   
   # base case
     # icer (already defined)
   
   # CDR-SB RR=23%
-  l.inputs_icer_1 <- l.inputs_icer
-  l.inputs_icer_1[["rr.tx_mci_mil"]] <- 1-0.23
-  l.inputs_icer_1[["rr.tx_mil_mod"]] <- 1-0.23
-  l.inputs_icer_1[["rr.tx_mil_sev"]] <- 1-0.23
-  
-  # CDR-SB time shift, calibrate
   l.inputs_icer_2 <- l.inputs_icer
+  l.inputs_icer_2[["rr.tx_mci_mil"]] <- 1-0.23
+  l.inputs_icer_2[["rr.tx_mil_mod"]] <- 1-0.23
+  l.inputs_icer_2[["rr.tx_mil_sev"]] <- 1-0.23
   
-  # headroom function
-    # see specific code chapter below (due to use of different cycle length)
+  # CDR-SB time shift (calibrate)
+    # see code chapter 'calibrate to time shift'
   
   # MMSE progression (Vos & SveDem)
     ## source: [Vos, 2015: https://doi.org/10.1093/brain/awv029]
@@ -1025,31 +1022,31 @@ if(F) {
     temp.est1 <- 1-exp(- -log(1-temp.est1)/3)
     temp.est1
   
-  l.inputs_icer_3 <- l.inputs_icer
-  l.inputs_icer_3[["p.mci_mil"]] <- round(temp.est2,3) # 0.248
-  l.inputs_icer_3[["p.mci_mod"]] <- 0
-  l.inputs_icer_3[["p.mci_sev"]] <- 0
-  l.inputs_icer_3[["p.mil_mci"]] <- 0
-  l.inputs_icer_3[["p.mil_mod"]] <- 0.293
-  l.inputs_icer_3[["p.mil_sev"]] <- 0.001
-  l.inputs_icer_3[["p.mod_mil"]] <- 0.087
-  l.inputs_icer_3[["p.mod_sev"]] <- 0.109
-  l.inputs_icer_3[["p.sev_mil"]] <- 0.000
-  l.inputs_icer_3[["p.sev_mod"]] <- 0.196
+  l.inputs_icer_4 <- l.inputs_icer
+  l.inputs_icer_4[["p.mci_mil"]] <- round(temp.est2,3) # 0.248
+  l.inputs_icer_4[["p.mci_mod"]] <- 0
+  l.inputs_icer_4[["p.mci_sev"]] <- 0
+  l.inputs_icer_4[["p.mil_mci"]] <- 0
+  l.inputs_icer_4[["p.mil_mod"]] <- 0.293
+  l.inputs_icer_4[["p.mil_sev"]] <- 0.001
+  l.inputs_icer_4[["p.mod_mil"]] <- 0.087
+  l.inputs_icer_4[["p.mod_sev"]] <- 0.109
+  l.inputs_icer_4[["p.sev_mil"]] <- 0.000
+  l.inputs_icer_4[["p.sev_mod"]] <- 0.196
   
   # Mortality (SveDem)
-  l.inputs_icer_4 <- l.inputs_icer
-  l.inputs_icer_4[["hr.mort_mci"]] <- 1
-  l.inputs_icer_4[["hr.mort_mil"]] <- 1.318 * 1.82
-  l.inputs_icer_4[["hr.mort_mod"]] <- 2.419 * 1.82
-  l.inputs_icer_4[["hr.mort_sev"]] <- 4.267 * 1.82
-  
-  # MMSE progression and mortality (Vos & SveDem)
-  l.inputs_icer_5 <- l.inputs_icer_3
+  l.inputs_icer_5 <- l.inputs_icer
   l.inputs_icer_5[["hr.mort_mci"]] <- 1
   l.inputs_icer_5[["hr.mort_mil"]] <- 1.318 * 1.82
   l.inputs_icer_5[["hr.mort_mod"]] <- 2.419 * 1.82
   l.inputs_icer_5[["hr.mort_sev"]] <- 4.267 * 1.82
+  
+  # MMSE progression and mortality (Vos & SveDem)
+  l.inputs_icer_6 <- l.inputs_icer_4
+  l.inputs_icer_6[["hr.mort_mci"]] <- 1
+  l.inputs_icer_6[["hr.mort_mil"]] <- 1.318 * 1.82
+  l.inputs_icer_6[["hr.mort_mod"]] <- 2.419 * 1.82
+  l.inputs_icer_6[["hr.mort_sev"]] <- 4.267 * 1.82
   
   # A: continue treatment & no waning during treatment
     # n/a: identical to base case
@@ -1077,30 +1074,30 @@ if(F) {
   l.inputs_icer_E[["tx_discontinuation2_begin"]] <- 2
   
   # methodology: cycle lengths 
-    # see specific code chapter below
+    # see code chapter 'cycle time'
   
-  # run models
+  # run scenarios
   
   ## initialize outcomes table
   l.out_scenario <- list()
   l.out_scenario_prep <- list()
-  m.table1 <- matrix(data = NA, nrow = 10, ncol = 7, dimnames = list(NULL,c("mcimil","ly","qaly","cost_dxtx","cost_care","nhb","icer")))
+  m.table1 <- matrix(data = NA, nrow = 12, ncol = 7, dimnames = list(NULL,c("mcimil","ly","qaly","cost_dxtx","cost_care","nhb","icer")))
   
-  ## run models
+  ## run scenarios
   l.out_scenario[[1]] <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
-  l.out_scenario[[2]] <- f.run_scenario(l.inputs = l.inputs_icer_1, detailed = TRUE)
-  l.out_scenario[[3]] <- f.run_scenario(l.inputs = l.inputs_icer_2, detailed = TRUE)
-  l.out_scenario[[4]] <- f.run_scenario(l.inputs = l.inputs_icer_3, detailed = TRUE)
-  l.out_scenario[[5]] <- f.run_scenario(l.inputs = l.inputs_icer_4, detailed = TRUE)
-  l.out_scenario[[6]] <- f.run_scenario(l.inputs = l.inputs_icer_5, detailed = TRUE)
-  l.out_scenario[[7]] <- f.run_scenario(l.inputs = l.inputs_icer_B, detailed = TRUE)
-  l.out_scenario[[8]] <- f.run_scenario(l.inputs = l.inputs_icer_C, detailed = TRUE)
-  l.out_scenario[[9]] <- f.run_scenario(l.inputs = l.inputs_icer_D, detailed = TRUE)
-  l.out_scenario[[10]] <- f.run_scenario(l.inputs = l.inputs_icer_E, detailed = TRUE)
+  l.out_scenario[[2]] <- f.run_scenario(l.inputs = l.inputs_icer_2, detailed = TRUE)
+  
+  l.out_scenario[[4]] <- f.run_scenario(l.inputs = l.inputs_icer_4, detailed = TRUE)
+  l.out_scenario[[5]] <- f.run_scenario(l.inputs = l.inputs_icer_5, detailed = TRUE)
+  l.out_scenario[[6]] <- f.run_scenario(l.inputs = l.inputs_icer_6, detailed = TRUE)
+  
+  l.out_scenario[[8]] <- f.run_scenario(l.inputs = l.inputs_icer_B, detailed = TRUE)
+  l.out_scenario[[9]] <- f.run_scenario(l.inputs = l.inputs_icer_C, detailed = TRUE)
+  l.out_scenario[[10]] <- f.run_scenario(l.inputs = l.inputs_icer_D, detailed = TRUE)
+  l.out_scenario[[11]] <- f.run_scenario(l.inputs = l.inputs_icer_E, detailed = TRUE)
 
   ## store results
-  i=1
-  for(i in 1:10) {
+  for(i in c(1,2, 4,5,6, 8,9,10,11)) {
     l.out_scenario_prep[[i]] <- f.result(l.out_scenario = l.out_scenario[[i]], within = 2)
     if(l.out_scenario_prep[[i]]["mci","dif"]<0) stop("lower person years")
     if(l.out_scenario_prep[[i]]["mil","dif"]<0) stop("lower person years")
@@ -1135,7 +1132,7 @@ if(T) {
   f.p_time <- function(p, t) 1-(1-p)^(t)
   
   # proportion of the 1-year cycle length
-  t <- 1/12
+  t <- 1/24 # alternatively set to 1/24 for 'calibrate to time shift'
   
   # simultaneously convert matrix of dementia transition probabilities to new cycle length
   ## temporary matrix of dementia transition probabilities
@@ -1335,13 +1332,38 @@ if(T) {
     half_cycle_correction = FALSE # could be no longer needed with small cycle time
   )
   
-  # run scenario
+  # run scenario and results
   l.out_cycle2 <- f.run_scenario(l.inputs = l.inputs_cycle2, detailed = TRUE)
   m.result_cycle2 <- f.result(l.out_scenario = l.out_cycle2, within = 4)
   
+  # store result in sensitivity analysis table
+  m.table1[12,"mcimil"] <- sum(m.result_cycle2[c("mci","mil"),"dif"])/(1/t)
+  m.table1[12,"ly"] <- m.result_cycle2["ly","dif"]/(1/t)
+  m.table1[12,"qaly"] <- m.result_cycle2["qaly","dif"]
+  m.table1[12,"cost_dxtx"] <- sum(m.result_cycle2[c("cost_dx","cost_tx"),"dif"])
+  m.table1[12,"cost_care"] <- sum(m.result_cycle2[c("cost_hc","cost_sc","cost_ic"),"dif"])
+  m.table1[12,"nhb"] <- m.result_cycle2["nhb","dif"]
+  m.table1[12,"icer"] <- calculate_icers(cost = l.out_cycle2[["df.out"]][,"COST"], effect = l.out_cycle2[["df.out"]][,"QALY"], strategies = l.out_cycle2[["df.out"]][,"strategy"])[2,"ICER"]
+  
   # compare state trace
-  round(l.out_icer  [["l.out"]][["soc"]][["m.trace"]][c(1:5,10,20),],2)
-  round(l.out_cycle2[["l.out"]][["soc"]][["m.trace"]][c(1:5,10,20)*(1/t)-1,],2)
+  tracesoc_icer   <- l.out_icer  [["l.out"]][["soc"]][["m.trace"]] # store trace
+  traceint_icer   <- l.out_icer  [["l.out"]][["int"]][["m.trace"]]
+  tracesoc_cycle2 <- l.out_cycle2[["l.out"]][["soc"]][["m.trace"]]
+  traceint_cycle2 <- l.out_cycle2[["l.out"]][["int"]][["m.trace"]]
+  round(tracesoc_icer  [c(1:5,10,20),],2) # print trace for cycles 1:5 and cycle 10 and cycle 20 (with 1-year cycle length)
+  round(tracesoc_cycle2[(c(1:5,10,20)-1)*(1/t)+1,],2) # print trace for cycles 1,13,25,37,49 and cycle 109 and cycle 229 (with 1-month cycle length)
+  round(traceint_icer  [c(1:5,10,20),],2) # idem
+  round(traceint_cycle2[(c(1:5,10,20)-1)*(1/t)+1,],2) # idem
+  plot (rowSums(tracesoc_icer  [c(1:10)            ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="black", lty=1) # plot trace mci and mil for soc
+  lines(rowSums(traceint_icer  [c(1:10)            ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="black", lty=2)
+  #lines(rowSums(l.out_icer$l.out$soc$m.out[,c("mci","mil")]), col="red") # half-cycle corrected
+  #lines(rowSums(l.out_icer$l.out$int$m.out[,c("mci","mil")]), col="red", lty=2) # half-cycle corrected
+  lines(rowSums(tracesoc_cycle2[(c(1:10)-1)*(1/t)+1,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="blue" , lty=1)
+  lines(rowSums(traceint_cycle2[(c(1:10)-1)*(1/t)+1,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="blue" , lty=2)
+  sum(tracesoc_icer  [2:3 ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]) # person-years in soc in first 2 years with 1-year cycle length
+  sum(traceint_icer  [2:3 ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]) # person-years in int in first 2 years with 1-year cycle length
+  sum(tracesoc_cycle2[2:25,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")])/12 # person-years in soc in first 2 years with 1-month cycle length
+  sum(traceint_cycle2[2:25,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")])/12 # person-years in int in first 2 years with 1-month cycle length
   # compare health-economic outcomes
   l.out_icer[["df.out"]]
   l.out_cycle2[["df.out"]]
@@ -1349,5 +1371,73 @@ if(T) {
   icer_cycle2 <- calculate_icers(cost = l.out_cycle2[["df.out"]][,"COST"], effect = l.out_cycle2[["df.out"]][,"QALY"], strategies = l.out_cycle2[["df.out"]][,"strategy"]); print(icer_cycle2, digits=2)
   
 }
+
+
+
+######################################## 5.3.2. CALIBRATE TO TIME SHIFT ########################################
+
+if(F) {
+  
+  # copy input estimates for calibration (cycle time must be 1/24 year, i.e., 0.5 month)
+  l.inputs_cal <- l.inputs_cycle2
+  
+  # (temporary value for debugging; can be ignored)
+  x<-0.69
+  
+  # function to estimate proportion at the required time delay
+  f.headroom <- function(x) {
+    l.inputs_cal[["rr.tx_mci_mil"]] <- x
+    l.inputs_cal[["rr.tx_mil_mod"]] <- x
+    l.inputs_cal[["rr.tx_mil_sev"]] <- x
+    
+    # run scenario and results
+    l.out_cal <- f.run_scenario(l.inputs = l.inputs_cal, detailed=TRUE)
+    m.result_cal <- f.result(l.out_scenario = l.out_cal, within = 2)
+    
+    # temporary result
+    round(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:37,c("mci","mil","mod","sev","dth")],3) # soc: state trace up to cycle 37 (=1.5 years with 1/24 cycle length)
+    round(l.out_cal[["l.out"]][["int"]][["m.out"]][1:37,c("mci","mil","mod","sev","dth")],3) # int: idem
+    
+    # obtain to-be calibrated result
+    p.int18m <- l.out_cal[["l.out"]][["int"]][["m.out"]][36+1,"mil"] # proportion mci int at cycle 37 (=1.5 year, which matches trial duration); change mci to mil, see below
+    p.soc18m <- l.out_cal[["l.out"]][["soc"]][["m.out"]][36+1-2*5.5,"mil"] # proportion mci soc at cycle 26 (=1.5 year minus 5.5 months, which matches the to-be calibrated time delay); change mci to mil, see below
+      round(p.int18m,3)
+      round(p.soc18m,3)
+    
+    # calculate difference
+    dif <- p.int18m - p.soc18m
+    
+    # return difference
+    return(dif)
+  }
+  
+  # test run the function
+  f.headroom(x = 0.1)
+  
+  # calibrate relative risk treatment effect such that proportion mci in the int strategy at 18 months is the same as proportion mci in the soc strategy at 18-5.5=12.5 months (i.e., time shift of 5.5 months)
+  result_optimize <- optimize(f = function(x) abs(f.headroom(x)), interval = c(0.01,0.99), tol = 0.0001, maximum = FALSE)
+  print(result_optimize) # 'minimum' gives the rr at which the time shift is 5.5 months
+  # result: for mci the rr = 0.58 and for mil the rr = 0.55 (after manually adjusting mci to mil in the calibration function and rerunning the code); average = 
+  mean(c(0.582,0.548)) # 0.565
+  
+  # run scenario and results at treatment rr = 0.565 (applied to icer base case with cycle length 1 year)
+  l.inputs_icer3 <- l.inputs_icer
+  l.inputs_icer3[["rr.tx_mci_mil"]] <- 0.565
+  l.inputs_icer3[["rr.tx_mil_mod"]] <- 0.565
+  l.inputs_icer3[["rr.tx_mil_sev"]] <- 0.565
+  l.out_icer3 <- f.run_scenario(l.inputs = l.inputs_icer3, detailed = TRUE)
+  m.result_icer3 <- f.result(l.out_scenario = l.out_icer3, within = 2)
+  
+  # store result in sensitivity analysis table
+  m.table1[3,"mcimil"] <- sum(m.result_icer3[c("mci","mil"),"dif"])
+  m.table1[3,"ly"] <- m.result_icer3["ly","dif"]
+  m.table1[3,"qaly"] <- m.result_icer3["qaly","dif"]
+  m.table1[3,"cost_dxtx"] <- sum(m.result_icer3[c("cost_dx","cost_tx"),"dif"])
+  m.table1[3,"cost_care"] <- sum(m.result_icer3[c("cost_hc","cost_sc","cost_ic"),"dif"])
+  m.table1[3,"nhb"] <- m.result_icer3["nhb","dif"]
+  m.table1[3,"icer"] <- calculate_icers(cost = l.out_icer3[["df.out"]][,"COST"], effect = l.out_icer3[["df.out"]][,"QALY"], strategies = l.out_icer3[["df.out"]][,"strategy"])[2,"ICER"]
+  
+}
+
 
 
