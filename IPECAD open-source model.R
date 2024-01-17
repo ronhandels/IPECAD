@@ -931,10 +931,10 @@ if(T) {
     # plot: incremental cost-effectiveness plane
     par(mar=c(5, 4, 4, 1)+0.1, xpd=FALSE)
     windows(width=7, height=7, pointsize=12)
-    print(plot(icer, label="all"))
+    print(plot(icer_icer, label="all"))
     
     # table: incremental cost-effectiveness ratio
-    print(as.data.frame(icer))
+    print(as.data.frame(icer_icer))
     
     # figure: annual cost difference by sector over time
     m.cost_incr.pos <- m.cost_incr.neg <- l.out_icer[["l.out"]][["int"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] - l.out_icer[["l.out"]][["soc"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] # split positive and negative
@@ -1132,7 +1132,7 @@ if(T) {
   f.p_time <- function(p, t) 1-(1-p)^(t)
   
   # proportion of the 1-year cycle length
-  t <- 1/24 # alternatively set to 1/24 for 'calibrate to time shift'
+  t <- 1/24 # half-month cycle length
   
   # simultaneously convert matrix of dementia transition probabilities to new cycle length
   ## temporary matrix of dementia transition probabilities
@@ -1376,7 +1376,7 @@ if(T) {
 
 ######################################## 5.3.2. CALIBRATE TO TIME SHIFT ########################################
 
-if(F) {
+if(T) {
   
   # copy input estimates for calibration (cycle time must be 1/24 year, i.e., 0.5 month)
   l.inputs_cal <- l.inputs_cycle2
@@ -1397,15 +1397,34 @@ if(F) {
     # temporary result
     round(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:37,c("mci","mil","mod","sev","dth")],3) # soc: state trace up to cycle 37 (=1.5 years with 1/24 cycle length)
     round(l.out_cal[["l.out"]][["int"]][["m.out"]][1:37,c("mci","mil","mod","sev","dth")],3) # int: idem
+    round(sum(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:36+1,c("mci","mil")]),3)/2 # soc: person-months up to 18 months (at 1/24 cycle length)
+    round(sum(l.out_cal[["l.out"]][["int"]][["m.out"]][1:36+1,c("mci","mil")]),3)/2 # int: person-months up to 18 months (at 1/24 cycle length)
     
-    # obtain to-be calibrated result
-    p.int18m <- l.out_cal[["l.out"]][["int"]][["m.out"]][36+1,"mil"] # proportion mci int at cycle 37 (=1.5 year, which matches trial duration); change mci to mil, see below
-    p.soc18m <- l.out_cal[["l.out"]][["soc"]][["m.out"]][36+1-2*5.5,"mil"] # proportion mci soc at cycle 26 (=1.5 year minus 5.5 months, which matches the to-be calibrated time delay); change mci to mil, see below
+    # pick: 
+    # 1A: obtain to-be calibrated result: proportion in mci at 18 months
+    if(T) {
+      p.int18m <- l.out_cal[["l.out"]][["int"]][["m.out"]][36+1,"mci"] # proportion mci int at cycle 37 (=1.5 year, which matches trial duration); change mci to mil, see below
+      p.soc18m <- l.out_cal[["l.out"]][["soc"]][["m.out"]][36+1-2*5.5,"mci"] # proportion mci soc at cycle 26 (=1.5 year minus 5.5 months, which matches the to-be calibrated time delay); change mci to mil, see below
+        round(p.int18m,3)
+        round(p.soc18m,3)
+      dif <- p.int18m - p.soc18m # calculate difference
+      }
+    # 1B: obtain to-be calibrated result: proportion in mil at 18 months
+    if(F) {
+      p.int18m <- l.out_cal[["l.out"]][["int"]][["m.out"]][36+1,"mil"] # proportion mil int at cycle 37 (=1.5 year, which matches trial duration); change mci to mil, see below
+      p.soc18m <- l.out_cal[["l.out"]][["soc"]][["m.out"]][36+1-2*5.5,"mil"] # proportion mil soc at cycle 26 (=1.5 year minus 5.5 months, which matches the to-be calibrated time delay); change mci to mil, see below
       round(p.int18m,3)
       round(p.soc18m,3)
-    
-    # calculate difference
-    dif <- p.int18m - p.soc18m
+    dif <- p.int18m - p.soc18m # calculate difference
+    }
+    # 2: person-months in mci and mil up to 18 months
+    if(F) {
+      soc18mmci <- sum(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:36+1,"mci"]) # person-half-months (at 1/24 cycle length) in mci in soc
+      int18mmci <- sum(l.out_cal[["l.out"]][["int"]][["m.out"]][1:36+1,"mci"]) # person-half-months (at 1/24 cycle length) in mci in soc
+      soc18mmil <- sum(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:36+1,"mil"]) # person-half-months (at 1/24 cycle length) in mci in soc
+      int18mmil <- sum(l.out_cal[["l.out"]][["int"]][["m.out"]][1:36+1,"mil"]) # person-half-months (at 1/24 cycle length) in mci in soc
+      dif <- (int18mmci + int18mmil) - (soc18mmci + soc18mmil)
+    }
     
     # return difference
     return(dif)
@@ -1426,7 +1445,7 @@ if(F) {
   l.inputs_icer3[["rr.tx_mil_mod"]] <- 0.565
   l.inputs_icer3[["rr.tx_mil_sev"]] <- 0.565
   l.out_icer3 <- f.run_scenario(l.inputs = l.inputs_icer3, detailed = TRUE)
-  m.result_icer3 <- f.result(l.out_scenario = l.out_icer3, within = 2)
+  m.result_icer3 <- f.result(l.out_scenario = l.out_icer3, within = 18)
   
   # store result in sensitivity analysis table
   m.table1[3,"mcimil"] <- sum(m.result_icer3[c("mci","mil"),"dif"])
@@ -1436,6 +1455,18 @@ if(F) {
   m.table1[3,"cost_care"] <- sum(m.result_icer3[c("cost_hc","cost_sc","cost_ic"),"dif"])
   m.table1[3,"nhb"] <- m.result_icer3["nhb","dif"]
   m.table1[3,"icer"] <- calculate_icers(cost = l.out_icer3[["df.out"]][,"COST"], effect = l.out_icer3[["df.out"]][,"QALY"], strategies = l.out_icer3[["df.out"]][,"strategy"])[2,"ICER"]
+  
+  # additional outcome
+  # difference in person-years in mci and mil up to 2 years
+  sum(m.result_icer3[c("mci","mil"),"dif"])
+  # difference in person-half-months in mci and mil up to 18 months (at icer rr.tx)
+  l.out_cal <- f.run_scenario(l.inputs = l.inputs_cal, detailed=TRUE)
+  l.inputs_cal[["rr.tx_mci_mil"]] <- 0.565
+  l.inputs_cal[["rr.tx_mil_mod"]] <- 0.565
+  l.inputs_cal[["rr.tx_mil_sev"]] <- 0.565
+  temp1 <- sum(l.out_cal$l.out$soc$m.out[1:36+1,c("mci","mil")])
+  temp2 <- sum(l.out_cal$l.out$int$m.out[1:36+1,c("mci","mil")])
+  (temp2 - temp1)/2 # difference in person-months (at 1/24 cycle length) in mci+mil between con and int
   
 }
 
