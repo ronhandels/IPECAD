@@ -19,15 +19,15 @@ setwd("~/GitHub/IPECAD")
 
 ######################################## 1.1. ESTIMATED ########################################
 
-# U.S. general population life table
+# U.S. general population life table 2019
 ## import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
-m.lifetable_US_2019_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_sexcombined.csv", header=TRUE))[,c("male","female")]
+m.lifetable_US_2019 <- as.matrix(read.csv(file="life_tables/lifetable_US_2019.csv", header=TRUE))[,c("male","female","total")]
 ## convert probability to rate
-m.mortality_rate_US_2019_sexcombined <- -log(1-(m.lifetable_US_2019_sexcombined))
+m.mortality_rate_US_2019 <- -log(1-(m.lifetable_US_2019))
 
-# U.S. general population life table (idem)
-m.lifetable_US_2016_sexcombined <- as.matrix(read.csv(file="life_tables/lifetable_US_2016_sexcombined.csv", header=TRUE))[,c("male","female")]
-m.mortality_rate_US_2016_sexcombined <- -log(1-(m.lifetable_US_2016_sexcombined))
+# U.S. general population life table 2016
+m.lifetable_US_2016 <- as.matrix(read.csv(file="life_tables/lifetable_US_2016.csv", header=TRUE))[,c("male","female","total")]
+m.mortality_rate_US_2016 <- -log(1-(m.lifetable_US_2016))
 
 
 
@@ -40,7 +40,7 @@ l.inputs_icer <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), 
   age_start = 71, 
-  sex = "male", 
+  sex = "total", 
   p.starting_state_mci = 0.55, 
   n.cycle = 29, 
   p.mci_mil = 0.23, 
@@ -57,7 +57,7 @@ l.inputs_icer <- list(
   p.mil_i = 0.038, 
   p.mod_i = 0.110, 
   p.sev_i = 0.259, 
-  m.r.mortality = m.mortality_rate_US_2019_sexcombined, 
+  m.r.mortality = m.mortality_rate_US_2019, 
   hr.mort_mci = 1.82, 
   hr.mort_mil = 2.92, 
   hr.mort_mod = 3.85, 
@@ -137,7 +137,7 @@ l.inputs_adace <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), 
   age_start = 73, 
-  sex = "male", 
+  sex = "total", 
   p.starting_state_mci = 0.446, 
   n.cycle = 27, 
   p.mci_mil = 0.23, 
@@ -154,7 +154,7 @@ l.inputs_adace <- list(
   p.mil_i = 0.038, 
   p.mod_i = 0.110, 
   p.sev_i = 0.259, 
-  m.r.mortality = m.mortality_rate_US_2016_sexcombined, 
+  m.r.mortality = m.mortality_rate_US_2016, 
   hr.mort_mci = 1, 
   hr.mort_mil = 2.92, 
   hr.mort_mod = 3.85, 
@@ -685,7 +685,7 @@ if(F) {
     v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
     age_start = 70, 
     n.cycle = 29, 
-    sex = "female", 
+    sex = "total", 
     p.mci_mil = 0.21, 
     p.mci_mod = 0, 
     p.mci_sev = 0, 
@@ -814,6 +814,57 @@ if(T) {
   print(round(m.result_icer[c("ly","qaly","cost"),c("soc","int","dif")],2))
   icer_icer <- calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"])
   icer_icer
+  
+  # additional analysis (presentation Stockholm 2024)
+  round(m.result_icer,2)
+  with(as.list(l.inputs_icer), {
+    
+    # prepare
+    c.mci <- c.mci_hc*(1-p.mci_i) + c.mci_hc_i*p.mci_i + c.mci_sc*(1-p.mci_i) + c.mci_sc_i*p.mci_i + c.mci_ic*(1-p.mci_i) + c.mci_ic_i*p.mci_i
+    c.mil <- c.mil_hc*(1-p.mil_i) + c.mil_hc_i*p.mil_i + c.mil_sc*(1-p.mil_i) + c.mil_sc_i*p.mil_i + c.mil_ic*(1-p.mil_i) + c.mil_ic_i*p.mil_i
+    c.mod <- c.mod_hc*(1-p.mod_i) + c.mod_hc_i*p.mod_i + c.mod_sc*(1-p.mod_i) + c.mod_sc_i*p.mod_i + c.mod_ic*(1-p.mod_i) + c.mod_ic_i*p.mod_i
+    c.sev <- c.sev_hc*(1-p.sev_i) + c.sev_hc_i*p.sev_i + c.sev_sc*(1-p.sev_i) + c.sev_sc_i*p.sev_i + c.sev_ic*(1-p.sev_i) + c.sev_ic_i*p.sev_i
+    u.mci <- (u.mci_pt+u.mci_ic)*(1-p.mci_i) + (u.mci_pt_i+u.mci_ic_i)*p.mci_i
+    u.mil <- (u.mil_pt+u.mil_ic)*(1-p.mil_i) + (u.mil_pt_i+u.mil_ic_i)*p.mil_i
+    u.mod <- (u.mod_pt+u.mod_ic)*(1-p.mod_i) + (u.mod_pt_i+u.mod_ic_i)*p.mod_i
+    u.sev <- (u.sev_pt+u.sev_ic)*(1-p.sev_i) + (u.sev_pt_i+u.sev_ic_i)*p.sev_i
+    
+    # outcome 1
+    c.Tx_start # diagnostic costs + side effects
+    c.Tx_tot <- sum(m.result_icer[c("mci","mil"),"soc"]) * c.Tx * (1-p.tx_discontinuation1) # treatment cost
+    u.Tx_start # treatment side effects
+    c.mci_dif <- m.result_icer["mci","dif"] * c.mci
+    c.mil_dif <- m.result_icer["mil","dif"] * c.mil
+    c.mod_dif <- m.result_icer["mod","dif"] * c.mod
+    c.sev_dif <- m.result_icer["sev","dif"] * c.sev
+    u.mci_dif <- m.result_icer["mci","dif"] * u.mci
+    u.mil_dif <- m.result_icer["mil","dif"] * u.mil
+    u.mod_dif <- m.result_icer["mod","dif"] * u.mod
+    u.sev_dif <- m.result_icer["sev","dif"] * u.sev
+    c_dif1 <- c.Tx_start + c.Tx_tot + c.mci_dif + c.mil_dif + c.mod_dif + c.sev_dif
+    qaly_dif1 <- u.Tx_start + u.mci_dif + u.mil_dif + u.mod_dif + u.sev_dif
+    
+    # outcome 2
+    c.mci_dif2 <- m.result_icer["mci","dif"] * (c.mil - c.mci)
+    c.mil_dif2 <- m.result_icer["mil","dif"] * (c.mod - c.mil)
+    c.ly_dif <- m.result_icer["ly","dif"] * ((c.mci + c.mil)/2)
+    u.mci_dif2 <- m.result_icer["mci","dif"] * (u.mil - u.mci)
+    u.mil_dif2 <- m.result_icer["mil","dif"] * (u.mod - u.mil)
+    u.ly <- m.result_icer["ly","dif"] * ((u.mci + u.mil)/2)
+    c_dif2 <- c.Tx_start + c.Tx_tot + -c.mci_dif2 + -c.mil_dif2 + c.ly_dif
+    qaly_dif2 <- u.Tx_start + -u.mci_dif2 + -u.mil_dif2 + u.ly
+    
+    # return
+    return(list(
+      c_dif1 = c_dif1, 
+      qaly_dif1 = qaly_dif1, 
+      icer1 = c_dif1/qaly_dif1, 
+      c_dif2 = c_dif2, 
+      qaly_dif2 = qaly_dif2, 
+      icer2 = c_dif2/qaly_dif2
+    ))
+  }
+  )
   
   # standard tables/plots
   
@@ -972,7 +1023,7 @@ if(T) {
 
 ######################################## 5.2. CROSS-VALIDATE: AD-ACE ########################################
 
-if(F) {
+if(T) {
   
   # run scenario and results
   l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
@@ -989,7 +1040,7 @@ if(F) {
 
 ######################################## 5.3. SENSITIVITY ANALYSIS ########################################
 
-if(T) {
+if(F) {
   
   # base case
     # icer (already defined)
@@ -1115,13 +1166,32 @@ if(T) {
   # proportion results extrapolated
   round(m.result_icer[c("mci","mil","ly","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic"),c("dif_within","dif_extrapolate","dif_p_extrapolate")],2)
   
+  # additional analysis (presentation Stockholm 2024)
+  ## inputs
+  l.inputs_icer_6b <- l.inputs_icer_6
+  l.inputs_icer_6b[["rr.tx_mci_mil"]] <- 1-0.161
+  l.inputs_icer_6b[["rr.tx_mil_mod"]] <- 1-0.161
+  l.inputs_icer_6b[["rr.tx_mil_sev"]] <- 1-0.161
+  ## run scenario and results
+  l.out_icer_6b <- f.run_scenario(l.inputs = l.inputs_icer_6b, detailed = TRUE)
+  m.result_icer_6b <- f.result(l.out_scenario = l.out_icer_6b, within = 4)
+  ## outcomes
+  sum(m.result_icer_6b[c("mci","mil"),"dif"])
+  m.result_icer_6b["ly","dif"]
+  m.result_icer_6b["qaly","dif"]
+  sum(m.result_icer_6b[c("cost_dx","cost_tx"),"dif"])
+  sum(m.result_icer_6b[c("cost_hc","cost_sc","cost_ic"),"dif"])
+  sum(m.result_icer_6b["nhb","dif"])
+  calculate_icers(cost = l.out_icer_6b[["df.out"]][,"COST"], effect = l.out_icer_6b[["df.out"]][,"QALY"], strategies = l.out_icer_6b[["df.out"]][,"strategy"])[2,"ICER"]
+  
+  
   
 }
 
 
 ######################################## 5.3.1. CYCLE TIME ########################################
 
-if(T) {
+if(F) {
   
   # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
   
@@ -1233,9 +1303,9 @@ if(T) {
   round(TP2_mci_st - TP_mci_st,2)
   
   # adjust mortality table
-  m.mortality_rate_US_2019_sexcombined_cycle <- m.mortality_rate_US_2019_sexcombined * t # mortality table is rate, which can be multiplied (as compared to probability)
-  t.rows <- rep(x = 1:nrow(m.mortality_rate_US_2019_sexcombined_cycle), each = 1/t) # create vector for age row numbers and repeat each age row multiple times
-  m.mortality_rate_US_2019_sexcombined_cycle <- m.mortality_rate_US_2019_sexcombined_cycle[t.rows,] # select each row multiple times
+  m.mortality_rate_US_2019_cycle <- m.mortality_rate_US_2019 * t # mortality table is rate, which can be multiplied (as compared to probability)
+  t.rows <- rep(x = 1:nrow(m.mortality_rate_US_2019_cycle), each = 1/t) # create vector for age row numbers and repeat each age row multiple times
+  m.mortality_rate_US_2019_cycle <- m.mortality_rate_US_2019_cycle[t.rows,] # select each row multiple times
   
   # adjust inputs to cycle time (list is duplicated to force check all parameters for adjustment)
   l.inputs_cycle2 <- l.inputs_cycle
@@ -1244,7 +1314,7 @@ if(T) {
     v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
     v.names_strat = c("soc","int"), 
     age_start = l.inputs_cycle2[["age_start"]] / t, 
-    sex = "male", 
+    sex = "total", 
     p.starting_state_mci = 0.55, 
     n.cycle = l.inputs_cycle2[["n.cycle"]] / t, 
     p.mci_mil = f.p_time(p = l.inputs_cycle2[["p.mci_mil"]], t = t), 
@@ -1261,7 +1331,7 @@ if(T) {
     p.mil_i = f.p_time(p = l.inputs_cycle2[["p.mil_i"]], t = t), 
     p.mod_i = f.p_time(p = l.inputs_cycle2[["p.mod_i"]], t = t), 
     p.sev_i = f.p_time(p = l.inputs_cycle2[["p.sev_i"]], t = t), 
-    m.r.mortality = m.mortality_rate_US_2019_sexcombined_cycle, 
+    m.r.mortality = m.mortality_rate_US_2019_cycle, 
     hr.mort_mci = 1.82, 
     hr.mort_mil = 2.92, 
     hr.mort_mod = 3.85, 
@@ -1376,7 +1446,7 @@ if(T) {
 
 ######################################## 5.3.2. CALIBRATE TO TIME SHIFT ########################################
 
-if(T) {
+if(F) {
   
   # copy input estimates for calibration (cycle time must be 1/24 year, i.e., 0.5 month)
   l.inputs_cal <- l.inputs_cycle2
@@ -1471,4 +1541,118 @@ if(T) {
 }
 
 
+######################################## 5.3.3. REPLICATION: HERRING ########################################
 
+
+if(T) {
+  
+  # U.S. general population life table 2017
+  m.lifetable_US_2017 <- as.matrix(read.csv(file="life_tables/lifetable_US_2017.csv", header=TRUE))[,c("male","female","total")]
+  m.mortality_rate_US_2017 <- -log(1-(m.lifetable_US_2017))
+  m.mortality_rate_US_2017 <- cbind(m.mortality_rate_US_2017, weighted=NA)
+  m.mortality_rate_US_2017[,"weighted"] <- m.mortality_rate_US_2017[,"male"]*(1-0.524) + m.mortality_rate_US_2017[,"female"]*0.524
+  
+  # input parameters
+  l.inputs_herring <- list(
+    v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+    v.names_strat = c("soc","int"), 
+    age_start = 65, 
+    sex = "total", 
+    p.starting_state_mci = 1, 
+    n.cycle = 35, 
+    p.mci_mil = 0.232 * 0.727, 
+    p.mci_mod = 0.232 * 0.273, 
+    p.mci_sev = 0, 
+    p.mil_mci = 0.033, 
+    p.mil_mod = 0.352, 
+    p.mil_sev = 0.044, 
+    p.mod_mil = 0.029, 
+    p.mod_sev = 0.42, 
+    p.sev_mil = 0, 
+    p.sev_mod = 0.019, 
+    p.mci_i = 0, 
+    p.mil_i = 0, 
+    p.mod_i = 0, 
+    p.sev_i = 0, 
+    m.r.mortality = m.mortality_rate_US_2017, 
+    hr.mort_mci = 1.48, 
+    hr.mort_mil = 2.84, 
+    hr.mort_mod = 2.84, 
+    hr.mort_sev = 2.84, 
+    rr.tx_mci_mil = 0.69, 
+    rr.tx_mci_mod = 0.69, 
+    rr.tx_mci_sev = 0.69, 
+    rr.tx_mil_mod = 0.69, 
+    rr.tx_mil_sev = 0.69, 
+    rr.tx_mci_mil_dis = 1, 
+    rr.tx_mci_mod_dis = 1, 
+    rr.tx_mci_sev_dis = 1, 
+    rr.tx_mil_mod_dis = 1, 
+    rr.tx_mil_sev_dis = 1, 
+    p.tx_discontinuation1 = 0, 
+    p.tx_discontinuation2 = 0, 
+    tx_discontinuation2_begin = 29, 
+    tx_duration = 29, 
+    tx_waning = 0, 
+    tx_waning_dis = 0, 
+    u.mci_pt = 0.800, 
+    u.mil_pt = 0.740, 
+    u.mod_pt = 0.590, 
+    u.sev_pt = 0.360, 
+    u.mci_pt_i = 0, 
+    u.mil_pt_i = 0, 
+    u.mod_pt_i = 0, 
+    u.sev_pt_i = 0, 
+    u.mci_ic = 0, 
+    u.mil_ic = -0.036, 
+    u.mod_ic = -0.070, 
+    u.sev_ic = -0.086, 
+    u.mci_ic_i = 0, 
+    u.mil_ic_i = 0, 
+    u.mod_ic_i = 0, 
+    u.sev_ic_i = 0, 
+    u.Tx_start = 0, 
+    c.mci_hc = 0, 
+    c.mil_hc = 0, 
+    c.mod_hc = 0, 
+    c.sev_hc = 0, 
+    c.mci_hc_i = 0, 
+    c.mil_hc_i = 0, 
+    c.mod_hc_i = 0, 
+    c.sev_hc_i = 0, 
+    c.mci_sc = 0, 
+    c.mil_sc = 0, 
+    c.mod_sc = 0, 
+    c.sev_sc = 0, 
+    c.mci_sc_i = 0, 
+    c.mil_sc_i = 0, 
+    c.mod_sc_i = 0, 
+    c.sev_sc_i = 0, 
+    c.mci_ic =  0, 
+    c.mil_ic = 0, 
+    c.mod_ic = 0, 
+    c.sev_ic = 0, 
+    c.mci_ic_i = 0, 
+    c.mil_ic_i = 0, 
+    c.mod_ic_i = 0, 
+    c.sev_ic_i = 0, 
+    c.Tx = 0, 
+    c.Tx_start = 0, 
+    discount_EFFECT = 0, 
+    discount_QALY = 0.03, 
+    discount_COST = 0, 
+    wtp = 0, 
+    half_cycle_correction = TRUE
+  )
+  
+  # run scenario and results
+  l.out_herring <- f.run_scenario(l.inputs = l.inputs_herring, detailed = TRUE)
+  m.result_herring <- f.result(l.out_scenario = l.out_herring, within = 2)
+  
+  # compare to publication
+  print(round(m.result_herring[c("ly","mci","qaly_pt","qaly_ic"),c("soc","int","dif")],2))
+  print(round(sum(m.result_herring[c("mil","mod","sev"),"soc"]),2))
+  print(round(sum(m.result_herring[c("mil","mod","sev"),"int"]),2))
+  
+  
+}

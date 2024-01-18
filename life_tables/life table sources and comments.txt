@@ -93,29 +93,40 @@ https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.x
 ## notes
 
 
-# US_2017_sexcombined (United States)
+# US_2016 (United States)
 
-## obtained from
-https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table01.xlsx
+## retrieved on 2024-01-18 from from: 
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table01.xlsx
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table02.xlsx
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table03.xlsx
 
-## retrieved on
-2023-12-06
-
-## notes
-Referred to by Herring et al. [2021: https://doi.org/10.1007/s40120-021-00273-0]. 
-Estimate obtained from Xu et al. [2019: Arias E. United States Life Tables, 2017. Natl Vital Stat Rep. 2019 Jun;68(7):1-66. PMID: 32501200.; https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_07-508.pdf] from table 1 (link to excel as listed above). 
-
-combined estimate (male and female) copied to CSV column for male and female
+## notes: 
+. data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
+. https://www.cdc.gov/nchs/nvss/life-expectancy.htm
+. https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_04-508.pdf
 
 
-# US_2019_sexcombined (United States)
+# US_2017 (United States)
 
-## obtained from
-https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table01.xlsx
+## retrieved on 2024-01-18 from from: 
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table01.xlsx
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table02.xlsx
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table03.xlsx
 
-## retrieved on
-2023-12-07
+## notes: 
+. data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
+. https://www.cdc.gov/nchs/nvss/life-expectancy.htm
+. https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_07-508.pdf
 
-## notes
-Referred to by https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf.
-Combined estimate (male and female) copied to CSV column for male and female.
+
+# US_2019 (United States)
+
+## retrieved on 2024-01-18 from from: 
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table01.xlsx
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table02.xlsx
+. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.xlsx
+
+## notes: 
+. data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
+. https://www.cdc.gov/nchs/nvss/life-expectancy.htm
+. https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf
