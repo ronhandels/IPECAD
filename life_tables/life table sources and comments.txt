@@ -95,7 +95,7 @@ https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.x
 
 # US_2016 (United States)
 
-## retrieved on 2024-01-18 from from: 
+## retrieved on 2024-01-18 from: 
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table01.xlsx
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table02.xlsx
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table03.xlsx
@@ -108,7 +108,7 @@ https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.x
 
 # US_2017 (United States)
 
-## retrieved on 2024-01-18 from from: 
+## retrieved on 2024-01-18 from: 
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table01.xlsx
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table02.xlsx
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table03.xlsx
@@ -121,7 +121,7 @@ https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.x
 
 # US_2019 (United States)
 
-## retrieved on 2024-01-18 from from: 
+## retrieved on 2024-01-18 from: 
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table01.xlsx
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table02.xlsx
 . https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.xlsx
@@ -130,3 +130,11 @@ https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.x
 . data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
 . https://www.cdc.gov/nchs/nvss/life-expectancy.htm
 . https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf
+
+
+# US_2019 SSA (United States)
+
+## retrieved on 2024-01-31 from: https://www.ssa.gov/OACT/STATS/table4c6_2019_TR2022.html
+
+## notes: 
+. this life table was used for the ICER 2023 report on Alzheimer drug treatment

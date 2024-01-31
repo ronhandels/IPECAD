@@ -19,13 +19,16 @@ setwd("~/GitHub/IPECAD")
 
 ######################################## 1.1. ESTIMATED ########################################
 
-# U.S. general population life table 2019
+# U.S. general population life table 2019 from ssa.gov
 ## import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
-m.lifetable_US_2019 <- as.matrix(read.csv(file="life_tables/lifetable_US_2019.csv", header=TRUE))[,c("male","female","total")]
+m.lifetable_US_2019 <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_ssa.csv", header=TRUE))[,c("male","female")]
 ## convert probability to rate
 m.mortality_rate_US_2019 <- -log(1-(m.lifetable_US_2019))
+## weight rate 52% female 48% male
+m.mortality_rate_US_2019 <- cbind(m.mortality_rate_US_2019, weighted=NA)
+m.mortality_rate_US_2019[,"weighted"] <- m.mortality_rate_US_2019[,"male"] * 0.48 + m.mortality_rate_US_2019[,"female"] * 0.52
 
-# U.S. general population life table 2016
+# U.S. general population life table 2016 from cdc.gov
 m.lifetable_US_2016 <- as.matrix(read.csv(file="life_tables/lifetable_US_2016.csv", header=TRUE))[,c("male","female","total")]
 m.mortality_rate_US_2016 <- -log(1-(m.lifetable_US_2016))
 
@@ -40,7 +43,7 @@ l.inputs_icer <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), 
   age_start = 71, 
-  sex = "total", 
+  sex = "weighted", 
   p.starting_state_mci = 0.55, 
   n.cycle = 29, 
   p.mci_mil = 0.23, 
@@ -813,7 +816,7 @@ if(T) {
   # compare to publication
   print(round(m.result_icer[c("ly","qaly","cost"),c("soc","int","dif")],2))
   icer_icer <- calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"])
-  icer_icer
+  print(icer_icer)
   
   # additional analysis (presentation Stockholm 2024)
   round(m.result_icer,2)
@@ -1023,7 +1026,7 @@ if(T) {
 
 ######################################## 5.2. CROSS-VALIDATE: AD-ACE ########################################
 
-if(T) {
+if(F) {
   
   # run scenario and results
   l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
@@ -1650,9 +1653,10 @@ if(T) {
   m.result_herring <- f.result(l.out_scenario = l.out_herring, within = 2)
   
   # compare to publication
-  print(round(m.result_herring[c("ly","mci","qaly_pt","qaly_ic"),c("soc","int","dif")],2))
+  print(round(m.result_herring[c("ly","ontx","mci"),c("soc","int","dif")],2))
+  # dem
   print(round(sum(m.result_herring[c("mil","mod","sev"),"soc"]),2))
   print(round(sum(m.result_herring[c("mil","mod","sev"),"int"]),2))
-  
+  print(round(sum(m.result_herring[c("mil","mod","sev"),"int"]) - sum(m.result_herring[c("mil","mod","sev"),"soc"]),2))
   
 }
