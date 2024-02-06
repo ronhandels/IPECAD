@@ -31,12 +31,15 @@ m.mortality_rate_US_2019[,"weighted"] <- m.mortality_rate_US_2019[,"male"] * 0.4
 # U.S. general population life table 2016 from cdc.gov
 m.lifetable_US_2016 <- as.matrix(read.csv(file="life_tables/lifetable_US_2016.csv", header=TRUE))[,c("male","female","total")]
 m.mortality_rate_US_2016 <- -log(1-(m.lifetable_US_2016))
+m.mortality_rate_US_2016 <- cbind(m.mortality_rate_US_2016, weighted=NA)
+m.mortality_rate_US_2016[,"weighted"] <- m.mortality_rate_US_2016[,"male"] * (1-0.446) + m.mortality_rate_US_2016[,"female"] * 0.446
+
 
 
 
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
-######################################## 1.2.1. INPUTS: REPLICATION ICER ########################################
+######################################## 1.2.1. INPUTS: CROSS-VALIDATION ICER ########################################
 
 # input parameters
 l.inputs_icer <- list(
@@ -133,15 +136,15 @@ l.inputs_icer <- list(
 
 
 
-######################################## 1.2.1. INPUTS: CROSS-VALIDATION ADACE ########################################
+######################################## 1.2.1. INPUTS: CROSS-VALIDATION AD-ACE ########################################
 
 # input parameters
 l.inputs_adace <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), 
   age_start = 73, 
-  sex = "total", 
-  p.starting_state_mci = 0.446, 
+  sex = "weighted", 
+  p.starting_state_mci = 0.781, 
   n.cycle = 27, 
   p.mci_mil = 0.23, 
   p.mci_mod = 0, 
@@ -194,7 +197,7 @@ l.inputs_adace <- list(
   u.mil_ic_i = -0.036, 
   u.mod_ic_i = -0.070, 
   u.sev_ic_i = -0.086, 
-  u.Tx_start = -0.14 * (12/52) * 0.22, # disutility ARIA-E multiplied by average duration (12 weeks) multiplied by prevalence ARIA-E (22%)
+  u.Tx_start = -0.14 * (12/52) * 0.126, # disutility ARIA-E multiplied by average duration (12 weeks) multiplied by prevalence ARIA-E (22%)
   c.mci_hc = 1254*12, 
   c.mil_hc = 1471*12, 
   c.mod_hc = 1958*12, 
@@ -219,8 +222,8 @@ l.inputs_adace <- list(
   c.mil_ic_i = 781*12 +  961*12, 
   c.mod_ic_i = 799*12 + 1420*12, 
   c.sev_ic_i = 811*12 + 2377*12, 
-  c.Tx = 26500, 
-  c.Tx_start = 212.14 * 5, # 5x mri in year 1
+  c.Tx = 0, 
+   c.Tx_start = 212.14 * 5 + 0.126 * 0.78 * 212.14 * 2 + 0.126 * 0.22 * 0.91 * 796.80 + 0.126 * 0.22 * (1-0.91) * 1098.27, # monitoring (5x MRI in year 1) and ARIA-E (12.6%) being asymptomatic (78%) (2x MRI), symptomatic (22%) mild/moderate (91%) or symptomatic severe (9%)
   discount_EFFECT = 0.03, 
   discount_QALY = 0.03, 
   discount_COST = 0.03, 
@@ -805,7 +808,7 @@ if(F) {
 
 ######################################## 5. ANALYSIS ########################################
 
-######################################## 5.1. REPLICATION: ICER ########################################
+######################################## 5.1. CROSS-VALIDATION: ICER ########################################
 
 if(T) {
   
@@ -871,7 +874,7 @@ if(T) {
   
   # standard tables/plots
   
-  if(T) {
+  if(F) {
     
     # all outcomes
     # str(l.out_icer) # show structure of output
@@ -1024,7 +1027,7 @@ if(T) {
 
 
 
-######################################## 5.2. CROSS-VALIDATE: AD-ACE ########################################
+######################################## 5.2. CROSS-VALIDATION: AD-ACE ########################################
 
 if(F) {
   
@@ -1041,9 +1044,9 @@ if(F) {
 
 
 
-######################################## 5.3. SENSITIVITY ANALYSIS ########################################
+######################################## 5.3. UNCERTAINTY SCENARIOS ########################################
 
-if(F) {
+if(T) {
   
   # base case
     # icer (already defined)
@@ -1169,7 +1172,7 @@ if(F) {
   # proportion results extrapolated
   round(m.result_icer[c("mci","mil","ly","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic"),c("dif_within","dif_extrapolate","dif_p_extrapolate")],2)
   
-  # additional analysis (presentation Stockholm 2024)
+  # additional analysis (presentation Stockholm 19-01-2024)
   ## inputs
   l.inputs_icer_6b <- l.inputs_icer_6
   l.inputs_icer_6b[["rr.tx_mci_mil"]] <- 1-0.161
@@ -1194,7 +1197,7 @@ if(F) {
 
 ######################################## 5.3.1. CYCLE TIME ########################################
 
-if(F) {
+if(T) {
   
   # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
   
@@ -1312,12 +1315,11 @@ if(F) {
   
   # adjust inputs to cycle time (list is duplicated to force check all parameters for adjustment)
   l.inputs_cycle2 <- l.inputs_cycle
-  
   l.inputs_cycle2<- list(
     v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
     v.names_strat = c("soc","int"), 
     age_start = l.inputs_cycle2[["age_start"]] / t, 
-    sex = "total", 
+    sex = "weighted", 
     p.starting_state_mci = 0.55, 
     n.cycle = l.inputs_cycle2[["n.cycle"]] / t, 
     p.mci_mil = f.p_time(p = l.inputs_cycle2[["p.mci_mil"]], t = t), 
@@ -1490,14 +1492,6 @@ if(F) {
       round(p.soc18m,3)
     dif <- p.int18m - p.soc18m # calculate difference
     }
-    # 2: person-months in mci and mil up to 18 months
-    if(F) {
-      soc18mmci <- sum(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:36+1,"mci"]) # person-half-months (at 1/24 cycle length) in mci in soc
-      int18mmci <- sum(l.out_cal[["l.out"]][["int"]][["m.out"]][1:36+1,"mci"]) # person-half-months (at 1/24 cycle length) in mci in soc
-      soc18mmil <- sum(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:36+1,"mil"]) # person-half-months (at 1/24 cycle length) in mci in soc
-      int18mmil <- sum(l.out_cal[["l.out"]][["int"]][["m.out"]][1:36+1,"mil"]) # person-half-months (at 1/24 cycle length) in mci in soc
-      dif <- (int18mmci + int18mmil) - (soc18mmci + soc18mmil)
-    }
     
     # return difference
     return(dif)
@@ -1509,14 +1503,14 @@ if(F) {
   # calibrate relative risk treatment effect such that proportion mci in the int strategy at 18 months is the same as proportion mci in the soc strategy at 18-5.5=12.5 months (i.e., time shift of 5.5 months)
   result_optimize <- optimize(f = function(x) abs(f.headroom(x)), interval = c(0.01,0.99), tol = 0.0001, maximum = FALSE)
   print(result_optimize) # 'minimum' gives the rr at which the time shift is 5.5 months
-  # result: for mci the rr = 0.58 and for mil the rr = 0.55 (after manually adjusting mci to mil in the calibration function and rerunning the code); average = 
-  mean(c(0.582,0.548)) # 0.565
+  # result: for mci the rr = 0.581 and for mil the rr = 0.547 (after manually adjusting mci to mil in the calibration function and rerunning the code); average = 
+  mean(c(0.581,0.547)) # 0.56
   
-  # run scenario and results at treatment rr = 0.565 (applied to icer base case with cycle length 1 year)
+  # run scenario and results at treatment rr = 0.56 (applied to icer base case with cycle length 1 year)
   l.inputs_icer3 <- l.inputs_icer
-  l.inputs_icer3[["rr.tx_mci_mil"]] <- 0.565
-  l.inputs_icer3[["rr.tx_mil_mod"]] <- 0.565
-  l.inputs_icer3[["rr.tx_mil_sev"]] <- 0.565
+  l.inputs_icer3[["rr.tx_mci_mil"]] <- 0.56
+  l.inputs_icer3[["rr.tx_mil_mod"]] <- 0.56
+  l.inputs_icer3[["rr.tx_mil_sev"]] <- 0.56
   l.out_icer3 <- f.run_scenario(l.inputs = l.inputs_icer3, detailed = TRUE)
   m.result_icer3 <- f.result(l.out_scenario = l.out_icer3, within = 18)
   
@@ -1529,17 +1523,8 @@ if(F) {
   m.table1[3,"nhb"] <- m.result_icer3["nhb","dif"]
   m.table1[3,"icer"] <- calculate_icers(cost = l.out_icer3[["df.out"]][,"COST"], effect = l.out_icer3[["df.out"]][,"QALY"], strategies = l.out_icer3[["df.out"]][,"strategy"])[2,"ICER"]
   
-  # additional outcome
-  # difference in person-years in mci and mil up to 2 years
-  sum(m.result_icer3[c("mci","mil"),"dif"])
-  # difference in person-half-months in mci and mil up to 18 months (at icer rr.tx)
-  l.out_cal <- f.run_scenario(l.inputs = l.inputs_cal, detailed=TRUE)
-  l.inputs_cal[["rr.tx_mci_mil"]] <- 0.565
-  l.inputs_cal[["rr.tx_mil_mod"]] <- 0.565
-  l.inputs_cal[["rr.tx_mil_sev"]] <- 0.565
-  temp1 <- sum(l.out_cal$l.out$soc$m.out[1:36+1,c("mci","mil")])
-  temp2 <- sum(l.out_cal$l.out$int$m.out[1:36+1,c("mci","mil")])
-  (temp2 - temp1)/2 # difference in person-months (at 1/24 cycle length) in mci+mil between con and int
+  # copy sensitivity analysis results table to clipboard
+  write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
 }
 
@@ -1547,7 +1532,7 @@ if(F) {
 ######################################## 5.3.3. REPLICATION: HERRING ########################################
 
 
-if(T) {
+if(F) {
   
   # U.S. general population life table 2017
   m.lifetable_US_2017 <- as.matrix(read.csv(file="life_tables/lifetable_US_2017.csv", header=TRUE))[,c("male","female","total")]
@@ -1560,7 +1545,7 @@ if(T) {
     v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
     v.names_strat = c("soc","int"), 
     age_start = 65, 
-    sex = "total", 
+    sex = "weighted", 
     p.starting_state_mci = 1, 
     n.cycle = 35, 
     p.mci_mil = 0.232 * 0.727, 
