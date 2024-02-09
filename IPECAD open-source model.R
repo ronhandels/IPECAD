@@ -821,6 +821,14 @@ if(T) {
   icer_icer <- calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"])
   print(icer_icer)
   
+  # proportion in state
+  l.inputs_icer_nohccdis <- l.inputs_icer
+  l.inputs_icer_nohccdis[["discount_EFFECT"]] <- 0
+  l.inputs_icer_nohccdis[["half_cycle_correction"]] <- FALSE
+  l.out_icer_nohccdis <- f.run_scenario(l.inputs = l.inputs_icer_nohccdis, detailed = TRUE)
+  write.table(x = round(l.out_icer_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  write.table(x = round(l.out_icer_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  
   # additional analysis (presentation Stockholm 2024)
   round(m.result_icer,2)
   with(as.list(l.inputs_icer), {
@@ -1029,7 +1037,7 @@ if(T) {
 
 ######################################## 5.2. CROSS-VALIDATION: AD-ACE ########################################
 
-if(F) {
+if(T) {
   
   # run scenario and results
   l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
@@ -1040,13 +1048,21 @@ if(F) {
   icer_adace <- calculate_icers(cost = l.out_adace[["df.out"]][,"COST"], effect = l.out_adace[["df.out"]][,"QALY"], strategies = l.out_adace[["df.out"]][,"strategy"])
   icer_adace
   
+  # proportion in state
+  l.inputs_adace_nohccdis <- l.inputs_adace
+  l.inputs_adace_nohccdis[["discount_EFFECT"]] <- 0
+  l.inputs_adace_nohccdis[["half_cycle_correction"]] <- FALSE
+  l.out_adace_nohccdis <- f.run_scenario(l.inputs = l.inputs_adace_nohccdis, detailed = TRUE)
+  write.table(x = round(l.out_adace_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  write.table(x = round(l.out_adace_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  
 }
 
 
 
 ######################################## 5.3. UNCERTAINTY SCENARIOS ########################################
 
-if(T) {
+if(F) {
   
   # base case
     # icer (already defined)
@@ -1197,7 +1213,7 @@ if(T) {
 
 ######################################## 5.3.1. CYCLE TIME ########################################
 
-if(T) {
+if(F) {
   
   # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
   
