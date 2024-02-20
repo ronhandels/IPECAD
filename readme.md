@@ -366,6 +366,18 @@ Maastricht University - Netherlands) and Linh Nguyen.
 This is for development, experimenting and exploring new features, it is
 not necessarily stable.
 
+## v2.2.0-beta (2023; released)
+
+This version is used for the IPECAD workshop model cross-comparison 2023. These results have been used for:
+
+the poster at ISPOR 2023: https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246 and https://ipecadgroup.wordpress.com/workshop/
+manuscript submitted to Value in Health in 2024 entitled "IPECAD Modeling Workshop 2023 Cross Comparison Challenge on Cost-Effectiveness Models in Alzheimer's Disease"
+
+This version has been developed by: 
+
+- Ron Handels
+- Anders Wimo
+
 ## v2.1.0-beta (2023; released)
 
 This version was build for the abstract submitted to ISPOR Europe 2023.
