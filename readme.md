@@ -366,7 +366,7 @@ Maastricht University - Netherlands) and Linh Nguyen.
 This is for development, experimenting and exploring new features, it is
 not necessarily stable.
 
-## v2.2.0-beta (2023; released)
+## v2.2.0-beta (2024; released)
 
 This version is used for the IPECAD workshop model cross-comparison 2023. These results have been used for:
 
