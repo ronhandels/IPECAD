@@ -5,13 +5,18 @@
 
 
 
+######################################## MANUAL PREPARATION ########################################
+
+# install.packages("dampack") # remove '#' at beginning of the line and run once to install this package
+setwd("~/GitHub/IPECAD") # if needed, change to the directory to the folder in which the R code and the life table folder is located
+
+
+
 ######################################## TECHNICAL PREPARATION ########################################
 
 cat("\014") # clear console
 rm(list = ls()) # clear environment
-# install.packages("dampack") # remove '#' at beginning of the line and run once to install this package
 library(dampack) # load package
-setwd("~/GitHub/IPECAD")
 
 
 
@@ -24,13 +29,15 @@ setwd("~/GitHub/IPECAD")
 m.lifetable_US_2019 <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_ssa.csv", header=TRUE))[,c("male","female")]
 ## convert probability to rate
 m.mortality_rate_US_2019 <- -log(1-(m.lifetable_US_2019))
-## weight rate 52% female 48% male
+## weight rate for male and female
 m.mortality_rate_US_2019 <- cbind(m.mortality_rate_US_2019, weighted=NA)
 m.mortality_rate_US_2019[,"weighted"] <- m.mortality_rate_US_2019[,"male"] * 0.48 + m.mortality_rate_US_2019[,"female"] * 0.52
 
 # U.S. general population life table 2016 from cdc.gov
 m.lifetable_US_2016 <- as.matrix(read.csv(file="life_tables/lifetable_US_2016.csv", header=TRUE))[,c("male","female","total")]
+## convert probability to rate
 m.mortality_rate_US_2016 <- -log(1-(m.lifetable_US_2016))
+## weight rate for male and female
 m.mortality_rate_US_2016 <- cbind(m.mortality_rate_US_2016, weighted=NA)
 m.mortality_rate_US_2016[,"weighted"] <- m.mortality_rate_US_2016[,"male"] * (1-0.446) + m.mortality_rate_US_2016[,"female"] * 0.446
 
@@ -41,7 +48,7 @@ m.mortality_rate_US_2016[,"weighted"] <- m.mortality_rate_US_2016[,"male"] * (1-
 
 ######################################## 1.2.1. INPUTS: CROSS-VALIDATION ICER ########################################
 
-# input parameters
+# input parameters (see readme for details)
 l.inputs_icer <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), 
@@ -138,7 +145,7 @@ l.inputs_icer <- list(
 
 ######################################## 1.2.1. INPUTS: CROSS-VALIDATION AD-ACE ########################################
 
-# input parameters
+# input parameters (see readme for details)
 l.inputs_adace <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
   v.names_strat = c("soc","int"), 
@@ -222,8 +229,8 @@ l.inputs_adace <- list(
   c.mil_ic_i = 781*12 +  961*12, 
   c.mod_ic_i = 799*12 + 1420*12, 
   c.sev_ic_i = 811*12 + 2377*12, 
-  c.Tx = 0, 
-   c.Tx_start = 212.14 * 5 + 0.126 * 0.78 * 212.14 * 2 + 0.126 * 0.22 * 0.91 * 796.80 + 0.126 * 0.22 * (1-0.91) * 1098.27, # monitoring (5x MRI in year 1) and ARIA-E (12.6%) being asymptomatic (78%) (2x MRI), symptomatic (22%) mild/moderate (91%) or symptomatic severe (9%)
+  c.Tx = 26500, 
+  c.Tx_start = 212.14 * 5 + 0.126 * 0.78 * 212.14 * 2 + 0.126 * 0.22 * 0.91 * 796.80 + 0.126 * 0.22 * (1-0.91) * 1098.27, # monitoring (5x MRI in year 1) and ARIA-E (12.6%) being asymptomatic (78%) (2x MRI), symptomatic (22%) mild/moderate (91%) or symptomatic severe (9%)
   discount_EFFECT = 0.03, 
   discount_QALY = 0.03, 
   discount_COST = 0.03, 
@@ -361,13 +368,13 @@ f.run_strategy <- function(l.inputs) {
     a.TP["sev_i","mod_i",] <- v.p.sev_mod                                               * (1-a.TP["sev_i","dth",])
     a.TP["sev_i","sev_i",] <- v.p.sev_sev                                               * (1-a.TP["sev_i","dth",])  
     
+    # check TPs are within 0-1 range
+    if(any(a.TP<0 | a.TP>1)) stop("one or more transition probabilities are lower than 0 or higher than 1")
     # check TPs sum to 1 for each cycle (STEP G2: some checks)
     for(i in v.names_state) {
       temp1 <- colSums(a.TP[i,,])
       if(!isTRUE(all.equal(current = temp1, target = rep(1,n.cycle), tolerance = 1e-10))) stop(paste("TPs for",i,"do not add up to 1"))
     }
-    # !!! TO-DO: check TPs are within 0-1 range
-    
     
     # initialize state trace (STEP G3: initialize objects to store strategy outcomes)
     m.trace <- matrix(data = NA, nrow = n.cycle, ncol = n.state, dimnames = list(NULL,v.names_state))
@@ -400,10 +407,10 @@ f.run_strategy <- function(l.inputs) {
           m.out[i,j]   <- (m.out[i,j]   + m.out[i+1,j])   * 0.5
         }
       }
-      m.out <- m.out[-n.cycle,]
+      m.out <- m.out[-n.cycle,] # remove the last cycle
     }
     
-    # add additional outcomes at cycle 1
+    # add additional inputs to cycle 1
     if(strat=="int") {
       m.out[,"cost_dx"][1] <- m.out[,"cost_dx"][1] + c.Tx_start
       m.out[,"qaly_pt"][1] <- m.out[,"qaly_pt"][1] + u.Tx_start
@@ -438,7 +445,6 @@ f.run_strategy <- function(l.inputs) {
     m.out[,"cost"] <- rowSums(m.out[,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")])
     m.out[,"ly"] <- rowSums(m.out[,c("mci","mil","mod","sev")])
     
-    
     # calculate net health benefit
     m.out[,"nhb"] <- m.out[,"qaly"] - (m.out[,"cost"] / wtp)
     
@@ -460,11 +466,14 @@ f.run_strategy <- function(l.inputs) {
 f.run_scenario <- function(l.inputs, detailed=FALSE) {
   with(as.list(l.inputs), { # the 'with' functions enables to call the items from the list without having to refer to the list each time (one can use 'age_start' instead l.inputs[["age_start"]])
     
+    # some validity checks on input estimates
+    # [to be developed]
+    
     # store counters (STEP B: prepare and initialize objects to store scenario and strategy outcomes)
     n.state <- length(v.names_state) # number of states
     n.strat <- length(v.names_strat) # number of strategies
 
-    # initialize output dataframe (create an empty dataframe to store outcomes of a scenario)
+    # initialize output data frame (create an empty data frame to store outcomes of a scenario)
     df.out <- data.frame(
       strategy = v.names_strat,
       QALY = numeric(n.strat),
@@ -632,8 +641,10 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 2.3. PREPARE RESULTS ########################################
 
+# prepare results
 f.result <- function(l.out_scenario, within) {
   
+  # store cycle-specific outcomes
   m.out_soc <- l.out_scenario$l.out$soc$m.out
   m.out_int <- l.out_scenario$l.out$int$m.out
   
@@ -665,8 +676,7 @@ f.result <- function(l.out_scenario, within) {
   m.result[,"dif_within"] <- m.result[,"int_within"] - m.result[,"soc_within"]
   m.result[,"dif_extrapolate"] <- m.result[,"int_extrapolate"] - m.result[,"soc_extrapolate"]
   m.result[,"dif_p_extrapolate"] <- m.result[,"dif_extrapolate"] / m.result[,"dif"]
-  round(m.result, digits=2)
-    # note: proportional difference is invalid for outcomes with negative values
+  round(m.result, digits=2) # note: proportional difference is invalid for outcomes with negative values
   
   # return
   return(m.result)
@@ -788,7 +798,7 @@ if(F) {
 ######################################## 4.1. EXTREME SCENARIOS ########################################
 
 if(F) {
-
+  
   # identical scenarios
   l.inputs_icer_extr1 <- l.inputs_icer
   l.inputs_icer_extr1[["rr.tx_mci_mil"]] <- 1
@@ -804,6 +814,7 @@ if(F) {
   round(m.result_icer_extr1,2)
   
 }
+
 
 
 ######################################## 5. ANALYSIS ########################################
@@ -1046,7 +1057,7 @@ if(T) {
   # compare to publication
   print(round(m.result_adace[c("ly","qaly","cost"),c("soc","int","dif")],2))
   icer_adace <- calculate_icers(cost = l.out_adace[["df.out"]][,"COST"], effect = l.out_adace[["df.out"]][,"QALY"], strategies = l.out_adace[["df.out"]][,"strategy"])
-  icer_adace
+  print(icer_adace)
   
   # proportion in state
   l.inputs_adace_nohccdis <- l.inputs_adace
@@ -1205,8 +1216,6 @@ if(F) {
   sum(m.result_icer_6b[c("cost_hc","cost_sc","cost_ic"),"dif"])
   sum(m.result_icer_6b["nhb","dif"])
   calculate_icers(cost = l.out_icer_6b[["df.out"]][,"COST"], effect = l.out_icer_6b[["df.out"]][,"QALY"], strategies = l.out_icer_6b[["df.out"]][,"strategy"])[2,"ICER"]
-  
-  
   
 }
 
@@ -1548,11 +1557,13 @@ if(F) {
 ######################################## 5.3.3. REPLICATION: HERRING ########################################
 
 
-if(F) {
+if(T) {
   
   # U.S. general population life table 2017
   m.lifetable_US_2017 <- as.matrix(read.csv(file="life_tables/lifetable_US_2017.csv", header=TRUE))[,c("male","female","total")]
+  ## convert probability to rate
   m.mortality_rate_US_2017 <- -log(1-(m.lifetable_US_2017))
+  ## weight rate for male and female
   m.mortality_rate_US_2017 <- cbind(m.mortality_rate_US_2017, weighted=NA)
   m.mortality_rate_US_2017[,"weighted"] <- m.mortality_rate_US_2017[,"male"]*(1-0.524) + m.mortality_rate_US_2017[,"female"]*0.524
   
@@ -1652,6 +1663,7 @@ if(F) {
   # run scenario and results
   l.out_herring <- f.run_scenario(l.inputs = l.inputs_herring, detailed = TRUE)
   m.result_herring <- f.result(l.out_scenario = l.out_herring, within = 2)
+  print(round(m.result_herring[c("ly","qaly","cost"),c("soc","int","dif")],2))
   
   # compare to publication
   print(round(m.result_herring[c("ly","ontx","mci"),c("soc","int","dif")],2))
