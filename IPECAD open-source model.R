@@ -229,7 +229,7 @@ l.inputs_adace <- list(
   c.mil_ic_i = 781*12 +  961*12, 
   c.mod_ic_i = 799*12 + 1420*12, 
   c.sev_ic_i = 811*12 + 2377*12, 
-  c.Tx = 26500, 
+  c.Tx = 0, 
   c.Tx_start = 212.14 * 5 + 0.126 * 0.78 * 212.14 * 2 + 0.126 * 0.22 * 0.91 * 796.80 + 0.126 * 0.22 * (1-0.91) * 1098.27, # monitoring (5x MRI in year 1) and ARIA-E (12.6%) being asymptomatic (78%) (2x MRI), symptomatic (22%) mild/moderate (91%) or symptomatic severe (9%)
   discount_EFFECT = 0.03, 
   discount_QALY = 0.03, 
@@ -297,7 +297,7 @@ f.run_strategy <- function(l.inputs) {
     a.TP["mcion_c","mil_i",]   <- v.p.mcion_mil *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
     a.TP["mcion_c","mod_i",]   <- v.p.mcion_mod *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
     a.TP["mcion_c","sev_i",]   <- v.p.mcion_sev *    p.mci_i                            * (1-a.TP["mcion_c","dth",])
-
+    
     # TP matrix state: from mci-off community-setting
     a.TP["mciof_c","mciof_c",] <- v.p.mci_mci   * (1-p.mci_i)                           * (1-a.TP["mciof_c","dth",])
     a.TP["mciof_c","milof_c",] <- v.p.mci_mil   * (1-p.mci_i)                           * (1-a.TP["mciof_c","dth",])
@@ -345,13 +345,13 @@ f.run_strategy <- function(l.inputs) {
     a.TP["sev_c","mil_i",]   <- v.p.sev_mil     *    p.sev_i                            * (1-a.TP["sev_c","dth",])
     a.TP["sev_c","mod_i",]   <- v.p.sev_mod     *    p.sev_i                            * (1-a.TP["sev_c","dth",])
     a.TP["sev_c","sev_i",]   <- v.p.sev_sev     *    p.sev_i                            * (1-a.TP["sev_c","dth",])
-
+    
     # TP matrix state: from mci institutionalized-setting
     a.TP["mci_i","mci_i",] <- v.p.mci_mci                                               * (1-a.TP["mci_i","dth",])
     a.TP["mci_i","mil_i",] <- v.p.mci_mil                                               * (1-a.TP["mci_i","dth",])
     a.TP["mci_i","mod_i",] <- v.p.mci_mod                                               * (1-a.TP["mci_i","dth",])
     a.TP["mci_i","sev_i",] <- v.p.mci_sev                                               * (1-a.TP["mci_i","dth",])
-  
+    
     # TP matrix state: from mild institutionalized-setting
     a.TP["mil_i","mci_i",] <- v.p.mil_mci                                               * (1-a.TP["mil_i","dth",])
     a.TP["mil_i","mil_i",] <- v.p.mil_mil                                               * (1-a.TP["mil_i","dth",])
@@ -472,7 +472,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
     # store counters (STEP B: prepare and initialize objects to store scenario and strategy outcomes)
     n.state <- length(v.names_state) # number of states
     n.strat <- length(v.names_strat) # number of strategies
-
+    
     # initialize output data frame (create an empty data frame to store outcomes of a scenario)
     df.out <- data.frame(
       strategy = v.names_strat,
@@ -658,7 +658,7 @@ f.result <- function(l.out_scenario, within) {
       c("soc","int","dif","dif_relative","soc_within","int_within","soc_extrapolate","int_extrapolate","dif_within","dif_extrapolate","dif_p_extrapolate")
     )
   )
-
+  
   # fill matrix
   for(i in rownames(m.result)) {
     m.result[i,"soc"] <- sum(m.out_soc[,i])
@@ -790,7 +790,7 @@ if(F) {
   print(table.he_incr_val_int)
   
   # comment: fully replicated outcomes compared to previous version (main branch at this moment)
-
+  
 }
 
 
@@ -909,17 +909,17 @@ if(T) {
     # l.out_icer[["l.out"]][["int"]][["m.trace"]]
     # l.out_icer[["l.out"]][["int"]][["m.out"]]
     
-    # table: summary results
-    table.summary_result_data <- m.result_icer[c("mci","mil","mod","sev","ly","qaly","cost"),c("soc","int","dif")]
-    table.summary_result <- format(
-      table.summary_result_data, 
+    # table: summary
+    table.summary_data <- m.result_icer[c("mci","mil","mod","sev","ly","qaly","cost"),c("soc","int","dif")]
+    table.summary <- format(
+      table.summary_data, 
       digits=2, 
       scientific=FALSE, 
       big.mark=","
     )
     
-    print(round(table.summary_result_data,2))
-    print(table.summary_result)
+    print(round(table.summary_data,2))
+    print(table.summary)
     
     # plot: time in state
     plot.timestate_data <- m.result_icer[c("mci","mil","mod","sev"),c("int","soc")]
@@ -1004,36 +1004,36 @@ if(T) {
     legend(x="topright", legend=c("mci","mil","mod","sev","dth"), col=c("green","yellow","orange","red","black"), lty=1, bg="white")
     legend(x="right", legend=c("soc","int"), col="black", lty=c(1,2), bg="white")
     
+    # table: incremental cost-effectiveness ratio
+    print(as.data.frame(icer_icer))
+    
     # plot: incremental cost-effectiveness plane
     par(mar=c(5, 4, 4, 1)+0.1, xpd=FALSE)
     windows(width=7, height=7, pointsize=12)
     print(plot(icer_icer, label="all"))
     
-    # table: incremental cost-effectiveness ratio
-    print(as.data.frame(icer_icer))
-    
-    # figure: annual cost difference by sector over time
-    m.cost_incr.pos <- m.cost_incr.neg <- l.out_icer[["l.out"]][["int"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] - l.out_icer[["l.out"]][["soc"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] # split positive and negative
-    m.cost_incr.pos[m.cost_incr.pos<0] <- 0
-    m.cost_incr.neg[m.cost_incr.neg>=0] <- 0
+    # plot: cost difference by sector over time
+    m.cost_incr_pos <- m.cost_incr_neg <- l.out_icer[["l.out"]][["int"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] - l.out_icer[["l.out"]][["soc"]][["m.out"]][,c("cost_dx","cost_tx","cost_hc","cost_sc","cost_ic")] # split positive and negative
+    m.cost_incr_pos[m.cost_incr_pos<0] <- 0
+    m.cost_incr_neg[m.cost_incr_neg>=0] <- 0
     
     windows(width=7, height=7, pointsize=12)
     par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
     barplot(
-      height = t(m.cost_incr.pos),
+      height = t(m.cost_incr_pos),
       beside = F,
       xlab = "time (years)",
       ylab = "annual incremental costs",
       ylim = c(
-        min(m.cost_incr.neg) + min(m.cost_incr.neg)*0.10, 
-        max(m.cost_incr.pos) + max(m.cost_incr.pos)*0.10
-        ),
+        min(m.cost_incr_neg) + min(m.cost_incr_neg)*0.10, 
+        max(m.cost_incr_pos) + max(m.cost_incr_pos)*0.10
+      ),
       col = rainbow(5), 
-      names.arg = 1:nrow(m.cost_incr.pos),
+      names.arg = 1:nrow(m.cost_incr_pos),
       main = "costs by sector over time"
     )
     barplot(
-      height = t(m.cost_incr.neg),
+      height = t(m.cost_incr_neg),
       beside = F,
       col = rainbow(5),
       add = T
@@ -1041,7 +1041,7 @@ if(T) {
     legend(x = "topright", legend = c("diagnostic","treatment","health","social","informal"), fill = rainbow(5))
     
   }
-
+  
 }
 
 
@@ -1076,7 +1076,7 @@ if(T) {
 if(F) {
   
   # base case
-    # icer (already defined)
+  # icer (already defined)
   
   # CDR-SB RR=23%
   l.inputs_icer_2 <- l.inputs_icer
@@ -1085,26 +1085,26 @@ if(F) {
   l.inputs_icer_2[["rr.tx_mil_sev"]] <- 1-0.23
   
   # CDR-SB time shift (calibrate)
-    # see code chapter 'calibrate to time shift'
+  # see code chapter 'calibrate to time shift'
   
   # MMSE progression (Vos & SveDem)
-    ## source: [Vos, 2015: https://doi.org/10.1093/brain/awv029]
-    ## option: Amyloid positive & neuronal loss undetermined
-    ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+) and 'conflicting IAP' (Amyloid+, Injury-)
-    ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text), and 22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text) with prevalence of 353 and 49 respectively (respectively)
-    ### This results into a weighted 3-year cumulative incidence of (converting all 4 probabilities to rates before weighting and averaging):
-    temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )
-    ## and corresponding 1-year probability of 
-    temp.est2 <- 1-exp(- -log(1-temp.est2)/3)
-    temp.est2
-    ## alternative option: Amyloid positive & neuronal loss positive
-    ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+)
-    ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text)
-    ### This results into a weighted 3-year cumulative incidence of:
-    temp.est1 <- 1-exp(- (-log(1-0.59) + -log(1-0.04)) )
-    ## and corresponding 1-year probability of 
-    temp.est1 <- 1-exp(- -log(1-temp.est1)/3)
-    temp.est1
+  ## source: [Vos, 2015: https://doi.org/10.1093/brain/awv029]
+  ## option: Amyloid positive & neuronal loss undetermined
+  ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+) and 'conflicting IAP' (Amyloid+, Injury-)
+  ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text), and 22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text) with prevalence of 353 and 49 respectively (respectively)
+  ### This results into a weighted 3-year cumulative incidence of (converting all 4 probabilities to rates before weighting and averaging):
+  temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )
+  ## and corresponding 1-year probability of 
+  temp.est2 <- 1-exp(- -log(1-temp.est2)/3)
+  temp.est2
+  ## alternative option: Amyloid positive & neuronal loss positive
+  ### Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+)
+  ### corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text)
+  ### This results into a weighted 3-year cumulative incidence of:
+  temp.est1 <- 1-exp(- (-log(1-0.59) + -log(1-0.04)) )
+  ## and corresponding 1-year probability of 
+  temp.est1 <- 1-exp(- -log(1-temp.est1)/3)
+  temp.est1
   
   l.inputs_icer_4 <- l.inputs_icer
   l.inputs_icer_4[["p.mci_mil"]] <- round(temp.est2,3) # 0.248
@@ -1133,7 +1133,7 @@ if(F) {
   l.inputs_icer_6[["hr.mort_sev"]] <- 4.267 * 1.82
   
   # A: continue treatment & no waning during treatment
-    # n/a: identical to base case
+  # n/a: identical to base case
   
   # B: continue treatment & waning during treatment
   l.inputs_icer_B <- l.inputs_icer
@@ -1158,7 +1158,7 @@ if(F) {
   l.inputs_icer_E[["tx_discontinuation2_begin"]] <- 2
   
   # methodology: cycle lengths 
-    # see code chapter 'cycle time'
+  # see code chapter 'cycle time'
   
   # run scenarios
   
@@ -1179,7 +1179,7 @@ if(F) {
   l.out_scenario[[9]] <- f.run_scenario(l.inputs = l.inputs_icer_C, detailed = TRUE)
   l.out_scenario[[10]] <- f.run_scenario(l.inputs = l.inputs_icer_D, detailed = TRUE)
   l.out_scenario[[11]] <- f.run_scenario(l.inputs = l.inputs_icer_E, detailed = TRUE)
-
+  
   ## store results
   for(i in c(1,2, 4,5,6, 8,9,10,11)) {
     l.out_scenario_prep[[i]] <- f.result(l.out_scenario = l.out_scenario[[i]], within = 2)
@@ -1505,17 +1505,17 @@ if(F) {
     if(T) {
       p.int18m <- l.out_cal[["l.out"]][["int"]][["m.out"]][36+1,"mci"] # proportion mci int at cycle 37 (=1.5 year, which matches trial duration); change mci to mil, see below
       p.soc18m <- l.out_cal[["l.out"]][["soc"]][["m.out"]][36+1-2*5.5,"mci"] # proportion mci soc at cycle 26 (=1.5 year minus 5.5 months, which matches the to-be calibrated time delay); change mci to mil, see below
-        round(p.int18m,3)
-        round(p.soc18m,3)
+      round(p.int18m,3)
+      round(p.soc18m,3)
       dif <- p.int18m - p.soc18m # calculate difference
-      }
+    }
     # 1B: obtain to-be calibrated result: proportion in mil at 18 months
     if(F) {
       p.int18m <- l.out_cal[["l.out"]][["int"]][["m.out"]][36+1,"mil"] # proportion mil int at cycle 37 (=1.5 year, which matches trial duration); change mci to mil, see below
       p.soc18m <- l.out_cal[["l.out"]][["soc"]][["m.out"]][36+1-2*5.5,"mil"] # proportion mil soc at cycle 26 (=1.5 year minus 5.5 months, which matches the to-be calibrated time delay); change mci to mil, see below
       round(p.int18m,3)
       round(p.soc18m,3)
-    dif <- p.int18m - p.soc18m # calculate difference
+      dif <- p.int18m - p.soc18m # calculate difference
     }
     
     # return difference
