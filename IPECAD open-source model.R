@@ -51,7 +51,7 @@ m.mortality_rate_US_2016[,"weighted"] <- m.mortality_rate_US_2016[,"male"] * (1-
 # input parameters (see readme for details)
 l.inputs_icer <- list(
   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
-  v.names_strat = c("soc","int"), 
+  v.names_strat = c("soc","int"), # strategies: soc = standard of care; int = intervention
   age_start = 71, 
   sex = "weighted", 
   p.starting_state_mci = 0.55, 
@@ -412,8 +412,8 @@ f.run_strategy <- function(l.inputs) {
     
     # add additional inputs to cycle 1
     if(strat=="int") {
-      m.out[,"cost_dx"][1] <- m.out[,"cost_dx"][1] + c.Tx_start
       m.out[,"qaly_pt"][1] <- m.out[,"qaly_pt"][1] + u.Tx_start
+      m.out[,"cost_dx"][1] <- m.out[,"cost_dx"][1] + c.Tx_start
     }
     
     # define vector for discounting QALYs and costs (STEP G8: apply discounting)
@@ -891,9 +891,18 @@ if(T) {
   }
   )
   
+  # export results for IPECAD repository
+  write.table(x = m.result_icer[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  l.inputs_icer_repository <- l.inputs_icer
+  l.inputs_icer_repository[["half_cycle_correction"]] <- FALSE
+  l.inputs_icer_repository[["discount_EFFECT"]] <- 0
+  l.out_icer_repository <- f.run_scenario(l.inputs = l.inputs_icer_repository, detailed = TRUE)
+  write.table(x = l.out_icer_repository$l.out$soc$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  write.table(x = l.out_icer_repository$l.out$int$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+
   # standard tables/plots
   
-  if(F) {
+  if(T) {
     
     # all outcomes
     # str(l.out_icer) # show structure of output
@@ -1066,6 +1075,15 @@ if(T) {
   l.out_adace_nohccdis <- f.run_scenario(l.inputs = l.inputs_adace_nohccdis, detailed = TRUE)
   write.table(x = round(l.out_adace_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   write.table(x = round(l.out_adace_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  
+  # export results for IPECAD repository
+  write.table(x = m.result_adace[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  l.inputs_adace_repository <- l.inputs_adace
+  l.inputs_adace_repository[["half_cycle_correction"]] <- FALSE
+  l.inputs_adace_repository[["discount_EFFECT"]] <- 0
+  l.out_adace_repository <- f.run_scenario(l.inputs = l.inputs_adace_repository, detailed = TRUE)
+  write.table(x = l.out_adace_repository$l.out$soc$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+  write.table(x = l.out_adace_repository$l.out$int$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
 }
 
