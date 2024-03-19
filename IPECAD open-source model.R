@@ -242,7 +242,10 @@ l.inputs_adace <- list(
 
 ######################################## 2. RUN MODEL ########################################
 
-# The model is run using 2 functions: run strategy and run scenario. The second (scenario) includes a loop over all strategies by calling them one by one. This is done in the following steps (annotated in the code): 
+# The model is run using 2 functions: run function `f.run_strategy` and run function `f.run_scenario`. 
+# The second function (`f.run_scenario`) includes a loop over all strategies by calling them one by one. 
+
+# Overall, the code follows these steps: 
 # A: function to run a scenario
 # B: prepare and initialize objects to store scenario and strategy outcomes
 # C: run each strategy in a loop
@@ -261,6 +264,23 @@ l.inputs_adace <- list(
   # G9: store outcomes to be wrapped up by the 'run scenario' function
 # H: store strategy results
 # I: add strategy results to scenario outcomes
+
+# Standard naming for objects is ‘x.object_name’, with x:
+# v = vector
+# m = matrix
+# a = array
+# l = list
+# df = data frame
+# f = function
+# temp = temporary object
+# p = probability or proportion
+# r = rate
+# rr = relative risk or relative rate
+# hr = hazard ratio
+# n = number
+# u = utility
+# c = cost
+# This is inspired by recommendations by https://github.com/DARTH-git/darthpack (https://doi.org/10.1007/s40273-019-00837-x table 3). 
 
 
 
