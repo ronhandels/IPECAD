@@ -502,7 +502,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       v.p.sev_mil <- rep(p.sev_mil, n.cycle)
       v.p.sev_mod <- rep(p.sev_mod, n.cycle)
       
-      # probability of remaining in the same state (calculated as 1 minus transitions to other states, conditional on survival)
+      # probability of remaining in the same state (calculated as 1 minus transitions to other states; conditional on survival)
       v.p.mci_mci <- 1 - v.p.mci_mil - v.p.mci_mod - v.p.mci_sev
       v.p.mil_mil <- 1 - v.p.mil_mci - v.p.mil_mod - v.p.mil_sev
       v.p.mod_mod <- 1 - v.p.mod_mil - v.p.mod_sev
@@ -949,7 +949,7 @@ if(T) {
     axis(side = 1, at = 0:ceiling(max(colSums(plot.timestate_data))))
     text(x=c(0,cumsum(plot.timestate_data[1:3,"int"])), y=1, labels=round(plot.timestate_data[,"int"],1), pos=4)
     text(x=c(0,cumsum(plot.timestate_data[1:3,"soc"])), y=2, labels=round(plot.timestate_data[,"soc"],1), pos=4)
-    text(x=c(0,cumsum(plot.timestate_data[1:3,"int"])), y=0.5, labels=c("mci","mil","mod","sev"), pos=4)
+    text(x=c(0,cumsum(plot.timestate_data[1:3,"int"])), y=0.5, labels=c("MCI","mild","moderate","severe"), pos=4)
     #legend(x="bottom", legend=c("mci","mil","mod","sev"), inset=c(0,-0.6), horiz=TRUE, fill=c("green","yellow","orange","red"))
     
     # table: state trace
