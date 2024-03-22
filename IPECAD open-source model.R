@@ -737,9 +737,14 @@ if(F) {
 
 if(T) {
   
-  # run scenario and results
+  # run scenario
   l.out_icer <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
-  m.result_icer <- f.result(l.out_scenario = l.out_icer, within = 2)
+  
+  # additional results
+  m.result_icer <- matrix(data = NA, nrow = ncol(l.out_icer$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_icer$l.out$soc$m.out), c("soc","int","dif")))
+  m.result_icer[,"soc"] <- colSums(l.out_icer$l.out$soc$m.out)
+  m.result_icer[,"int"] <- colSums(l.out_icer$l.out$int$m.out)
+  m.result_icer[,"dif"] <- m.result_icer[,"int"] - m.result_icer[,"soc"]
   
   # compare to publication
   print(round(m.result_icer[c("ly","qaly","cost"),c("soc","int","dif")],2))
@@ -753,57 +758,6 @@ if(T) {
   l.out_icer_nohccdis <- f.run_scenario(l.inputs = l.inputs_icer_nohccdis, detailed = TRUE)
   write.table(x = round(l.out_icer_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   write.table(x = round(l.out_icer_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  
-  # additional analysis (presentation Stockholm 2024)
-  round(m.result_icer,2)
-  with(as.list(l.inputs_icer), {
-    
-    # prepare
-    c.mci <- c.mci_hc*(1-p.mci_i) + c.mci_hc_i*p.mci_i + c.mci_sc*(1-p.mci_i) + c.mci_sc_i*p.mci_i + c.mci_ic*(1-p.mci_i) + c.mci_ic_i*p.mci_i
-    c.mil <- c.mil_hc*(1-p.mil_i) + c.mil_hc_i*p.mil_i + c.mil_sc*(1-p.mil_i) + c.mil_sc_i*p.mil_i + c.mil_ic*(1-p.mil_i) + c.mil_ic_i*p.mil_i
-    c.mod <- c.mod_hc*(1-p.mod_i) + c.mod_hc_i*p.mod_i + c.mod_sc*(1-p.mod_i) + c.mod_sc_i*p.mod_i + c.mod_ic*(1-p.mod_i) + c.mod_ic_i*p.mod_i
-    c.sev <- c.sev_hc*(1-p.sev_i) + c.sev_hc_i*p.sev_i + c.sev_sc*(1-p.sev_i) + c.sev_sc_i*p.sev_i + c.sev_ic*(1-p.sev_i) + c.sev_ic_i*p.sev_i
-    u.mci <- (u.mci_pt+u.mci_ic)*(1-p.mci_i) + (u.mci_pt_i+u.mci_ic_i)*p.mci_i
-    u.mil <- (u.mil_pt+u.mil_ic)*(1-p.mil_i) + (u.mil_pt_i+u.mil_ic_i)*p.mil_i
-    u.mod <- (u.mod_pt+u.mod_ic)*(1-p.mod_i) + (u.mod_pt_i+u.mod_ic_i)*p.mod_i
-    u.sev <- (u.sev_pt+u.sev_ic)*(1-p.sev_i) + (u.sev_pt_i+u.sev_ic_i)*p.sev_i
-    
-    # outcome 1
-    c.Tx_start # diagnostic costs + side effects
-    c.Tx_tot <- sum(m.result_icer[c("mci","mil"),"soc"]) * c.Tx * (1-p.tx_discontinuation1) # treatment cost
-    u.Tx_start # treatment side effects
-    c.mci_dif <- m.result_icer["mci","dif"] * c.mci
-    c.mil_dif <- m.result_icer["mil","dif"] * c.mil
-    c.mod_dif <- m.result_icer["mod","dif"] * c.mod
-    c.sev_dif <- m.result_icer["sev","dif"] * c.sev
-    u.mci_dif <- m.result_icer["mci","dif"] * u.mci
-    u.mil_dif <- m.result_icer["mil","dif"] * u.mil
-    u.mod_dif <- m.result_icer["mod","dif"] * u.mod
-    u.sev_dif <- m.result_icer["sev","dif"] * u.sev
-    c_dif1 <- c.Tx_start + c.Tx_tot + c.mci_dif + c.mil_dif + c.mod_dif + c.sev_dif
-    qaly_dif1 <- u.Tx_start + u.mci_dif + u.mil_dif + u.mod_dif + u.sev_dif
-    
-    # outcome 2
-    c.mci_dif2 <- m.result_icer["mci","dif"] * (c.mil - c.mci)
-    c.mil_dif2 <- m.result_icer["mil","dif"] * (c.mod - c.mil)
-    c.ly_dif <- m.result_icer["ly","dif"] * ((c.mci + c.mil)/2)
-    u.mci_dif2 <- m.result_icer["mci","dif"] * (u.mil - u.mci)
-    u.mil_dif2 <- m.result_icer["mil","dif"] * (u.mod - u.mil)
-    u.ly <- m.result_icer["ly","dif"] * ((u.mci + u.mil)/2)
-    c_dif2 <- c.Tx_start + c.Tx_tot + -c.mci_dif2 + -c.mil_dif2 + c.ly_dif
-    qaly_dif2 <- u.Tx_start + -u.mci_dif2 + -u.mil_dif2 + u.ly
-    
-    # return
-    return(list(
-      c_dif1 = c_dif1, 
-      qaly_dif1 = qaly_dif1, 
-      icer1 = c_dif1/qaly_dif1, 
-      c_dif2 = c_dif2, 
-      qaly_dif2 = qaly_dif2, 
-      icer2 = c_dif2/qaly_dif2
-    ))
-  }
-  )
   
   # export results for IPECAD repository
   write.table(x = m.result_icer[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
@@ -1005,7 +959,7 @@ if(T) {
 
 ######################################## 5.3. UNCERTAINTY SCENARIOS ########################################
 
-if(F) {
+if(T) {
   
   # base case
   # icer (already defined)
@@ -1130,24 +1084,6 @@ if(F) {
   
   # proportion results extrapolated
   round(m.result_icer[c("mci","mil","ly","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic"),c("dif_within","dif_extrapolate","dif_p_extrapolate")],2)
-  
-  # additional analysis (presentation Stockholm 19-01-2024)
-  ## inputs
-  l.inputs_icer_6b <- l.inputs_icer_6
-  l.inputs_icer_6b[["rr.tx_mci_mil"]] <- 1-0.161
-  l.inputs_icer_6b[["rr.tx_mil_mod"]] <- 1-0.161
-  l.inputs_icer_6b[["rr.tx_mil_sev"]] <- 1-0.161
-  ## run scenario and results
-  l.out_icer_6b <- f.run_scenario(l.inputs = l.inputs_icer_6b, detailed = TRUE)
-  m.result_icer_6b <- f.result(l.out_scenario = l.out_icer_6b, within = 4)
-  ## outcomes
-  sum(m.result_icer_6b[c("mci","mil"),"dif"])
-  m.result_icer_6b["ly","dif"]
-  m.result_icer_6b["qaly","dif"]
-  sum(m.result_icer_6b[c("cost_dx","cost_tx"),"dif"])
-  sum(m.result_icer_6b[c("cost_hc","cost_sc","cost_ic"),"dif"])
-  sum(m.result_icer_6b["nhb","dif"])
-  calculate_icers(cost = l.out_icer_6b[["df.out"]][,"COST"], effect = l.out_icer_6b[["df.out"]][,"QALY"], strategies = l.out_icer_6b[["df.out"]][,"strategy"])[2,"ICER"]
   
 }
 
