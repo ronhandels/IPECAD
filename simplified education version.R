@@ -68,7 +68,10 @@ a <- array(data = c(1,2,3,4,11,22,33,44), dim = c(2,2,2))
 a[,,1] # all elements of the third dimension
 a[1,,] # all elements of the first dimension. Because the third dimension only has length of 1, it simplifies the array going from 3 to 2 dimensions. Notice when printing this it is different from how matrix is printed in its full form
 
-# matrix multiplication
+# advanced selection in array
+# [to be detailed, perhaps with example of selecting sex- and age-specific death rate]
+
+# list
 # [to be detailed]
 
 # loop
@@ -80,10 +83,19 @@ a[1,,] # all elements of the first dimension. Because the third dimension only h
 # function in function
 # [to be detailed]
 
-
+# debugging
+# [to be detailed]
 
 # further read for very basics R: https://rstudio-education.github.io/hopr/basics.html
 # further read for advanced R subsetting: https://adv-r.hadley.nz/subsetting.html
+
+
+
+######################################## SOME BASIC HEALTH-ECONOMIC MODELING METHODS IN R ########################################
+
+# transition probability table and time dependency operationalized by age-specific mortality
+# matrix multiplication
+# [to be detailed]
 
 
 
@@ -171,15 +183,15 @@ l.inputs <- list(
 # E: run preparations specific for the intervention strategy
 # F: store newly created or updated inputs to be used for the function to run a single strategy
 # G: function to run the strategy
-# G1: prepare transition probability matrix
-# G2: some checks
-# G3: initialize objects to store strategy outcomes
-# G4: starting state
-# G5: markov multiplication by looping over cycles
-# G6: multiply states with utility and cost estimates
-# G7: half-cycle correction
-# G8: discount QALYs and costs
-# G9: store outcomes to be wrapped up by the 'run scenario' function
+  # G1: prepare transition probability matrix
+  # G2: some checks
+  # G3: initialize objects to store strategy outcomes
+  # G4: starting state
+  # G5: markov multiplication by looping over cycles
+  # G6: multiply states with utility and cost estimates
+  # G7: half-cycle correction
+  # G8: discount QALYs and costs
+  # G9: store outcomes to be wrapped up by the 'run scenario' function
 # H: store strategy results
 # I: add strategy results to scenario outcomes
 

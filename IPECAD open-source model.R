@@ -1,7 +1,7 @@
 
 ######################################## INFORMATION ########################################
 
-# see readme.md for details
+# see readme.md on https://github.com/ronhandels/IPECAD for details
 
 
 
@@ -712,109 +712,6 @@ f.result <- function(l.out_scenario, within) {
 
 ######################################## 4. VALIDATION ########################################
 
-######################################## 4.1. COMPARE TO PREVIOUS VERSION ########################################
-
-if(F) {
-  # internal validation to previous version
-  l.inputs_val_int <- list(
-    v.names_state = c("mcion","mciof","milon","milof","mod","sev","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
-    v.names_strat = c("soc","int"), # strategies: soc = standard of care strategy; int = intervention strategy
-    age_start = 70, 
-    n.cycle = 29, 
-    sex = "total", 
-    p.mci_mil = 0.21, 
-    p.mci_mod = 0, 
-    p.mci_sev = 0, 
-    p.mil_mci = 0, 
-    p.mil_mod = 0.293, 
-    p.mil_sev = 0.001, 
-    p.mod_mil = 0.087, 
-    p.mod_sev = 0.109, 
-    p.sev_mil = 0.000, 
-    p.sev_mod = 0.196, 
-    p.mci_i = 0, 
-    p.mil_i = 0.038, 
-    p.mod_i = 0.110, 
-    p.sev_i = 0.259, 
-    m.r.mortality = m.mortality_rate_US, 
-    hr.mort_mci = 1, 
-    hr.mort_verymilddem = 1.82, 
-    hr.mort_mil = 1.318, 
-    hr.mort_mod = 2.419, 
-    hr.mort_sev = 4.267, 
-    rr.tx_mci_mil = 0.75, 
-    rr.tx_mci_mod = 1, 
-    rr.tx_mci_sev = 1, 
-    rr.tx_mil_mod = 0.75, 
-    rr.tx_mci_mil_dis = 1, 
-    rr.tx_mci_mod_dis = 1, 
-    rr.tx_mci_sev_dis = 1, 
-    rr.tx_mil_mod_dis = 1, 
-    p.tx_discontinuation1 = 0, 
-    p.tx_discontinuation2 = 0.1, 
-    tx_discontinuation2_begin = 2, 
-    tx_waning = 0.05, 
-    tx_waning_dis = 0, 
-    tx_duration = 7, 
-    p.starting_state_mci = 1, 
-    u.mci_pt = 0.73, 
-    u.mil_pt = 0.69, 
-    u.mod_pt = 0.53, 
-    u.sev_pt = 0.38, 
-    u.mci_ic = 0, 
-    u.mil_ic = 0, 
-    u.mod_ic = 0, 
-    u.sev_ic = 0, 
-    c.mci_hc = 1254 * 12, 
-    c.mil_hc = 1471 * 12, 
-    c.mod_hc = 1958 * 12, 
-    c.sev_hc = 2250 * 12, 
-    c.mci_hc_i = 1254 * 12, 
-    c.mil_hc_i = 1471 * 12, 
-    c.mod_hc_i = 1958 * 12, 
-    c.sev_hc_i = 2250 * 12, 
-    c.mci_sc = 222 * 12, 
-    c.mil_sc = 410 * 12, 
-    c.mod_sc = 653 * 12, 
-    c.sev_sc = 1095 * 12, 
-    c.mci_sc_i = 8762 * 12, 
-    c.mil_sc_i = 8762 * 12, 
-    c.mod_sc_i = 8762 * 12, 
-    c.sev_sc_i = 8762 * 12, 
-    c.mci_ic = 0, 
-    c.mil_ic = 0, 
-    c.mod_ic = 0, 
-    c.sev_ic = 0, 
-    c.mci_ic_i = 0, 
-    c.mil_ic_i = 0, 
-    c.mod_ic_i = 0, 
-    c.sev_ic_i = 0, 
-    c.Tx = 10000, 
-    c.Tx_start = 2000, 
-    discount_QALY = 0.035, 
-    discount_COST = 0.035, 
-    wtp = 40000, 
-    half_cycle_correction = FALSE
-  )
-  
-  # run scenario
-  out_val_int <- f.run_scenario(l.inputs = l.inputs_val_int, detailed = TRUE)
-  out_val_int
-  
-  ## incremental summary outcomes
-  df.he_incr_val_int <- rbind(
-    out_val_int[["df.out"]][,-1], 
-    incremental = out_val_int[["df.out"]]["int",-1] - out_val_int[["df.out"]]["soc",-1]
-  )
-  table.he_incr_val_int <- format(df.he_incr_val_int, digits=2, scientific=FALSE, big.mark=",")
-  print(table.he_incr_val_int)
-  
-  # comment: fully replicated outcomes compared to previous version (main branch at this moment)
-  
-}
-
-
-
 ######################################## 4.1. EXTREME SCENARIOS ########################################
 
 if(F) {
@@ -829,9 +726,6 @@ if(F) {
   l.inputs_icer_extr1[["c.Tx_start"]] <- 0
   ## run scenario and results
   l.out_icer_extr1 <- f.run_scenario(l.inputs = l.inputs_icer_extr1, detailed = TRUE)
-  m.result_icer_extr1 <- f.result(l.out_scenario = l.out_icer_extr1, within = 2)
-  ## print results
-  round(m.result_icer_extr1,2)
   
 }
 
@@ -1378,7 +1272,7 @@ if(F) {
   
   # adjust inputs to cycle time (list is duplicated to force check all parameters for adjustment)
   l.inputs_cycle2 <- l.inputs_cycle
-  l.inputs_cycle2<- list(
+  l.inputs_cycle2 <- list(
     v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
     v.names_strat = c("soc","int"), 
     age_start = l.inputs_cycle2[["age_start"]] / t, 

@@ -28,7 +28,7 @@ ui <- fluidPage(
       ), 
       
       sliderInput(inputId = "age_start", label = "Age of starting population", min = 50, max = 99, value = 71), 
-      radioButtons(inputId = "sex", label = "Sex of starting population", choices = c("female","male")), 
+      radioButtons(inputId = "sex", label = "Sex of starting population", choices = c("female","male","weighted"), selected = "weighted"), 
       sliderInput(inputId = "p.starting_state_mci", label="Proportion starting population in MCI", min = 0, max = 1, value = 0.55), 
       sliderInput(inputId = "n.cycle", label="Number of cycles (years) to run", min = 1, max = 50, value = 29), 
       sliderInput(inputId = "p.mci_mil", label = "TP MCI to mild dementia", min = 0, max = 1, value = 0.23), 
@@ -191,6 +191,10 @@ server <- function(input, output, session) {
     # put UI inputs into list of model inputs
     m.lifetable_US_2019 <- as.matrix(read.csv(file="lifetable_US_2019_ssa.csv", header=TRUE))[,c("male","female")] # load life table
     m.mortality_rate_US_2019 <- -log(1-(m.lifetable_US_2019)) # convert probability to rate
+    ## weight rate for male and female
+    m.mortality_rate_US_2019 <- cbind(m.mortality_rate_US_2019, weighted=NA)
+    m.mortality_rate_US_2019[,"weighted"] <- m.mortality_rate_US_2019[,"male"] * 0.48 + m.mortality_rate_US_2019[,"female"] * 0.52
+    
     l.inputs <- list(
       v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
       v.names_strat = c("soc","int"), 
