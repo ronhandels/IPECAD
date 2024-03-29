@@ -139,7 +139,7 @@ ui <- fluidPage(
         ("soc = standard of care strategy")
       ), 
       
-      tableOutput("test"),
+      #tableOutput("test"), # for testing purposes
       
       h2("Summary"),
       tableOutput("table.summary"),
@@ -296,13 +296,18 @@ server <- function(input, output, session) {
     
     # run scenario and results
     l.out <- f.run_scenario(l.inputs = l.inputs, detailed = TRUE)
-    m.result <- f.result(l.out_scenario = l.out, within = 2)
+    
+    # additional results
+    m.result <- matrix(data = NA, nrow = ncol(l.out$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out$l.out$soc$m.out), c("soc","int","dif")))
+    m.result[,"soc"] <- colSums(l.out$l.out$soc$m.out)
+    m.result[,"int"] <- colSums(l.out$l.out$int$m.out)
+    m.result[,"dif"] <- m.result[,"int"] - m.result[,"soc"]
     
     
     
     ######################################## ** PREPARE OUTCOMES ########################################
     
-    # test (not used)
+    # test (for testing purposes)
     test <- input$p.mci_mil
     
     # table: summary

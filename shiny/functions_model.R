@@ -373,46 +373,4 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 
 
-######################################## 2.3. PREPARE RESULTS ########################################
 
-# prepare results
-f.result <- function(l.out_scenario, within) {
-  
-  # store cycle-specific outcomes
-  m.out_soc <- l.out_scenario$l.out$soc$m.out
-  m.out_int <- l.out_scenario$l.out$int$m.out
-  
-  # initialize matrix for summary outcomes
-  m.result <- matrix(
-    data = NA, 
-    nrow = ncol(m.out_soc), 
-    ncol = 11, 
-    dimnames = list(
-      colnames(m.out_soc),
-      c("soc","int","dif","dif_relative","soc_within","int_within","soc_extrapolate","int_extrapolate","dif_within","dif_extrapolate","dif_p_extrapolate")
-    )
-  )
-  
-  # fill matrix
-  for(i in rownames(m.result)) {
-    m.result[i,"soc"] <- sum(m.out_soc[,i])
-    m.result[i,"int"] <- sum(m.out_int[,i])
-    m.result[i,"soc_within"] <- sum(m.out_soc[1:within,i])
-    m.result[i,"int_within"] <- sum(m.out_int[1:within,i])
-    m.result[i,"soc_extrapolate"] <- sum(m.out_soc[(within+1):nrow(m.out_soc),i])
-    m.result[i,"int_extrapolate"] <- sum(m.out_int[(within+1):nrow(m.out_soc),i])
-  }
-  
-  # add absolute, relative and proportional difference
-  round(m.result,1)
-  m.result[,"dif"] <- m.result[,"int"] - m.result[,"soc"]
-  m.result[,"dif_relative"] <- m.result[,"dif"] / m.result[,"soc"]
-  m.result[,"dif_within"] <- m.result[,"int_within"] - m.result[,"soc_within"]
-  m.result[,"dif_extrapolate"] <- m.result[,"int_extrapolate"] - m.result[,"soc_extrapolate"]
-  m.result[,"dif_p_extrapolate"] <- m.result[,"dif_extrapolate"] / m.result[,"dif"]
-  round(m.result, digits=2) # note: proportional difference is invalid for outcomes with negative values
-  
-  # return
-  return(m.result)
-  
-}
