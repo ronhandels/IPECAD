@@ -16,7 +16,7 @@ ui <- fluidPage(
     ######################################## * SIDEBAR PANEL ########################################
     
     sidebarPanel(
-      
+    
       h3("Basic inputs"), 
       
       helpText(
@@ -135,7 +135,7 @@ ui <- fluidPage(
         ("mod = moderate dementia"), br(),         
         ("NHB = net health benefit"), br(),         
         ("QALY = quality-adjusted life years"), br(),         
-        ("sev = severe dementia"), br(),         
+        ("sev = severe dementia"), br(), 
         ("soc = standard of care strategy")
       ), 
       
