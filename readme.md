@@ -14,6 +14,8 @@ This readme only contains an installation guide and version history. A descripti
 
 The branch "main" is for development and fune tuning before release. The branch "develop" is for development, experimenting and exploring new features, it is not necessarily stable. Releases are stable versions often associated to specific applications of the model. 
 
+A simplified version for education purposes is available in the develop branch. 
+
 # Installation tutorial R version
 
 -   Download the preferred release (see detailed below) on https://github.com/ronhandels/ipecad or main branch (click on "\<\> Code" (green button) \> click on "Download ZIP"). 
