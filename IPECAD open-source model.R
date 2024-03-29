@@ -43,7 +43,6 @@ m.mortality_rate_US_2016[,"weighted"] <- m.mortality_rate_US_2016[,"male"] * (1-
 
 
 
-
 ######################################## 1.2. MODEL INPUTS LIST ########################################
 
 ######################################## 1.2.1. INPUTS: CROSS-VALIDATION ICER ########################################
@@ -438,9 +437,9 @@ f.run_strategy <- function(l.inputs) {
     
     # define vector for discounting QALYs and costs (STEP G8: apply discounting)
     n <- ifelse(test=half_cycle_correction, yes=2, no=1)
-    v.discount_EFFECT <- 1 / (( 1 + (discount_EFFECT)) ^ (0 : (n.cycle-n)))
-    v.discount_QALY   <- 1 / (( 1 + (discount_QALY))   ^ (0 : (n.cycle-n)))
-    v.discount_COST   <- 1 / (( 1 + (discount_COST))   ^ (0 : (n.cycle-n)))
+    v.discount_EFFECT <- 1 / (( 1 + discount_EFFECT) ^ (0 : (n.cycle-n)))
+    v.discount_QALY   <- 1 / (( 1 + discount_QALY)   ^ (0 : (n.cycle-n)))
+    v.discount_COST   <- 1 / (( 1 + discount_COST)   ^ (0 : (n.cycle-n)))
     
     # apply discounting
     for(i in c(colnames(m.trace),"ly")) {
@@ -659,75 +658,15 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 
 
-######################################## 2.3. PREPARE RESULTS ########################################
-
-# prepare results
-f.result <- function(l.out_scenario, within) {
-  
-  # store cycle-specific outcomes
-  m.out_soc <- l.out_scenario$l.out$soc$m.out
-  m.out_int <- l.out_scenario$l.out$int$m.out
-  
-  # initialize matrix for summary outcomes
-  m.result <- matrix(
-    data = NA, 
-    nrow = ncol(m.out_soc), 
-    ncol = 11, 
-    dimnames = list(
-      colnames(m.out_soc),
-      c("soc","int","dif","dif_relative","soc_within","int_within","soc_extrapolate","int_extrapolate","dif_within","dif_extrapolate","dif_p_extrapolate")
-    )
-  )
-  
-  # fill matrix
-  for(i in rownames(m.result)) {
-    m.result[i,"soc"] <- sum(m.out_soc[,i])
-    m.result[i,"int"] <- sum(m.out_int[,i])
-    m.result[i,"soc_within"] <- sum(m.out_soc[1:within,i])
-    m.result[i,"int_within"] <- sum(m.out_int[1:within,i])
-    m.result[i,"soc_extrapolate"] <- sum(m.out_soc[(within+1):nrow(m.out_soc),i])
-    m.result[i,"int_extrapolate"] <- sum(m.out_int[(within+1):nrow(m.out_soc),i])
-  }
-  
-  # add absolute, relative and proportional difference
-  round(m.result,1)
-  m.result[,"dif"] <- m.result[,"int"] - m.result[,"soc"]
-  m.result[,"dif_relative"] <- m.result[,"dif"] / m.result[,"soc"]
-  m.result[,"dif_within"] <- m.result[,"int_within"] - m.result[,"soc_within"]
-  m.result[,"dif_extrapolate"] <- m.result[,"int_extrapolate"] - m.result[,"soc_extrapolate"]
-  m.result[,"dif_p_extrapolate"] <- m.result[,"dif_extrapolate"] / m.result[,"dif"]
-  round(m.result, digits=2) # note: proportional difference is invalid for outcomes with negative values
-  
-  # return
-  return(m.result)
-  
-}
-
-
-
 ######################################## 3. MODEL CALIBRATION ########################################
+
 # n/a
 
 
 
 ######################################## 4. VALIDATION ########################################
 
-######################################## 4.1. EXTREME SCENARIOS ########################################
-
-if(F) {
-  
-  # identical scenarios
-  l.inputs_icer_extr1 <- l.inputs_icer
-  l.inputs_icer_extr1[["rr.tx_mci_mil"]] <- 1
-  l.inputs_icer_extr1[["rr.tx_mil_mod"]] <- 1
-  l.inputs_icer_extr1[["rr.tx_mil_sev"]] <- 1
-  l.inputs_icer_extr1[["u.Tx_start"]] <- 0
-  l.inputs_icer_extr1[["c.Tx"]] <- 0
-  l.inputs_icer_extr1[["c.Tx_start"]] <- 0
-  ## run scenario and results
-  l.out_icer_extr1 <- f.run_scenario(l.inputs = l.inputs_icer_extr1, detailed = TRUE)
-  
-}
+# n/a
 
 
 
@@ -752,7 +691,7 @@ if(T) {
   print(icer_icer)
   
   # proportion in state
-  l.inputs_icer_nohccdis <- l.inputs_icer
+  l.inputs_icer_nohccdis <- l.inputs_icer # run model without half-cycle correction and discounted effects
   l.inputs_icer_nohccdis[["discount_EFFECT"]] <- 0
   l.inputs_icer_nohccdis[["half_cycle_correction"]] <- FALSE
   l.out_icer_nohccdis <- f.run_scenario(l.inputs = l.inputs_icer_nohccdis, detailed = TRUE)
@@ -761,7 +700,7 @@ if(T) {
   
   # export results for IPECAD repository
   write.table(x = m.result_icer[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  l.inputs_icer_repository <- l.inputs_icer
+  l.inputs_icer_repository <- l.inputs_icer # run model without half-cycle correction and discounted effects
   l.inputs_icer_repository[["half_cycle_correction"]] <- FALSE
   l.inputs_icer_repository[["discount_EFFECT"]] <- 0
   l.out_icer_repository <- f.run_scenario(l.inputs = l.inputs_icer_repository, detailed = TRUE)
@@ -929,7 +868,12 @@ if(T) {
   
   # run scenario and results
   l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
-  m.result_adace <- f.result(l.out_scenario = l.out_adace, within = 2)
+  
+  # additional results
+  m.result_adace <- matrix(data = NA, nrow = ncol(l.out_adace$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_adace$l.out$soc$m.out), c("soc","int","dif")))
+  m.result_adace[,"soc"] <- colSums(l.out_adace$l.out$soc$m.out)
+  m.result_adace[,"int"] <- colSums(l.out_adace$l.out$int$m.out)
+  m.result_adace[,"dif"] <- m.result_adace[,"int"] - m.result_adace[,"soc"]
   
   # compare to publication
   print(round(m.result_adace[c("ly","qaly","cost"),c("soc","int","dif")],2))
@@ -937,7 +881,7 @@ if(T) {
   print(icer_adace)
   
   # proportion in state
-  l.inputs_adace_nohccdis <- l.inputs_adace
+  l.inputs_adace_nohccdis <- l.inputs_adace # run model without half-cycle correction and discounted effects
   l.inputs_adace_nohccdis[["discount_EFFECT"]] <- 0
   l.inputs_adace_nohccdis[["half_cycle_correction"]] <- FALSE
   l.out_adace_nohccdis <- f.run_scenario(l.inputs = l.inputs_adace_nohccdis, detailed = TRUE)
@@ -946,7 +890,7 @@ if(T) {
   
   # export results for IPECAD repository
   write.table(x = m.result_adace[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  l.inputs_adace_repository <- l.inputs_adace
+  l.inputs_adace_repository <- l.inputs_adace # run model without half-cycle correction and discounted effects
   l.inputs_adace_repository[["half_cycle_correction"]] <- FALSE
   l.inputs_adace_repository[["discount_EFFECT"]] <- 0
   l.out_adace_repository <- f.run_scenario(l.inputs = l.inputs_adace_repository, detailed = TRUE)
@@ -1048,7 +992,7 @@ if(T) {
   
   # run scenarios
   
-  ## initialize outcomes table
+  ## initialize outcomes lists and tables
   l.out_scenario <- list()
   l.out_scenario_prep <- list()
   m.table1 <- matrix(data = NA, nrow = 12, ncol = 7, dimnames = list(NULL,c("mcimil","ly","qaly","cost_dxtx","cost_care","nhb","icer")))
@@ -1068,9 +1012,15 @@ if(T) {
   
   ## store results
   for(i in c(1,2, 4,5,6, 8,9,10,11)) {
-    l.out_scenario_prep[[i]] <- f.result(l.out_scenario = l.out_scenario[[i]], within = 2)
+    # additional results
+    l.out_scenario_prep[[i]] <- matrix(data = NA, nrow = ncol(l.out_scenario[[i]]$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_scenario[[i]]$l.out$soc$m.out), c("soc","int","dif")))
+    l.out_scenario_prep[[i]][,"soc"] <- colSums(l.out_scenario[[i]]$l.out$soc$m.out)
+    l.out_scenario_prep[[i]][,"int"] <- colSums(l.out_scenario[[i]]$l.out$int$m.out)
+    l.out_scenario_prep[[i]][,"dif"] <- l.out_scenario_prep[[i]][,"int"] - l.out_scenario_prep[[i]][,"soc"]
+    # checks
     if(l.out_scenario_prep[[i]]["mci","dif"]<0) stop("lower person years")
     if(l.out_scenario_prep[[i]]["mil","dif"]<0) stop("lower person years")
+    # select from additional results
     m.table1[i,"mcimil"] <- sum(l.out_scenario_prep[[i]][c("mci","mil"),"dif"])
     m.table1[i,"ly"] <- l.out_scenario_prep[[i]]["ly","dif"]
     m.table1[i,"qaly"] <- l.out_scenario_prep[[i]]["qaly","dif"]
@@ -1083,14 +1033,46 @@ if(T) {
   write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
   # proportion results extrapolated
-  round(m.result_icer[c("mci","mil","ly","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic"),c("dif_within","dif_extrapolate","dif_p_extrapolate")],2)
+  ## store cycle-specific outcomes
+  m.out_icer_soc <- l.out_icer$l.out$soc$m.out
+  m.out_icer_int <- l.out_icer$l.out$int$m.out
+  ## initialize matrix for summary outcomes
+  m.result_icer <- matrix(
+    data = NA, 
+    nrow = ncol(m.out_icer_soc), 
+    ncol = 11, 
+    dimnames = list(
+      colnames(m.out_icer_soc),
+      c("soc","int","dif","dif_relative","soc_within","int_within","soc_extrapolate","int_extrapolate","dif_within","dif_extrapolate","dif_p_extrapolate")
+    )
+  )
+  ## define number of cycles considered within-trial
+  n.within <- 2
+  ## fill matrix
+  for(i in rownames(m.result_icer)) {
+    m.result_icer[i,"soc"] <- sum(m.out_icer_soc[,i])
+    m.result_icer[i,"int"] <- sum(m.out_icer_int[,i])
+    m.result_icer[i,"soc_within"] <- sum(m.out_icer_soc[1:n.within,i])
+    m.result_icer[i,"int_within"] <- sum(m.out_icer_int[1:n.within,i])
+    m.result_icer[i,"soc_extrapolate"] <- sum(m.out_icer_soc[(n.within+1):nrow(m.out_icer_soc),i])
+    m.result_icer[i,"int_extrapolate"] <- sum(m.out_icer_int[(n.within+1):nrow(m.out_icer_soc),i])
+  }
+  ## add absolute, relative and proportional difference
+  m.result_icer[,"dif"] <- m.result_icer[,"int"] - m.result_icer[,"soc"]
+  m.result_icer[,"dif_relative"] <- m.result_icer[,"dif"] / m.result_icer[,"soc"]
+  m.result_icer[,"dif_within"] <- m.result_icer[,"int_within"] - m.result_icer[,"soc_within"]
+  m.result_icer[,"dif_extrapolate"] <- m.result_icer[,"int_extrapolate"] - m.result_icer[,"soc_extrapolate"]
+  m.result_icer[,"dif_p_extrapolate"] <- m.result_icer[,"dif_extrapolate"] / m.result_icer[,"dif"]
+  ## select results for manuscript
+  round(m.result_icer[c("mci","mil","ly","qaly","cost_dx","cost_tx","cost_hc","cost_sc","cost_ic"),c("dif_within","dif_extrapolate","dif_p_extrapolate")], digits=2) # note: proportional difference is invalid for outcomes with negative values
   
 }
 
 
+
 ######################################## 5.3.1. CYCLE TIME ########################################
 
-if(F) {
+if(T) {
   
   # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
   
@@ -1300,9 +1282,14 @@ if(F) {
     half_cycle_correction = FALSE # could be no longer needed with small cycle time
   )
   
-  # run scenario and results
+  # run scenario
   l.out_cycle2 <- f.run_scenario(l.inputs = l.inputs_cycle2, detailed = TRUE)
-  m.result_cycle2 <- f.result(l.out_scenario = l.out_cycle2, within = 4)
+  
+  # additional results
+  m.result_cycle2 <- matrix(data = NA, nrow = ncol(l.out_cycle2$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_cycle2$l.out$soc$m.out), c("soc","int","dif")))
+  m.result_cycle2[,"soc"] <- colSums(l.out_cycle2$l.out$soc$m.out)
+  m.result_cycle2[,"int"] <- colSums(l.out_cycle2$l.out$int$m.out)
+  m.result_cycle2[,"dif"] <- m.result_cycle2[,"int"] - m.result_cycle2[,"soc"]
   
   # store result in sensitivity analysis table
   m.table1[12,"mcimil"] <- sum(m.result_cycle2[c("mci","mil"),"dif"])/(1/t)
@@ -1313,38 +1300,13 @@ if(F) {
   m.table1[12,"nhb"] <- m.result_cycle2["nhb","dif"]
   m.table1[12,"icer"] <- calculate_icers(cost = l.out_cycle2[["df.out"]][,"COST"], effect = l.out_cycle2[["df.out"]][,"QALY"], strategies = l.out_cycle2[["df.out"]][,"strategy"])[2,"ICER"]
   
-  # compare state trace
-  tracesoc_icer   <- l.out_icer  [["l.out"]][["soc"]][["m.trace"]] # store trace
-  traceint_icer   <- l.out_icer  [["l.out"]][["int"]][["m.trace"]]
-  tracesoc_cycle2 <- l.out_cycle2[["l.out"]][["soc"]][["m.trace"]]
-  traceint_cycle2 <- l.out_cycle2[["l.out"]][["int"]][["m.trace"]]
-  round(tracesoc_icer  [c(1:5,10,20),],2) # print trace for cycles 1:5 and cycle 10 and cycle 20 (with 1-year cycle length)
-  round(tracesoc_cycle2[(c(1:5,10,20)-1)*(1/t)+1,],2) # print trace for cycles 1,13,25,37,49 and cycle 109 and cycle 229 (with 1-month cycle length)
-  round(traceint_icer  [c(1:5,10,20),],2) # idem
-  round(traceint_cycle2[(c(1:5,10,20)-1)*(1/t)+1,],2) # idem
-  plot (rowSums(tracesoc_icer  [c(1:10)            ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="black", lty=1) # plot trace mci and mil for soc
-  lines(rowSums(traceint_icer  [c(1:10)            ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="black", lty=2)
-  #lines(rowSums(l.out_icer$l.out$soc$m.out[,c("mci","mil")]), col="red") # half-cycle corrected
-  #lines(rowSums(l.out_icer$l.out$int$m.out[,c("mci","mil")]), col="red", lty=2) # half-cycle corrected
-  lines(rowSums(tracesoc_cycle2[(c(1:10)-1)*(1/t)+1,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="blue" , lty=1)
-  lines(rowSums(traceint_cycle2[(c(1:10)-1)*(1/t)+1,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]), type="l", col="blue" , lty=2)
-  sum(tracesoc_icer  [2:3 ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]) # person-years in soc in first 2 years with 1-year cycle length
-  sum(traceint_icer  [2:3 ,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")]) # person-years in int in first 2 years with 1-year cycle length
-  sum(tracesoc_cycle2[2:25,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")])/12 # person-years in soc in first 2 years with 1-month cycle length
-  sum(traceint_cycle2[2:25,c("mcion_c","mciof_c","milon_c","milof_c","mci_i","mil_i")])/12 # person-years in int in first 2 years with 1-month cycle length
-  # compare health-economic outcomes
-  l.out_icer[["df.out"]]
-  l.out_cycle2[["df.out"]]
-  icer_icer <- calculate_icers(cost = l.out_icer[["df.out"]][,"COST"], effect = l.out_icer[["df.out"]][,"QALY"], strategies = l.out_icer[["df.out"]][,"strategy"]); print(icer_icer, digits=2)
-  icer_cycle2 <- calculate_icers(cost = l.out_cycle2[["df.out"]][,"COST"], effect = l.out_cycle2[["df.out"]][,"QALY"], strategies = l.out_cycle2[["df.out"]][,"strategy"]); print(icer_cycle2, digits=2)
-  
 }
 
 
 
 ######################################## 5.3.2. CALIBRATE TO TIME SHIFT ########################################
 
-if(F) {
+if(T) {
   
   # copy input estimates for calibration (cycle time must be 1/24 year, i.e., 0.5 month)
   l.inputs_cal <- l.inputs_cycle2
@@ -1358,9 +1320,14 @@ if(F) {
     l.inputs_cal[["rr.tx_mil_mod"]] <- x
     l.inputs_cal[["rr.tx_mil_sev"]] <- x
     
-    # run scenario and results
+    # run scenario
     l.out_cal <- f.run_scenario(l.inputs = l.inputs_cal, detailed=TRUE)
-    m.result_cal <- f.result(l.out_scenario = l.out_cal, within = 2)
+    
+    # additional results
+    m.result_cal <- matrix(data = NA, nrow = ncol(l.out_cal$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_cal$l.out$soc$m.out), c("soc","int","dif")))
+    m.result_cal[,"soc"] <- colSums(l.out_cal$l.out$soc$m.out)
+    m.result_cal[,"int"] <- colSums(l.out_cal$l.out$int$m.out)
+    m.result_cal[,"dif"] <- m.result_cal[,"int"] - m.result_cal[,"soc"]
     
     # temporary result
     round(l.out_cal[["l.out"]][["soc"]][["m.out"]][1:37,c("mci","mil","mod","sev","dth")],3) # soc: state trace up to cycle 37 (=1.5 years with 1/24 cycle length)
@@ -1399,13 +1366,18 @@ if(F) {
   # result: for mci the rr = 0.581 and for mil the rr = 0.547 (after manually adjusting mci to mil in the calibration function and rerunning the code); average = 
   mean(c(0.581,0.547)) # 0.56
   
-  # run scenario and results at treatment rr = 0.56 (applied to icer base case with cycle length 1 year)
+  # run scenario at treatment rr = 0.56 (applied to icer base case with cycle length 1 year)
   l.inputs_icer3 <- l.inputs_icer
   l.inputs_icer3[["rr.tx_mci_mil"]] <- 0.56
   l.inputs_icer3[["rr.tx_mil_mod"]] <- 0.56
   l.inputs_icer3[["rr.tx_mil_sev"]] <- 0.56
   l.out_icer3 <- f.run_scenario(l.inputs = l.inputs_icer3, detailed = TRUE)
-  m.result_icer3 <- f.result(l.out_scenario = l.out_icer3, within = 18)
+
+  # additional results
+  m.result_icer3 <- matrix(data = NA, nrow = ncol(l.out_icer3$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_icer3$l.out$soc$m.out), c("soc","int","dif")))
+  m.result_icer3[,"soc"] <- colSums(l.out_icer3$l.out$soc$m.out)
+  m.result_icer3[,"int"] <- colSums(l.out_icer3$l.out$int$m.out)
+  m.result_icer3[,"dif"] <- m.result_icer3[,"int"] - m.result_icer3[,"soc"]
   
   # store result in sensitivity analysis table
   m.table1[3,"mcimil"] <- sum(m.result_icer3[c("mci","mil"),"dif"])
@@ -1422,8 +1394,8 @@ if(F) {
 }
 
 
-######################################## 5.3.3. REPLICATION: HERRING ########################################
 
+######################################## 5.3.3. REPLICATION: HERRING ########################################
 
 if(T) {
   
@@ -1528,9 +1500,14 @@ if(T) {
     half_cycle_correction = TRUE
   )
   
-  # run scenario and results
+  # run scenario
   l.out_herring <- f.run_scenario(l.inputs = l.inputs_herring, detailed = TRUE)
-  m.result_herring <- f.result(l.out_scenario = l.out_herring, within = 2)
+  
+  # additional results
+  m.result_herring <- matrix(data = NA, nrow = ncol(l.out_herring$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_herring$l.out$soc$m.out), c("soc","int","dif")))
+  m.result_herring[,"soc"] <- colSums(l.out_herring$l.out$soc$m.out)
+  m.result_herring[,"int"] <- colSums(l.out_herring$l.out$int$m.out)
+  m.result_herring[,"dif"] <- m.result_herring[,"int"] - m.result_herring[,"soc"]
   print(round(m.result_herring[c("ly","qaly","cost"),c("soc","int","dif")],2))
   
   # compare to publication
