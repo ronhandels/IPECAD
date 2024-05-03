@@ -1,140 +1,98 @@
 
-# ES (Spain)
+# lifetable_ES_2021.csv
 
-## obtained from
-https://www.ine.es/jaxiT3/Tabla.htm?t=27153&L=0
-
-# retrieved on
-2023-06-27
-
-## notes
-https://www.ine.es/ > INEbase > Demography and population > demographic phenomena > life tables. results > series since 1991: population mortality tables for Spain by year, sex, age and functions > function=mortality rate
-
-rate per 1000 was divided by 1000 and converted to probability (1-exp(-rate))
+- Country: Spain. 
+- Obtained from: https://www.ine.es/jaxiT3/Tabla.htm?t=27153&L=0 .
+- Retrieved on: 2023-06-27. 
+- https://www.ine.es/ > INEbase > Demography and population > demographic phenomena > life tables. results > series since 1991: population mortality tables for Spain by year, sex, age and functions > function=mortality rate. 
+- Rate per 1000 was divided by 1000 and converted to probability (1-exp(-rate)). 
 
 
-# NL (The Netherlands)
+# lifetable_NL_2021.csv
 
-## obtained from
-https://opendata.cbs.nl/statline/#/CBS/nl/dataset/37360ned/table?ts=1687880432573
-
-## retrieved on
-2023-06-27
-
-## notes
-https://opendata.cbs.nl/#/CBS/en/ > open data portal > select theme > population > population development > death > mortality; key figures > original data > topcs = deaths per 1,000 inhabitants; gender = male,female; 
+- Country: The Netherlands. 
+- Obtained from: https://opendata.cbs.nl/statline/#/CBS/nl/dataset/37360ned/table?ts=1687880432573 .
+- Retrieved on: 2023-06-27.
+- https://opendata.cbs.nl/statline/#/CBS/nl/ > Thema's > Bevolking > Bevolkingsontwikkeling > Sterfte, doodsoorzaken en euthanasie > Levensverwachting > Levensverwachting; geslacht, leeftijd; Choose: geslacht = Mannen,Vrouwen; Onderwerp = Sterftekans; Leeftijd (op 31 december) = 0-99 or older; Perioden = 2021.
 
 
-# PL (Poland)
+# lifetable_PL_2021.csv
 
-## obtained from
-https://stat.gov.pl/download/gfx/portalinformacyjny/en/defaultaktualnosci/3288/2/15/1/life_expentancy_tables_of_poland_2021.pdf
-
-## retrieved on
-2023-06-27
-
-## notes
-https://stat.gov.pl/en/topics/population/life-expectancy/life-expectancy-tables-of-poland-2021,2,15.html
-
-PDF page 44
-
-Probability of dying used. 
+- Country: Poland. 
+- Obtained from: https://stat.gov.pl/download/gfx/portalinformacyjny/en/defaultaktualnosci/3288/2/15/1/life_expentancy_tables_of_poland_2021.pdf .
+- Retrieved on: 2023-06-27. 
+- https://stat.gov.pl/en/topics/population/life-expectancy/life-expectancy-tables-of-poland-2021,2,15.html .
+- PDF page 44. 
+- Probability of dying used. 
 
 
-# SE (Sweden)
+# lifetable_SE_2021.csv
 
-## obtained from
-https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/table/tableViewLayout1/
-
-## retrieved on
-2023-06-27
-
-## notes
-https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021
+- Country: Sweden. 
+- Obtained from: https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/table/tableViewLayout1/ .
+- Retrieved on: 2023-06-27.
+- https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021.
 
 
+# lifetable_SE_2019.csv
 
-# SE_2019 (Sweden)
-
-## obtained from
-https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/table/tableViewLayout1/
-
-## retrieved on
-2023-12-11
-
-## notes
-https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021. 
+- Country: Sweden. 
+- Obtained from: https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/table/tableViewLayout1/; 2019 .
+- Retrieved on: 2023-12-11.
+- https://www.statistikdatabasen.scb.se/pxweb/en/ssd/START__BE__BE0101__BE0101I/LivslangdEttariga/ > probability of dying (per mille); 2021. 
 Sex combined by converting probability to rate (both for male and female) (-ln(1-probability)), taking the mean of male and female for each year, convert back to probability (1-exp(-rate)). 
 
 
+# lifetable_UK_2021.csv
 
-# UK (United Kingdom)
-
-## obtained from
-https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesunitedkingdomreferencetables
-
-## retrieved on
-2023-06-27
-
-## notes
-office for national statistics > people, population and community > births, deaths and marriages > life expectancies > Datasets related to life expectancies: National life tables: UK
+- Country: United Kingdom.
+- Obtained from: https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesunitedkingdomreferencetables .
+- Retrieved on: 2023-06-27.
+- Office for national statistics > people, population and community > births, deaths and marriages > life expectancies > Datasets related to life expectancies: National life tables: UK. 
 
 
-# US (United States)
+# lifetable_US_2016.csv
 
-## obtained from
-https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf
+- Country: United States.
+- Obtained from: 
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table01.xlsx
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table02.xlsx
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table03.xlsx
+- Retrieved on: not recorded. 
+- Data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1". 
+- https://www.cdc.gov/nchs/nvss/life-expectancy.htm
+- https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_04-508.pdf
+
+
+# lifetable_US_2017.csv
+
+- Country: United States.
+- Obtained from: 
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table01.xlsx
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table02.xlsx
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table03.xlsx
+- Retrieved on: 2024-01-18. 
+- Data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1".
+- https://www.cdc.gov/nchs/nvss/life-expectancy.htm
+- https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_07-508.pdf
+
+
+# lifetable_US_2019.csv 
+
+- Country: United States.
+- Obtained from: 
+https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table01.xlsx
 https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table02.xlsx
 https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.xlsx
-
-## retrieved on
-2023-06-29
-
-## notes
-
-
-# US_2016 (United States)
-
-## retrieved on 2024-01-18 from: 
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table01.xlsx
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table02.xlsx
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_04/Table03.xlsx
-
-## notes: 
-. data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
-. https://www.cdc.gov/nchs/nvss/life-expectancy.htm
-. https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_04-508.pdf
+- Retrieved on: 2023-06-29.
+- Data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1".
+- https://www.cdc.gov/nchs/nvss/life-expectancy.htm
+- https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf
 
 
-# US_2017 (United States)
+# lifetable_US_2019_ssa.csv
 
-## retrieved on 2024-01-18 from: 
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table01.xlsx
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table02.xlsx
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/68_07/Table03.xlsx
-
-## notes: 
-. data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
-. https://www.cdc.gov/nchs/nvss/life-expectancy.htm
-. https://www.cdc.gov/nchs/data/nvsr/nvsr68/nvsr68_07-508.pdf
-
-
-# US_2019 (United States)
-
-## retrieved on 2024-01-18 from: 
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table01.xlsx
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table02.xlsx
-. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/NVSR/70-19/Table03.xlsx
-
-## notes: 
-. data copied to excel from table 1, 2 and 3 column "age" and "Probability of dying between ages x and x + 1"
-. https://www.cdc.gov/nchs/nvss/life-expectancy.htm
-. https://www.cdc.gov/nchs/data/nvsr/nvsr70/nvsr70-19.pdf
-
-
-# US_2019 SSA (United States)
-
-## retrieved on 2024-01-31 from: https://www.ssa.gov/OACT/STATS/table4c6_2019_TR2022.html
-
-## notes: 
-. this life table was used for the ICER 2023 report on Alzheimer drug treatment
+- Country: United States. 
+- Obtained from: https://www.ssa.gov/OACT/STATS/table4c6_2019_TR2022.html .
+- Retrieved on 2024-01-31.
+- This life table was used for the ICER 2023 report on Alzheimer drug treatment. 

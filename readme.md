@@ -10,34 +10,35 @@ The model is available in 3 formats:
 | spreadsheet | deterministic only (OpenDocument and Excel format) | https://github.com/ronhandels/ipecad/ \> file `IPECAD open-source model spreadsheet (open source format).ods` or `IPECAD open-source model spreadsheet (excel).xlsx` |
 | web-based   | deterministic only | https://ronhandels.shinyapps.io/ipecad/                                                  |
 
-This readme only contains an installation guide and version history. A description of the model and its input estimates can be found here: Handels et al. \[2024\] \[placeholder\]. 
+This readme only contains an installation guide and version history. A description of the model and its input estimates can be found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. 
 
 The branch "main" is for development and fune tuning before release. The branch "develop" is for development, experimenting and exploring new features, it is not necessarily stable. Releases are stable versions often associated to specific applications of the model. 
 
 A simplified version for education purposes is available in the 'education' branch, but is under development. 
 
-# Installation tutorial R version
+# Installation tutorial R version (for inexperienced R/github users)
 
--   Download the preferred release (see detailed below) on https://github.com/ronhandels/ipecad or main branch (click on "\<\> Code" (green button) \> click on "Download ZIP"). 
--   Unzip the files. 
--   Install R (https://cran.r-project.org/mirrors.html) and optionally download RStudio. 
--   Open file "IPECAD open-source model.R" in RStudio (or in R). 
--   Install `dampack` by running the code `install.packages("dampack")` in R (this piece of code and an instruction to activate it by removing the `#` is included in the R file under the heading `# MANUAL PREPARATION #`). 
--   If needed, change the working directory to ensure the right path to the life table (this is included in the R file under the heading `# MANUAL PREPARATION #`). 
--   We recommend familiarizing with the description of the model using the details related to the releases described below.
--   The R model code contains comments to guide through the code. 
+- Download files: go to https://github.com/ronhandels/IPECAD, then click "Code" (green button) and then "Download ZIP" on PC. 
+- Unzip folder. 
+- Move unzipped folder to desired location on PC. 
+- Make sure to have R (https://cran.r-project.org/mirrors.html) and ideally RStudio (https://www.rstudio.com) installed. 
+- Open R file named "IPECAD open-source model.R" in R (or RStudio)
+- Install `dampack` by running the code `install.packages("dampack")` in R (this code is located under the heading `# MANUAL PREPARATION #`; to activate the code remove the `#` at the beginning of the line).
+- Set the working directory to the file path where the unzipped folder is stored (this code is located under the heading `# MANUAL PREPARATION #`; change the code manually or alternatively in RStudio go to the menu "Session" then "Set Working Directory" then "To Source File Location" (or to "Choose Directory..." and choose the location of the unzipped folder)).
+- Run the code by sourcing it (in R go to the menu "File" then "Source R code..."; in RStudio go to the menu "Code" then "Source")
+- We recommend familiarizing with the description of the model using the details related to the releases described below.
 
 # Cite this work
 
 Name: IPECAD open-source model <https://github.com/ronhandels/IPECAD>. 
 
-Citation: \[placeholder to Handels et al. 2024 manuscript to be made publicly available\]
+Citation: Handels et al. 2024 https://doi.org/10.1101/2024.04.05.24305373
 
 # Version details
 
-## v2.3.0 (currently as "newfeatures" branch, release planned in 2024)
+## v2.3.0 (currently as "main" branch beta version, release planned in 2024)
 
-This version has been developed as an open-source framework with details found here: Handels et al. \[2024\] \[placeholder\]. In this manuscript we describe the new IPECAD open-source model framework (version 2) for the health-economic evaluation of early AD treatment and aim to apply it in 3 use cases for AD lecanemab treatment: 1) cross-validating an existing model with a similar structure (ICER), 2) cross-validating an existing model with a more complex structure (AD-ACE) and 3) assessing additional uncertainty scenarios. 
+This version has been developed as an open-source framework with details found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. In this manuscript we describe the new IPECAD open-source model framework (version 2) for the health-economic evaluation of early AD treatment and aim to apply it in 3 use cases for AD lecanemab treatment: 1) cross-validating an existing model with a similar structure (ICER), 2) cross-validating an existing model with a more complex structure (AD-ACE) and 3) assessing additional uncertainty scenarios. 
 
 This version has been developed and/or supported by: 
 
@@ -56,7 +57,7 @@ This version is used for the IPECAD workshop model cross-comparison 2023. Detail
 -  ISPOR 2023 abstract: abstract: <https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246>
 -  ISPOR 2023 poster: <https://osf.io/7xbez>
 -  IPECAD workshop details: <https://ipecad.org/workshop/>
--  Manuscript: \[placeholder to Handels et al. 2024 to be made available in the public domain\]; title: "IPECAD Modeling Workshop 2023 Cross Comparison Challenge on Cost-Effectiveness Models in Alzheimer's Disease"
+-  Manuscript: \[placeholder to manuscript to be made available in the public domain\]; title: "IPECAD Modeling Workshop 2023 Cross Comparison Challenge on Cost-Effectiveness Models in Alzheimer's Disease"
 
 This version extends v2.1.0 with new features (transitions to institutionalization, table/graph outcomes), new inputs (estimate of the transition from MCI to mild dementia, estimate for state-specific costs in community and institutional setting) and fixes (half-cycle correction before discounting). 
 
@@ -120,7 +121,7 @@ The IPECAD Open-Source Model v1 - Multi-Domain is an open-source model described
 
 # Acknowledgment
 
-We acknowledge all members of the IPECAD group \[<https://www.ipecad.org\>].
+We acknowledge all members of the IPECAD group \[<https://www.ipecad.org>\].
 
 We acknowledge all (future) contributors to the model.
 

@@ -695,17 +695,17 @@ if(T) {
   l.inputs_icer_nohccdis[["discount_EFFECT"]] <- 0
   l.inputs_icer_nohccdis[["half_cycle_correction"]] <- FALSE
   l.out_icer_nohccdis <- f.run_scenario(l.inputs = l.inputs_icer_nohccdis, detailed = TRUE)
-  write.table(x = round(l.out_icer_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  write.table(x = round(l.out_icer_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = round(l.out_icer_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = round(l.out_icer_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
   # export results for IPECAD repository
-  write.table(x = m.result_icer[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = m.result_icer[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   l.inputs_icer_repository <- l.inputs_icer # run model without half-cycle correction and discounted effects
   l.inputs_icer_repository[["half_cycle_correction"]] <- FALSE
   l.inputs_icer_repository[["discount_EFFECT"]] <- 0
   l.out_icer_repository <- f.run_scenario(l.inputs = l.inputs_icer_repository, detailed = TRUE)
-  write.table(x = l.out_icer_repository$l.out$soc$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  write.table(x = l.out_icer_repository$l.out$int$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = l.out_icer_repository$l.out$soc$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = l.out_icer_repository$l.out$int$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
 
   # standard tables/plots
   
@@ -740,7 +740,7 @@ if(T) {
     # plot: time in state
     plot.timestate_data <- m.result_icer[c("mci","mil","mod","sev"),c("int","soc")]
     
-    windows(width=7, height=4, pointsize=12)
+      # windows(width=7, height=4, pointsize=12)
     par(mar=c(5, 4, 4, 1), xpd=TRUE)
     barplot(
       height = plot.timestate_data, 
@@ -787,7 +787,7 @@ if(T) {
     yy_sev <- c(tableplot.statetracesoc_data[,"sev"], rev(tableplot.statetraceint_data[,"sev"])) # idem
     yy_dth <- c(tableplot.statetracesoc_data[,"dth"], rev(tableplot.statetraceint_data[,"dth"])) # idem
     
-    windows(width=7, height=7, pointsize=12)
+      # windows(width=7, height=7, pointsize=12)
     par(mar=c(5, 4, 4, 1)+0.1, xpd=FALSE)
     matplot(
       x = v.age_range, 
@@ -825,7 +825,7 @@ if(T) {
     
     # plot: incremental cost-effectiveness plane
     par(mar=c(5, 4, 4, 1)+0.1, xpd=FALSE)
-    windows(width=7, height=7, pointsize=12)
+      # windows(width=7, height=7, pointsize=12)
     print(plot(icer_icer, label="all"))
     
     # plot: cost difference by sector over time
@@ -833,7 +833,7 @@ if(T) {
     m.cost_incr_pos[m.cost_incr_pos<0] <- 0
     m.cost_incr_neg[m.cost_incr_neg>=0] <- 0
     
-    windows(width=7, height=7, pointsize=12)
+      # windows(width=7, height=7, pointsize=12)
     par(mar=c(5, 4, 4, 2)+0.1, xpd=FALSE)
     barplot(
       height = t(m.cost_incr_pos),
@@ -885,17 +885,17 @@ if(T) {
   l.inputs_adace_nohccdis[["discount_EFFECT"]] <- 0
   l.inputs_adace_nohccdis[["half_cycle_correction"]] <- FALSE
   l.out_adace_nohccdis <- f.run_scenario(l.inputs = l.inputs_adace_nohccdis, detailed = TRUE)
-  write.table(x = round(l.out_adace_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  write.table(x = round(l.out_adace_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = round(l.out_adace_nohccdis$l.out$soc$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = round(l.out_adace_nohccdis$l.out$int$m.out[1:11,c("mci","mil","mod","sev","dth")],2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
   # export results for IPECAD repository
-  write.table(x = m.result_adace[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = m.result_adace[c("cost_hc","cost_sc","cost_ic","cost_tx","qaly_pt","qaly_ic"),c("soc","int")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   l.inputs_adace_repository <- l.inputs_adace # run model without half-cycle correction and discounted effects
   l.inputs_adace_repository[["half_cycle_correction"]] <- FALSE
   l.inputs_adace_repository[["discount_EFFECT"]] <- 0
   l.out_adace_repository <- f.run_scenario(l.inputs = l.inputs_adace_repository, detailed = TRUE)
-  write.table(x = l.out_adace_repository$l.out$soc$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
-  write.table(x = l.out_adace_repository$l.out$int$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = l.out_adace_repository$l.out$soc$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = l.out_adace_repository$l.out$int$m.out[1:26,c("mci","mil","mod","sev","dth")], file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
 }
 
@@ -1030,7 +1030,7 @@ if(T) {
     m.table1[i,"icer"] <- calculate_icers(cost = l.out_scenario[[i]][["df.out"]][,"COST"], effect = l.out_scenario[[i]][["df.out"]][,"QALY"], strategies = l.out_scenario[[i]][["df.out"]][,"strategy"])[2,"ICER"]
   }
   print(round(m.table1,2))
-  write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
   # proportion results extrapolated
   ## store cycle-specific outcomes
@@ -1389,7 +1389,7 @@ if(T) {
   m.table1[3,"icer"] <- calculate_icers(cost = l.out_icer3[["df.out"]][,"COST"], effect = l.out_icer3[["df.out"]][,"QALY"], strategies = l.out_icer3[["df.out"]][,"strategy"])[2,"ICER"]
   
   # copy sensitivity analysis results table to clipboard
-  write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
+    # write.table(x = round(m.table1,2), file = "clipboard", sep = "\t", row.names = FALSE, col.names = FALSE)
   
 }
 
