@@ -674,7 +674,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
 
 ######################################## 5.1. CROSS-VALIDATION: ICER ########################################
 
-if(T) {
+if(F) {
   
   # run scenario
   l.out_icer <- f.run_scenario(l.inputs = l.inputs_icer, detailed = TRUE)
@@ -864,7 +864,7 @@ if(T) {
 
 ######################################## 5.2. CROSS-VALIDATION: AD-ACE ########################################
 
-if(T) {
+if(F) {
   
   # run scenario and results
   l.out_adace <- f.run_scenario(l.inputs = l.inputs_adace, detailed = TRUE)
@@ -903,7 +903,7 @@ if(T) {
 
 ######################################## 5.3. UNCERTAINTY SCENARIOS ########################################
 
-if(T) {
+if(F) {
   
   # base case
   # icer (already defined)
@@ -1072,7 +1072,7 @@ if(T) {
 
 ######################################## 5.3.1. CYCLE TIME ########################################
 
-if(T) {
+if(F) {
   
   # cycle time adjustment following guidance by Gidwani et al. [2020: https://doi.org/10.1007/s40273-020-00937-z]
   
@@ -1306,7 +1306,7 @@ if(T) {
 
 ######################################## 5.3.2. CALIBRATE TO TIME SHIFT ########################################
 
-if(T) {
+if(F) {
   
   # copy input estimates for calibration (cycle time must be 1/24 year, i.e., 0.5 month)
   l.inputs_cal <- l.inputs_cycle2
@@ -1397,7 +1397,7 @@ if(T) {
 
 ######################################## 5.3.3. REPLICATION: HERRING ########################################
 
-if(T) {
+if(F) {
   
   # U.S. general population life table 2017
   m.lifetable_US_2017 <- as.matrix(read.csv(file="life_tables/lifetable_US_2017.csv", header=TRUE))[,c("male","female","total")]
@@ -1518,3 +1518,217 @@ if(T) {
   print(round(sum(m.result_herring[c("mil","mod","sev"),"int"]) - sum(m.result_herring[c("mil","mod","sev"),"soc"]),2))
   
 }
+
+
+######################################## 5.4. ABSTRACT ALZHEIMER EUROPE 2024 ########################################
+
+# copy inputs ICER replication
+l.inputs_eu <- l.inputs_icer
+
+# disease progression MCI to dementia in Amyloid positive & neuronal loss undetermined [Vos, 2015: https://doi.org/10.1093/brain/awv029] 
+## Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+) and 'conflicting IAP' (Amyloid+, Injury-)
+## corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text), and 22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text) with prevalence of 353 and 49 respectively (respectively)
+## This results into a weighted 3-year cumulative incidence of (converting all 4 probabilities to rates before weighting and averaging):
+temp.est2 <- 1-exp(- ( (-log(1-0.59) + -log(1-0.04))*353 + (-log(1-0.22) + -log(1-0.04))*49 ) / (353+49) )
+## and corresponding 1-year probability of 
+temp.est2 <- 1-exp(- -log(1-temp.est2)/3)
+temp.est2
+l.inputs_eu[["p.mci_mil"]] <- round(temp.est2,3) # 0.248
+l.inputs_eu[["p.mil_mci"]] <- 0
+
+# disease progression dementia [Wimo, 2020: https://doi.org/10.3233/jad-191055]
+l.inputs_eu[["p.mci_mod"]] <- 0
+l.inputs_eu[["p.mci_sev"]] <- 0
+l.inputs_eu[["p.mil_mci"]] <- 0
+l.inputs_eu[["p.mil_mod"]] <- 0.293
+l.inputs_eu[["p.mil_sev"]] <- 0.001
+l.inputs_eu[["p.mod_mil"]] <- 0.087
+l.inputs_eu[["p.mod_sev"]] <- 0.109
+l.inputs_eu[["p.sev_mil"]] <- 0.000
+l.inputs_eu[["p.sev_mod"]] <- 0.196
+
+# institutionalization set to 0 (because rate not obtained for EU regions/countries)
+l.inputs_eu[["p.mci_i"]] <- 0
+l.inputs_eu[["p.mil_i"]] <- 0
+l.inputs_eu[["p.mod_i"]] <- 0
+l.inputs_eu[["p.sev_i"]] <- 0
+
+# mortality [Wimo, 2020: https://doi.org/10.3233/jad-191055]
+l.inputs_eu[["hr.mort_mci"]] <- 1
+l.inputs_eu[["hr.mort_mil"]] <- 1.318 * 1.82
+l.inputs_eu[["hr.mort_mod"]] <- 2.419 * 1.82
+l.inputs_eu[["hr.mort_sev"]] <- 4.267 * 1.82
+
+# utilities
+l.inputs_eu[["u.mci_pt"]] <- mean(c(0.7 ,0.75)) # Landeiro review 2020 studies Jonsson 2006 and Hessman 2016 (as these are EU mixed setting including MCI and dementia stages)
+l.inputs_eu[["u.mil_pt"]] <- mean(c(0.65,0.61))
+l.inputs_eu[["u.mod_pt"]] <- mean(c(0.51,0.41))
+l.inputs_eu[["u.sev_pt"]] <- mean(c(0.40,0.21))
+l.inputs_eu[["u.mci_pt_i"]] <- 0
+l.inputs_eu[["u.mil_pt_i"]] <- 0
+l.inputs_eu[["u.mod_pt_i"]] <- 0
+l.inputs_eu[["u.sev_pt_i"]] <- 0
+l.inputs_eu[["u.mci_ic"]] <- 0
+l.inputs_eu[["u.mil_ic"]] <- 0
+l.inputs_eu[["u.mod_ic"]] <- 0
+l.inputs_eu[["u.sev_ic"]] <- 0
+l.inputs_eu[["u.mci_ic_i"]] <- 0
+l.inputs_eu[["u.mil_ic_i"]] <- 0
+l.inputs_eu[["u.mod_ic_i"]] <- 0
+l.inputs_eu[["u.sev_ic_i"]] <- 0
+
+# set costs to 0
+l.inputs_eu[["c.mci_hc"]] <- 
+l.inputs_eu[["c.mil_hc"]] <- 0
+l.inputs_eu[["c.mod_hc"]] <- 0
+l.inputs_eu[["c.sev_hc"]] <- 0
+l.inputs_eu[["c.mci_hc_i"]] <- 0
+l.inputs_eu[["c.mil_hc_i"]] <- 0
+l.inputs_eu[["c.mod_hc_i"]] <- 0
+l.inputs_eu[["c.sev_hc_i"]] <- 0
+l.inputs_eu[["c.mci_sc"]] <- 0 
+l.inputs_eu[["c.mil_sc"]] <- 0 
+l.inputs_eu[["c.mod_sc"]] <- 0 
+l.inputs_eu[["c.sev_sc"]] <- 0 
+l.inputs_eu[["c.mci_sc_i"]] <- 0
+l.inputs_eu[["c.mil_sc_i"]] <- 0
+l.inputs_eu[["c.mod_sc_i"]] <- 0
+l.inputs_eu[["c.sev_sc_i"]] <- 0
+l.inputs_eu[["c.mci_ic"]] <-  0
+l.inputs_eu[["c.mil_ic"]] <- 0
+l.inputs_eu[["c.mod_ic"]] <- 0
+l.inputs_eu[["c.sev_ic"]] <- 0
+l.inputs_eu[["c.mci_ic_i"]] <- 0
+l.inputs_eu[["c.mil_ic_i"]] <- 0
+l.inputs_eu[["c.mod_ic_i"]] <- 0
+l.inputs_eu[["c.sev_ic_i"]] <- 0
+# treatment costs (1.1827 exchange rate Euro to US dollar from https://ec.europa.eu/eurostat/databrowser/view/tec00033/default/table?lang=en&category=t_ert)
+l.inputs_eu[["c.Tx"]] <- (26500 + (52/2)*78.35) / 1.1827
+l.inputs_eu[["c.Tx_start"]] <- (261.10*4 + 261.10*3*0.215) / 1.1827
+
+# load life tables from selection of EU countries
+a.lifetable <- array(data=NA, dim=c(100,3,5), dimnames=list(NULL,c("male","female","weighted"),c("ES","NL","PL","SE","UK")))
+a.lifetable[,c("male","female"),"ES"] <- as.matrix(read.csv(file="life_tables/lifetable_ES_2021.csv", header=TRUE))[,c("male","female")]
+a.lifetable[,c("male","female"),"NL"] <- as.matrix(read.csv(file="life_tables/lifetable_NL_2021.csv", header=TRUE))[,c("male","female")]
+a.lifetable[,c("male","female"),"PL"] <- as.matrix(read.csv(file="life_tables/lifetable_PL_2021.csv", header=TRUE))[,c("male","female")]
+a.lifetable[,c("male","female"),"SE"] <- as.matrix(read.csv(file="life_tables/lifetable_SE_2021.csv", header=TRUE))[,c("male","female")]
+a.lifetable[,c("male","female"),"UK"] <- as.matrix(read.csv(file="life_tables/lifetable_UK_2021.csv", header=TRUE))[,c("male","female")]
+matplot(x=a.lifetable[1:99,"male",], type="l", col=rainbow(5))
+legend(x="topleft", legend=c("ES","NL","PL","SE","UK"), col=rainbow(5), lty=c(1:5))
+a.lifetable[,"weighted",] <- a.lifetable[,"male",] * 0.48 + a.lifetable[,"female",] * 0.52 # weights (same as ICER replication)
+
+# costs in EU regions [Jonsson, 2023: https://doi.org/10.1007/s40273-022-01212-z supplemental material]
+c_na <- c(NA, NA, NA, NA, NA, NA, NA)
+c_e_mil <- c(125.69, 389.31, 819.81, 1952.78, 1023.69, 78.33, 3226.81)
+c_e_mod <- c(371.75, 437.27, 851.49, 2627.22, 1870.16, 478.9, 3032.98)
+c_e_sev <- c(748.95, 533.84, 1068.32, 4611.37, 857.21, 665.6, 2750.78)
+c_n_mil <- c(2247.4, 986.56, 2007.24, 6075.43, 4440.07, 504.38, 4614.44)
+c_n_mod <- c(2121.17, 1061.47, 1288.69, 21130.93, 6107.78, 717.71, 5112.33)
+c_n_sev <- c(1904.31, 1005.6, 1130.67, 40880.29, 7175.8, 305.59, 5795.96)
+c_w_mil <- c(1806.92, 1371.11, 1017.85, 4449.83, 8098.58, 988.41, 14251.28)
+c_w_mod <- c(2175.48, 2355.42, 1233.83, 13708.92, 8379.1, 1135.68, 18946)
+c_w_sev <- c(1672.04, 2997.69, 1154.24, 15763.69, 9191.27, 654.06, 24671.03)
+c_s_mil <- c(326.41, 870.02, 1584.38, 133.05, 2433.26, 465.42, 14607.64)
+c_s_mod <- c(901.69, 1279.84, 1748.57, 959.29, 4847.88, 1632.47, 29582.94)
+c_s_sev <- c(1743.6, 1158.02, 2113.16, 7617.24, 4541.32, 638.07, 44094.34)
+c_b_mil <- c(4048.92, 889.22, 728.12, 2562.5, 2446.38, 541.54, 8692.37)
+c_b_mod <- c(2225.86, 1373.19, 593.19, 6909.16, 4661.5, 725.03, 17735.22)
+c_b_sev <- c(2277.26, 1074.67, 967.02, 15490.36, 5687.87, 2088.04, 34372.29)
+a.c_eu <- array(
+  data = c(
+    c_na, c_e_mil, c_e_mod, c_e_sev, 
+    c_na, c_n_mil, c_n_mod, c_n_sev, 
+    c_na, c_w_mil, c_w_mod, c_w_sev, 
+    c_na, c_s_mil, c_s_mod, c_s_sev, 
+    c_na, c_b_mil, c_b_mod, c_b_sev
+  ), 
+  dim = c(7,4,5), 
+  dimnames = list(c("inp","out","pha","ins","com","icw","ict"),c("mci","mil","mod","sev"),c("eas","nor","wes","sou","bri"))
+); a.c_eu
+barplot(height = a.c_eu[,,"wes"]) # check with original publication figure 3
+a.c_eu[,"mci",] <- a.c_eu[,"mil",] * (1.12/1.56) # add costs for MCI (assumed ratio health care sector costs between m.mil and m.mci from ICER replication)
+
+# region-specific inputs: life table
+l.inputs_eas <- l.inputs_nor <- l.inputs_wes <- l.inputs_sou <- l.inputs_bri <- l.inputs_eu
+l.inputs_eas[["m.r.mortality"]] <- a.lifetable[,,"PL"]
+l.inputs_nor[["m.r.mortality"]] <- a.lifetable[,,"SE"]
+l.inputs_wes[["m.r.mortality"]] <- a.lifetable[,,"NL"]
+l.inputs_sou[["m.r.mortality"]] <- a.lifetable[,,"ES"]
+l.inputs_bri[["m.r.mortality"]] <- a.lifetable[,,"UK"]
+
+# region-specific inputs: costs
+l.inputs_eas[["c.mci_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mci","eas"])
+l.inputs_eas[["c.mil_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mil","eas"])
+l.inputs_eas[["c.mod_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mod","eas"])
+l.inputs_eas[["c.sev_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"sev","eas"])
+l.inputs_eas[["c.mci_sc"]] <- sum(a.c_eu[c("ins","com"),"mci","eas"])
+l.inputs_eas[["c.mil_sc"]] <- sum(a.c_eu[c("ins","com"),"mil","eas"])
+l.inputs_eas[["c.mod_sc"]] <- sum(a.c_eu[c("ins","com"),"mod","eas"])
+l.inputs_eas[["c.sev_sc"]] <- sum(a.c_eu[c("ins","com"),"sev","eas"])
+l.inputs_eas[["c.mci_ic"]] <- sum(a.c_eu[c("ict"),"mci","eas"])
+l.inputs_eas[["c.mil_ic"]] <- sum(a.c_eu[c("ict"),"mil","eas"])
+l.inputs_eas[["c.mod_ic"]] <- sum(a.c_eu[c("ict"),"mod","eas"])
+l.inputs_eas[["c.sev_ic"]] <- sum(a.c_eu[c("ict"),"sev","eas"])
+l.inputs_nor[["c.mci_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mci","nor"])
+l.inputs_nor[["c.mil_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mil","nor"])
+l.inputs_nor[["c.mod_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mod","nor"])
+l.inputs_nor[["c.sev_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"sev","nor"])
+l.inputs_nor[["c.mci_sc"]] <- sum(a.c_eu[c("ins","com"),"mci","nor"])
+l.inputs_nor[["c.mil_sc"]] <- sum(a.c_eu[c("ins","com"),"mil","nor"])
+l.inputs_nor[["c.mod_sc"]] <- sum(a.c_eu[c("ins","com"),"mod","nor"])
+l.inputs_nor[["c.sev_sc"]] <- sum(a.c_eu[c("ins","com"),"sev","nor"])
+l.inputs_nor[["c.mci_ic"]] <- sum(a.c_eu[c("ict"),"mci","nor"])
+l.inputs_nor[["c.mil_ic"]] <- sum(a.c_eu[c("ict"),"mil","nor"])
+l.inputs_nor[["c.mod_ic"]] <- sum(a.c_eu[c("ict"),"mod","nor"])
+l.inputs_nor[["c.sev_ic"]] <- sum(a.c_eu[c("ict"),"sev","nor"])
+l.inputs_wes[["c.mci_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mci","wes"])
+l.inputs_wes[["c.mil_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mil","wes"])
+l.inputs_wes[["c.mod_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mod","wes"])
+l.inputs_wes[["c.sev_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"sev","wes"])
+l.inputs_wes[["c.mci_sc"]] <- sum(a.c_eu[c("ins","com"),"mci","wes"])
+l.inputs_wes[["c.mil_sc"]] <- sum(a.c_eu[c("ins","com"),"mil","wes"])
+l.inputs_wes[["c.mod_sc"]] <- sum(a.c_eu[c("ins","com"),"mod","wes"])
+l.inputs_wes[["c.sev_sc"]] <- sum(a.c_eu[c("ins","com"),"sev","wes"])
+l.inputs_wes[["c.mci_ic"]] <- sum(a.c_eu[c("ict"),"mci","wes"])
+l.inputs_wes[["c.mil_ic"]] <- sum(a.c_eu[c("ict"),"mil","wes"])
+l.inputs_wes[["c.mod_ic"]] <- sum(a.c_eu[c("ict"),"mod","wes"])
+l.inputs_wes[["c.sev_ic"]] <- sum(a.c_eu[c("ict"),"sev","wes"])
+l.inputs_sou[["c.mci_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mci","sou"])
+l.inputs_sou[["c.mil_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mil","sou"])
+l.inputs_sou[["c.mod_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mod","sou"])
+l.inputs_sou[["c.sev_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"sev","sou"])
+l.inputs_sou[["c.mci_sc"]] <- sum(a.c_eu[c("ins","com"),"mci","sou"])
+l.inputs_sou[["c.mil_sc"]] <- sum(a.c_eu[c("ins","com"),"mil","sou"])
+l.inputs_sou[["c.mod_sc"]] <- sum(a.c_eu[c("ins","com"),"mod","sou"])
+l.inputs_sou[["c.sev_sc"]] <- sum(a.c_eu[c("ins","com"),"sev","sou"])
+l.inputs_sou[["c.mci_ic"]] <- sum(a.c_eu[c("ict"),"mci","sou"])
+l.inputs_sou[["c.mil_ic"]] <- sum(a.c_eu[c("ict"),"mil","sou"])
+l.inputs_sou[["c.mod_ic"]] <- sum(a.c_eu[c("ict"),"mod","sou"])
+l.inputs_sou[["c.sev_ic"]] <- sum(a.c_eu[c("ict"),"sev","sou"])
+l.inputs_bri[["c.mci_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mci","bri"])
+l.inputs_bri[["c.mil_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mil","bri"])
+l.inputs_bri[["c.mod_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mod","bri"])
+l.inputs_bri[["c.sev_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"sev","bri"])
+l.inputs_bri[["c.mci_sc"]] <- sum(a.c_eu[c("ins","com"),"mci","bri"])
+l.inputs_bri[["c.mil_sc"]] <- sum(a.c_eu[c("ins","com"),"mil","bri"])
+l.inputs_bri[["c.mod_sc"]] <- sum(a.c_eu[c("ins","com"),"mod","bri"])
+l.inputs_bri[["c.sev_sc"]] <- sum(a.c_eu[c("ins","com"),"sev","bri"])
+l.inputs_bri[["c.mci_ic"]] <- sum(a.c_eu[c("ict"),"mci","bri"])
+l.inputs_bri[["c.mil_ic"]] <- sum(a.c_eu[c("ict"),"mil","bri"])
+l.inputs_bri[["c.mod_ic"]] <- sum(a.c_eu[c("ict"),"mod","bri"])
+l.inputs_bri[["c.sev_ic"]] <- sum(a.c_eu[c("ict"),"sev","bri"])
+
+# run scenarios
+l.out_eas <- f.run_scenario(l.inputs = l.inputs_eas, detailed = TRUE)
+l.out_nor <- f.run_scenario(l.inputs = l.inputs_nor, detailed = TRUE)
+l.out_wes <- f.run_scenario(l.inputs = l.inputs_wes, detailed = TRUE)
+l.out_sou <- f.run_scenario(l.inputs = l.inputs_sou, detailed = TRUE)
+l.out_bri <- f.run_scenario(l.inputs = l.inputs_bri, detailed = TRUE)
+
+# additional results
+m.result_eas <- matrix(data = NA, nrow = ncol(l.out_eas$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_eas$l.out$soc$m.out), c("soc","int","dif")))
+m.result_eas[,"soc"] <- colSums(l.out_eas$l.out$soc$m.out)
+m.result_eas[,"int"] <- colSums(l.out_eas$l.out$int$m.out)
+m.result_eas[,"dif"] <- m.result_eas[,"int"] - m.result_eas[,"soc"]
+m.result_eas <- rbind(m.result_eas, qaly_pt_mb=m.result_eas["qaly_pt",] * 100000)
+
