@@ -1525,6 +1525,9 @@ if(F) {
 # copy inputs ICER replication
 l.inputs_eu <- l.inputs_icer
 
+# half-cycle correction
+l.inputs_eu[["half_cycle_correction"]] <- FALSE
+
 # disease progression MCI to dementia in Amyloid positive & neuronal loss undetermined [Vos, 2015: https://doi.org/10.1093/brain/awv029] 
 ## Operationalized by diagnostic criteria NIA-AA categories: 'NIA-AA high AD' (Amyloid+, Injury+) and 'conflicting IAP' (Amyloid+, Injury-)
 ## corresponding 3-year cumulative incidence probability: 'high AD' = 59% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text), and 22% (AD dementia; table 3) and 4% (non-AD dementia; mentioned in text) with prevalence of 353 and 49 respectively (respectively)
@@ -1546,6 +1549,148 @@ l.inputs_eu[["p.mod_mil"]] <- 0.087
 l.inputs_eu[["p.mod_sev"]] <- 0.109
 l.inputs_eu[["p.sev_mil"]] <- 0.000
 l.inputs_eu[["p.sev_mod"]] <- 0.196
+
+# convert probabilities to 6-month time period
+# l.inputs_cycle <- l.inputs_icer # model inputs list
+# f.p_time <- function(p, t) 1-(1-p)^(t) # function to convert probability (p) to a different (cycle) time period (t=time proportional to current 1-year cycle length)
+# t <- 1/4 # proportion of the 1-year cycle length
+# 
+# # simultaneously convert matrix of dementia transition probabilities to new cycle length
+# ## temporary matrix of dementia transition probabilities
+# t.TP <- matrix(data=NA, nrow=3, ncol=3, dimnames=list(c("mil","mod","sev"),c("mil","mod","sev")))
+# t.TP["mil","mod"] <- l.inputs_cycle[["p.mil_mod"]]
+# t.TP["mil","sev"] <- l.inputs_cycle[["p.mil_sev"]]
+# t.TP["mod","mil"] <- l.inputs_cycle[["p.mod_mil"]]
+# t.TP["mod","sev"] <- l.inputs_cycle[["p.mod_sev"]]
+# t.TP["sev","mil"] <- l.inputs_cycle[["p.sev_mil"]]
+# t.TP["sev","mod"] <- l.inputs_cycle[["p.sev_mod"]]
+# t.TP[1,1] <- 1-sum(t.TP[1,-1])
+# t.TP[2,2] <- 1-sum(t.TP[2,-2])
+# t.TP[3,3] <- 1-sum(t.TP[3,-3])
+# t.TP
+# 
+# ## convert TPs using eigenvalues
+# D <- diag(x=eigen(t.TP)$values); D
+# V <- eigen(t.TP)$vectors; V
+# t.TP2 <- V %*% D^(t) %*% solve(V); t.TP2
+# ## manually check for non-numbers or negative values (if very small, might be rounded to 0)
+# t.TP2
+# t.TP2[t.TP2 < 0] <- 0 # convert small negative values to 0
+# t.TP2 <- round(t.TP2, 3) # round
+# dimnames(t.TP2) <- dimnames(t.TP) # add names
+# rowSums(t.TP2) # check if rowsums add up to 1
+# diag(t.TP2) <- NA # remove matrix diagonal (probability of remaining in the same state)
+# t.TP2[1,1] <- 1-sum(t.TP2[1,-1]) # calculate probability of remaining in the same state as '1-(other probabilities)'
+# t.TP2[2,2] <- 1-sum(t.TP2[2,-2])
+# t.TP2[3,3] <- 1-sum(t.TP2[3,-3])
+# t.TP2
+# 
+# # check: convert back to 1-year cycle to estimate the difference with the original estimates
+# D2 <- diag(x=eigen(t.TP2)$values); D2
+# V2 <- eigen(t.TP2)$vectors; V2
+# t.TP22 <- V2 %*% D2^(1/t) %*% solve(V2); t.TP22
+# round(t.TP22,2)
+# round(t.TP,2)
+# round(t.TP - t.TP22,2)
+# 
+# # adjust mortality table
+# m.mortality_rate_US_2019_cycle <- m.mortality_rate_US_2019 * t # mortality table is rate, which can be multiplied (as compared to probability)
+# t.rows <- rep(x = 1:nrow(m.mortality_rate_US_2019_cycle), each = 1/t) # create vector for age row numbers and repeat each age row multiple times
+# m.mortality_rate_US_2019_cycle <- m.mortality_rate_US_2019_cycle[t.rows,] # select each row multiple times
+# 
+# # adjust inputs to cycle time (list is duplicated to force check all parameters for adjustment)
+# l.inputs_cycle2 <- l.inputs_cycle
+# l.inputs_cycle2 <- list(
+#   v.names_state = c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth"), # disease states: mci = mild cognitive impairment; mil = mild dementia; mod = moderate dementia; sev = severe dementia; dth = dead; x_i = living in institutional setting (without '_i' = living in community)
+#   v.names_strat = c("soc","int"), 
+#   age_start = l.inputs_cycle2[["age_start"]] / t, 
+#   sex = "weighted", 
+#   p.starting_state_mci = 0.55, 
+#   n.cycle = l.inputs_cycle2[["n.cycle"]] / t, 
+#   p.mci_mil = f.p_time(p = l.inputs_cycle2[["p.mci_mil"]], t = t), 
+#   p.mci_mod = f.p_time(p = l.inputs_cycle2[["p.mci_mod"]], t = t), 
+#   p.mci_sev = f.p_time(p = l.inputs_cycle2[["p.mci_sev"]], t = t), 
+#   p.mil_mci = 0, # assumption: changed to 0
+#   p.mil_mod = t.TP2["mil","mod"], 
+#   p.mil_sev = t.TP2["mil","sev"], 
+#   p.mod_mil = t.TP2["mod","mil"], 
+#   p.mod_sev = t.TP2["mod","sev"], 
+#   p.sev_mil = t.TP2["sev","mil"], 
+#   p.sev_mod = t.TP2["sev","mod"], 
+#   p.mci_i = f.p_time(p = l.inputs_cycle2[["p.mci_i"]], t = t), 
+#   p.mil_i = f.p_time(p = l.inputs_cycle2[["p.mil_i"]], t = t), 
+#   p.mod_i = f.p_time(p = l.inputs_cycle2[["p.mod_i"]], t = t), 
+#   p.sev_i = f.p_time(p = l.inputs_cycle2[["p.sev_i"]], t = t), 
+#   m.r.mortality = m.mortality_rate_US_2019_cycle, 
+#   hr.mort_mci = 1.82, 
+#   hr.mort_mil = 2.92, 
+#   hr.mort_mod = 3.85, 
+#   hr.mort_sev = 9.52, 
+#   rr.tx_mci_mil = 0.69, 
+#   rr.tx_mci_mod = 1, 
+#   rr.tx_mci_sev = 1, 
+#   rr.tx_mil_mod = 0.69, 
+#   rr.tx_mil_sev = 0.69, 
+#   rr.tx_mci_mil_dis = 1, 
+#   rr.tx_mci_mod_dis = 1, 
+#   rr.tx_mci_sev_dis = 1, 
+#   rr.tx_mil_mod_dis = 1, 
+#   rr.tx_mil_sev_dis = 1, 
+#   p.tx_discontinuation1 = f.p_time(p = l.inputs_cycle2[["p.tx_discontinuation1"]], t = t), 
+#   p.tx_discontinuation2 = f.p_time(p = l.inputs_cycle2[["p.tx_discontinuation2"]], t = t), 
+#   tx_discontinuation2_begin = l.inputs_cycle2[["tx_discontinuation2_begin"]] / t, 
+#   tx_duration = l.inputs_cycle2[["tx_duration"]] / t, 
+#   tx_waning = f.p_time(p = l.inputs_cycle2[["tx_waning"]], t = t), 
+#   tx_waning_dis = f.p_time(p = l.inputs_cycle2[["tx_waning_dis"]], t = t), 
+#   u.mci_pt = l.inputs_cycle2[["u.mci_pt"]] * t, 
+#   u.mil_pt = l.inputs_cycle2[["u.mil_pt"]] * t, 
+#   u.mod_pt = l.inputs_cycle2[["u.mod_pt"]] * t, 
+#   u.sev_pt = l.inputs_cycle2[["u.sev_pt"]] * t, 
+#   u.mci_pt_i = l.inputs_cycle2[["u.mci_pt_i"]] * t, 
+#   u.mil_pt_i = l.inputs_cycle2[["u.mil_pt_i"]] * t, 
+#   u.mod_pt_i = l.inputs_cycle2[["u.mod_pt_i"]] * t, 
+#   u.sev_pt_i = l.inputs_cycle2[["u.sev_pt_i"]] * t, 
+#   u.mci_ic = l.inputs_cycle2[["u.mci_ic"]] * t, 
+#   u.mil_ic = l.inputs_cycle2[["u.mil_ic"]] * t, 
+#   u.mod_ic = l.inputs_cycle2[["u.mod_ic"]] * t, 
+#   u.sev_ic = l.inputs_cycle2[["u.sev_ic"]] * t, 
+#   u.mci_ic_i = l.inputs_cycle2[["u.mci_ic_i"]] * t, 
+#   u.mil_ic_i = l.inputs_cycle2[["u.mil_ic_i"]] * t, 
+#   u.mod_ic_i = l.inputs_cycle2[["u.mod_ic_i"]] * t, 
+#   u.sev_ic_i = l.inputs_cycle2[["u.sev_ic_i"]] * t, 
+#   u.Tx_start = l.inputs_cycle2[["u.Tx_start"]], # not affected by cycle time
+#   c.mci_hc = l.inputs_cycle2[["c.mci_hc"]] * t, 
+#   c.mil_hc = l.inputs_cycle2[["c.mil_hc"]] * t, 
+#   c.mod_hc = l.inputs_cycle2[["c.mod_hc"]] * t, 
+#   c.sev_hc = l.inputs_cycle2[["c.sev_hc"]] * t, 
+#   c.mci_hc_i = l.inputs_cycle2[["c.mci_hc_i"]] * t, 
+#   c.mil_hc_i = l.inputs_cycle2[["c.mil_hc_i"]] * t, 
+#   c.mod_hc_i = l.inputs_cycle2[["c.mod_hc_i"]] * t, 
+#   c.sev_hc_i = l.inputs_cycle2[["c.sev_hc_i"]] * t, 
+#   c.mci_sc = l.inputs_cycle2[["c.mci_sc"]] * t, 
+#   c.mil_sc = l.inputs_cycle2[["c.mil_sc"]] * t, 
+#   c.mod_sc = l.inputs_cycle2[["c.mod_sc"]] * t, 
+#   c.sev_sc = l.inputs_cycle2[["c.sev_sc"]] * t, 
+#   c.mci_sc_i = l.inputs_cycle2[["c.mci_sc_i"]] * t, 
+#   c.mil_sc_i = l.inputs_cycle2[["c.mil_sc_i"]] * t, 
+#   c.mod_sc_i = l.inputs_cycle2[["c.mod_sc_i"]] * t, 
+#   c.sev_sc_i = l.inputs_cycle2[["c.sev_sc_i"]] * t, 
+#   c.mci_ic =  l.inputs_cycle2[["c.mci_ic"]] * t, 
+#   c.mil_ic = l.inputs_cycle2[["c.mil_ic"]] * t, 
+#   c.mod_ic = l.inputs_cycle2[["c.mod_ic"]] * t, 
+#   c.sev_ic = l.inputs_cycle2[["c.sev_ic"]] * t, 
+#   c.mci_ic_i = l.inputs_cycle2[["c.mci_ic_i"]] * t, 
+#   c.mil_ic_i = l.inputs_cycle2[["c.mil_ic_i"]] * t, 
+#   c.mod_ic_i = l.inputs_cycle2[["c.mod_ic_i"]] * t, 
+#   c.sev_ic_i = l.inputs_cycle2[["c.sev_ic_i"]] * t, 
+#   c.Tx = l.inputs_cycle2[["c.Tx"]] * t, 
+#   c.Tx_start = l.inputs_cycle2[["c.Tx_start"]], # not affected by cycle time
+#   discount_EFFECT = l.inputs_cycle2[["discount_EFFECT"]] * t, 
+#   discount_QALY = l.inputs_cycle2[["discount_QALY"]] * t, 
+#   discount_COST = l.inputs_cycle2[["discount_COST"]] * t, 
+#   wtp = l.inputs_cycle2[["wtp"]], # not affected by cycle time
+#   half_cycle_correction = FALSE # could be no longer needed with small cycle time
+# )
 
 # institutionalization set to 0 (because rate not obtained for EU regions/countries)
 l.inputs_eu[["p.mci_i"]] <- 0
@@ -1602,8 +1747,7 @@ l.inputs_eu[["c.mci_ic_i"]] <- 0
 l.inputs_eu[["c.mil_ic_i"]] <- 0
 l.inputs_eu[["c.mod_ic_i"]] <- 0
 l.inputs_eu[["c.sev_ic_i"]] <- 0
-# treatment costs (1.1827 exchange rate Euro to US dollar from https://ec.europa.eu/eurostat/databrowser/view/tec00033/default/table?lang=en&category=t_ert)
-l.inputs_eu[["c.Tx"]] <- (26500 + (52/2)*78.35) / 1.1827
+l.inputs_eu[["c.Tx"]] <- (26500 + (52/2)*78.35) / 1.1827 # treatment costs (1.1827 exchange rate Euro to US dollar from https://ec.europa.eu/eurostat/databrowser/view/tec00033/default/table?lang=en&category=t_ert)
 l.inputs_eu[["c.Tx_start"]] <- (261.10*4 + 261.10*3*0.215) / 1.1827
 
 # load life tables from selection of EU countries
@@ -1616,6 +1760,14 @@ a.lifetable[,c("male","female"),"UK"] <- as.matrix(read.csv(file="life_tables/li
 matplot(x=a.lifetable[1:99,"male",], type="l", col=rainbow(5))
 legend(x="topleft", legend=c("ES","NL","PL","SE","UK"), col=rainbow(5), lty=c(1:5))
 a.lifetable[,"weighted",] <- a.lifetable[,"male",] * 0.48 + a.lifetable[,"female",] * 0.52 # weights (same as ICER replication)
+
+# region-specific inputs: life table
+l.inputs_eas <- l.inputs_nor <- l.inputs_wes <- l.inputs_sou <- l.inputs_bri <- l.inputs_eu
+l.inputs_eas[["m.r.mortality"]] <- a.lifetable[,,"PL"]
+l.inputs_nor[["m.r.mortality"]] <- a.lifetable[,,"SE"]
+l.inputs_wes[["m.r.mortality"]] <- a.lifetable[,,"NL"]
+l.inputs_sou[["m.r.mortality"]] <- a.lifetable[,,"ES"]
+l.inputs_bri[["m.r.mortality"]] <- a.lifetable[,,"UK"]
 
 # costs in EU regions [Jonsson, 2023: https://doi.org/10.1007/s40273-022-01212-z supplemental material]
 c_na <- c(NA, NA, NA, NA, NA, NA, NA)
@@ -1647,14 +1799,7 @@ a.c_eu <- array(
 ); a.c_eu
 barplot(height = a.c_eu[,,"wes"]) # check with original publication figure 3
 a.c_eu[,"mci",] <- a.c_eu[,"mil",] * (1.12/1.56) # add costs for MCI (assumed ratio health care sector costs between m.mil and m.mci from ICER replication)
-
-# region-specific inputs: life table
-l.inputs_eas <- l.inputs_nor <- l.inputs_wes <- l.inputs_sou <- l.inputs_bri <- l.inputs_eu
-l.inputs_eas[["m.r.mortality"]] <- a.lifetable[,,"PL"]
-l.inputs_nor[["m.r.mortality"]] <- a.lifetable[,,"SE"]
-l.inputs_wes[["m.r.mortality"]] <- a.lifetable[,,"NL"]
-l.inputs_sou[["m.r.mortality"]] <- a.lifetable[,,"ES"]
-l.inputs_bri[["m.r.mortality"]] <- a.lifetable[,,"UK"]
+round(a.c_eu[c("inp","out","pha","ins","com"),,],0)
 
 # region-specific inputs: costs
 l.inputs_eas[["c.mci_hc"]] <- sum(a.c_eu[c("inp","out","pha"),"mci","eas"])
@@ -1729,6 +1874,158 @@ l.out_bri <- f.run_scenario(l.inputs = l.inputs_bri, detailed = TRUE)
 m.result_eas <- matrix(data = NA, nrow = ncol(l.out_eas$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_eas$l.out$soc$m.out), c("soc","int","dif")))
 m.result_eas[,"soc"] <- colSums(l.out_eas$l.out$soc$m.out)
 m.result_eas[,"int"] <- colSums(l.out_eas$l.out$int$m.out)
-m.result_eas[,"dif"] <- m.result_eas[,"int"] - m.result_eas[,"soc"]
-m.result_eas <- rbind(m.result_eas, qaly_pt_mb=m.result_eas["qaly_pt",] * 100000)
+m.result_eas <- rbind(m.result_eas, qaly_pt_mb=m.result_eas["qaly_pt",] * l.inputs_eas[["wtp"]])
+m.result_nor <- matrix(data = NA, nrow = ncol(l.out_nor$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_nor$l.out$soc$m.out), c("soc","int","dif")))
+m.result_nor[,"soc"] <- colSums(l.out_nor$l.out$soc$m.out)
+m.result_nor[,"int"] <- colSums(l.out_nor$l.out$int$m.out)
+m.result_nor <- rbind(m.result_nor, qaly_pt_mb=m.result_nor["qaly_pt",] * l.inputs_nor[["wtp"]])
+m.result_wes <- matrix(data = NA, nrow = ncol(l.out_wes$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_wes$l.out$soc$m.out), c("soc","int","dif")))
+m.result_wes[,"soc"] <- colSums(l.out_wes$l.out$soc$m.out)
+m.result_wes[,"int"] <- colSums(l.out_wes$l.out$int$m.out)
+m.result_wes <- rbind(m.result_wes, qaly_pt_mb=m.result_wes["qaly_pt",] * l.inputs_wes[["wtp"]])
+m.result_sou <- matrix(data = NA, nrow = ncol(l.out_sou$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_sou$l.out$soc$m.out), c("soc","int","dif")))
+m.result_sou[,"soc"] <- colSums(l.out_sou$l.out$soc$m.out)
+m.result_sou[,"int"] <- colSums(l.out_sou$l.out$int$m.out)
+m.result_sou <- rbind(m.result_sou, qaly_pt_mb=m.result_sou["qaly_pt",] * l.inputs_sou[["wtp"]])
+m.result_bri <- matrix(data = NA, nrow = ncol(l.out_bri$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_bri$l.out$soc$m.out), c("soc","int","dif")))
+m.result_bri[,"soc"] <- colSums(l.out_bri$l.out$soc$m.out)
+m.result_bri[,"int"] <- colSums(l.out_bri$l.out$int$m.out)
+m.result_bri <- rbind(m.result_bri, qaly_pt_mb=m.result_bri["qaly_pt",] * l.inputs_bri[["wtp"]])
+## combine results
+a.result <- array(data = c(m.result_eas,m.result_nor,m.result_wes,m.result_sou,m.result_bri), dim = c(dim(m.result_eas),5), dimnames = list(rownames(m.result_eas),colnames(m.result_eas),c("eas","nor","wes","sou","bri")))
+## additional results
+a.result[,"dif",] <- a.result[,"int",] - a.result[,"soc",]
 
+# RESULT: QALY gain
+a.result["qaly","dif",]
+
+# RESULT: range care sector savings
+a.result[c("cost_hc","cost_sc"),"dif",]
+colSums(a.result[c("cost_hc","cost_sc"),"dif",])
+a.result[c("mci","mil","mod","sev"),"dif",]
+
+# RESULT: diagnostic and drug cost
+a.result[c("cost_dx","cost_tx"),"dif",]
+mean(colSums(a.result[c("cost_dx","cost_tx"),"dif",]))
+
+# RESULT: ICER
+calculate_icers(cost = l.out_eas[["df.out"]][,"COST"], effect = l.out_eas[["df.out"]][,"QALY"], strategies = l.out_eas[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_nor[["df.out"]][,"COST"], effect = l.out_nor[["df.out"]][,"QALY"], strategies = l.out_nor[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_wes[["df.out"]][,"COST"], effect = l.out_wes[["df.out"]][,"QALY"], strategies = l.out_wes[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_sou[["df.out"]][,"COST"], effect = l.out_sou[["df.out"]][,"QALY"], strategies = l.out_sou[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_bri[["df.out"]][,"COST"], effect = l.out_bri[["df.out"]][,"QALY"], strategies = l.out_bri[["df.out"]][,"strategy"])
+
+# RESULT: % sector savings
+a.result[c("cost_hc","cost_sc","cost_ic"),"dif",] / colSums(a.result[c("cost_hc","cost_sc","cost_ic"),"dif",])
+
+# headroom function
+f.headroom <- function(x, l.inputs, parameter) {
+  l.inputs[[parameter]] <- x
+  out <- f.run_scenario(l.inputs=l.inputs, detailed=FALSE)
+  iNHB <- out[2,"NHB"] - out[1,"NHB"]
+  return(iNHB)
+}
+
+# run headroom
+# headroom_eas <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_eas, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_eas
+# headroom_nor <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_nor, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_nor
+# headroom_wes <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_wes, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_wes
+# headroom_sou <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_sou, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_sou
+# headroom_bri <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_bri, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_bri
+# # temporary for testing
+# l.inputs_test <- l.inputs_eas
+# l.inputs_test$c.Tx <- 8000
+# l.out_test <- f.run_scenario(l.inputs = l.inputs_test, detailed = TRUE)
+# l.out_test$df.out
+
+# RESULT: headroom
+# c(headroom_eas,headroom_nor,headroom_wes,headroom_sou,headroom_bri)
+
+# sensitivity analysis 1: stop 18 months without sustained effect
+l.inputs_eas_sa1 <- l.inputs_eas
+l.inputs_nor_sa1 <- l.inputs_nor
+l.inputs_wes_sa1 <- l.inputs_wes
+l.inputs_sou_sa1 <- l.inputs_sou
+l.inputs_bri_sa1 <- l.inputs_bri
+l.inputs_eas_sa1[["p.tx_discontinuation2"]] <- 1
+l.inputs_eas_sa1[["tx_discontinuation2_begin"]] <- 2 # 1=no longer treated from cycle 2 onward (thus only treated for cycle 1, which is starting population for 1 year)
+l.inputs_nor_sa1[["p.tx_discontinuation2"]] <- 1
+l.inputs_nor_sa1[["tx_discontinuation2_begin"]] <- 2
+l.inputs_wes_sa1[["p.tx_discontinuation2"]] <- 1
+l.inputs_wes_sa1[["tx_discontinuation2_begin"]] <- 2
+l.inputs_sou_sa1[["p.tx_discontinuation2"]] <- 1
+l.inputs_sou_sa1[["tx_discontinuation2_begin"]] <- 2
+l.inputs_bri_sa1[["p.tx_discontinuation2"]] <- 1
+l.inputs_bri_sa1[["tx_discontinuation2_begin"]] <- 2
+# l.inputs_eas_sa1$c.Tx <- 10000 # temporary for testing
+# l.inputs_eas_sa1$discount_COST <- 0 # temporary for testing
+# l.out_eas_sa1 <- f.run_scenario(l.inputs = l.inputs_eas_sa1, detailed = TRUE)
+# print(round(l.out_eas_sa1$l.out$int$m.trace,2))
+# print(round(l.out_eas_sa1$l.out$int$m.out,2))
+l.out_eas_sa1 <- f.run_scenario(l.inputs = l.inputs_eas_sa1, detailed = TRUE)
+l.out_nor_sa1 <- f.run_scenario(l.inputs = l.inputs_nor_sa1, detailed = TRUE)
+l.out_wes_sa1 <- f.run_scenario(l.inputs = l.inputs_wes_sa1, detailed = TRUE)
+l.out_sou_sa1 <- f.run_scenario(l.inputs = l.inputs_sou_sa1, detailed = TRUE)
+l.out_bri_sa1 <- f.run_scenario(l.inputs = l.inputs_bri_sa1, detailed = TRUE)
+calculate_icers(cost = l.out_eas_sa1[["df.out"]][,"COST"], effect = l.out_eas_sa1[["df.out"]][,"QALY"], strategies = l.out_eas_sa1[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_nor_sa1[["df.out"]][,"COST"], effect = l.out_nor_sa1[["df.out"]][,"QALY"], strategies = l.out_nor_sa1[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_wes_sa1[["df.out"]][,"COST"], effect = l.out_wes_sa1[["df.out"]][,"QALY"], strategies = l.out_wes_sa1[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_sou_sa1[["df.out"]][,"COST"], effect = l.out_sou_sa1[["df.out"]][,"QALY"], strategies = l.out_sou_sa1[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_bri_sa1[["df.out"]][,"COST"], effect = l.out_bri_sa1[["df.out"]][,"QALY"], strategies = l.out_bri_sa1[["df.out"]][,"strategy"])
+  # range: 296,000-325,000
+
+# sensitivity analysis 2: stop at 18 months with sustained effect
+l.inputs_eas_sa2 <- l.inputs_eas_sa1
+l.inputs_nor_sa2 <- l.inputs_nor_sa1
+l.inputs_wes_sa2 <- l.inputs_wes_sa1
+l.inputs_sou_sa2 <- l.inputs_sou_sa1
+l.inputs_bri_sa2 <- l.inputs_bri_sa1
+l.inputs_eas_sa2[["rr.tx_mci_mil_dis"]] <- 0.69
+l.inputs_eas_sa2[["rr.tx_mil_mod_dis"]] <- 0.69
+l.inputs_eas_sa2[["rr.tx_mil_sev_dis"]] <- 0.69
+l.inputs_nor_sa2[["rr.tx_mci_mil_dis"]] <- 0.69
+l.inputs_nor_sa2[["rr.tx_mil_mod_dis"]] <- 0.69
+l.inputs_nor_sa2[["rr.tx_mil_sev_dis"]] <- 0.69
+l.inputs_wes_sa2[["rr.tx_mci_mil_dis"]] <- 0.69
+l.inputs_wes_sa2[["rr.tx_mil_mod_dis"]] <- 0.69
+l.inputs_wes_sa2[["rr.tx_mil_sev_dis"]] <- 0.69
+l.inputs_sou_sa2[["rr.tx_mci_mil_dis"]] <- 0.69
+l.inputs_sou_sa2[["rr.tx_mil_mod_dis"]] <- 0.69
+l.inputs_sou_sa2[["rr.tx_mil_sev_dis"]] <- 0.69
+l.inputs_bri_sa2[["rr.tx_mci_mil_dis"]] <- 0.69
+l.inputs_bri_sa2[["rr.tx_mil_mod_dis"]] <- 0.69
+l.inputs_bri_sa2[["rr.tx_mil_sev_dis"]] <- 0.69
+l.out_eas_sa2 <- f.run_scenario(l.inputs = l.inputs_eas_sa2, detailed = TRUE)
+l.out_nor_sa2 <- f.run_scenario(l.inputs = l.inputs_nor_sa2, detailed = TRUE)
+l.out_wes_sa2 <- f.run_scenario(l.inputs = l.inputs_wes_sa2, detailed = TRUE)
+l.out_sou_sa2 <- f.run_scenario(l.inputs = l.inputs_sou_sa2, detailed = TRUE)
+l.out_bri_sa2 <- f.run_scenario(l.inputs = l.inputs_bri_sa2, detailed = TRUE)
+calculate_icers(cost = l.out_eas_sa2[["df.out"]][,"COST"], effect = l.out_eas_sa2[["df.out"]][,"QALY"], strategies = l.out_eas_sa2[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_nor_sa2[["df.out"]][,"COST"], effect = l.out_nor_sa2[["df.out"]][,"QALY"], strategies = l.out_nor_sa2[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_wes_sa2[["df.out"]][,"COST"], effect = l.out_wes_sa2[["df.out"]][,"QALY"], strategies = l.out_wes_sa2[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_sou_sa2[["df.out"]][,"COST"], effect = l.out_sou_sa2[["df.out"]][,"QALY"], strategies = l.out_sou_sa2[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_bri_sa2[["df.out"]][,"COST"], effect = l.out_bri_sa2[["df.out"]][,"QALY"], strategies = l.out_bri_sa2[["df.out"]][,"strategy"])
+  # range: 78,000-99,000
+
+# sensitivity analysis 3: 10% waning
+l.inputs_eas_sa3 <- l.inputs_eas
+l.inputs_nor_sa3 <- l.inputs_nor
+l.inputs_wes_sa3 <- l.inputs_wes
+l.inputs_sou_sa3 <- l.inputs_sou
+l.inputs_bri_sa3 <- l.inputs_bri
+l.inputs_eas_sa3[["tx_waning"]] <- 0.10
+l.inputs_nor_sa3[["tx_waning"]] <- 0.10
+l.inputs_wes_sa3[["tx_waning"]] <- 0.10
+l.inputs_sou_sa3[["tx_waning"]] <- 0.10
+l.inputs_bri_sa3[["tx_waning"]] <- 0.10
+l.out_eas_sa3 <- f.run_scenario(l.inputs = l.inputs_eas_sa3, detailed = TRUE)
+l.out_nor_sa3 <- f.run_scenario(l.inputs = l.inputs_nor_sa3, detailed = TRUE)
+l.out_wes_sa3 <- f.run_scenario(l.inputs = l.inputs_wes_sa3, detailed = TRUE)
+l.out_sou_sa3 <- f.run_scenario(l.inputs = l.inputs_sou_sa3, detailed = TRUE)
+l.out_bri_sa3 <- f.run_scenario(l.inputs = l.inputs_bri_sa3, detailed = TRUE)
+calculate_icers(cost = l.out_eas_sa3[["df.out"]][,"COST"], effect = l.out_eas_sa3[["df.out"]][,"QALY"], strategies = l.out_eas_sa3[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_nor_sa3[["df.out"]][,"COST"], effect = l.out_nor_sa3[["df.out"]][,"QALY"], strategies = l.out_nor_sa3[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_wes_sa3[["df.out"]][,"COST"], effect = l.out_wes_sa3[["df.out"]][,"QALY"], strategies = l.out_wes_sa3[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_sou_sa3[["df.out"]][,"COST"], effect = l.out_sou_sa3[["df.out"]][,"QALY"], strategies = l.out_sou_sa3[["df.out"]][,"strategy"])
+calculate_icers(cost = l.out_bri_sa3[["df.out"]][,"COST"], effect = l.out_bri_sa3[["df.out"]][,"QALY"], strategies = l.out_bri_sa3[["df.out"]][,"strategy"])
+  # range: 414,000-433,000
