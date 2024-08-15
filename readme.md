@@ -10,7 +10,7 @@ The model is available in 3 formats:
 | spreadsheet | deterministic only (OpenDocument and Excel format) | https://github.com/ronhandels/ipecad/ \> file `IPECAD open-source model spreadsheet (open source format).ods` or `IPECAD open-source model spreadsheet (excel).xlsx` |
 | web-based   | deterministic only | https://ronhandels.shinyapps.io/ipecad/                                                  |
 
-This readme only contains an installation guide and version history. A description of the model and its input estimates can be found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. 
+This readme only contains an installation guide and version history. A description of the model and its input estimates can be found here: Handels et al. \[2024\] https://doi.org/10.1016/j.jval.2024.07.009. 
 
 The branch "main" is for development and fune tuning before release. The branch "develop" is for development, experimenting and exploring new features, it is not necessarily stable. Releases are stable versions often associated to specific applications of the model. 
 
@@ -32,13 +32,13 @@ A simplified version for education purposes is available in the 'education' bran
 
 Name: IPECAD open-source model <https://github.com/ronhandels/IPECAD>. 
 
-Citation: Handels et al. 2024 https://doi.org/10.1101/2024.04.05.24305373
+Citation: Handels et al. 2024 https://doi.org/10.1016/j.jval.2024.07.009
 
 # Version details
 
-## v2.3.0 (currently as "main" branch beta version, release planned in 2024)
+## v2.3.0 (2024; released)
 
-This version has been developed as an open-source framework with details found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. In this manuscript we describe the new IPECAD open-source model framework (version 2) for the health-economic evaluation of early AD treatment and aim to apply it in 3 use cases for AD lecanemab treatment: 1) cross-validating an existing model with a similar structure (ICER), 2) cross-validating an existing model with a more complex structure (AD-ACE) and 3) assessing additional uncertainty scenarios. 
+This version has been developed as an open-source framework with details found here: Handels et al. \[2024\] https://doi.org/10.1016/j.jval.2024.07.009. In this manuscript we describe the new IPECAD open-source model framework (version 2) for the health-economic evaluation of early AD treatment and aim to apply it in 3 use cases for AD lecanemab treatment: 1) cross-validating an existing model with a similar structure (ICER), 2) cross-validating an existing model with a more complex structure (AD-ACE) and 3) assessing additional uncertainty scenarios. 
 
 This version has been developed and/or supported by: 
 
