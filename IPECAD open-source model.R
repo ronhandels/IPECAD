@@ -248,19 +248,19 @@ l.inputs_adace <- list(
 # A: function to run a scenario
 # A1: prepare and initialize objects to store scenario and strategy outcomes
 # A2: run each strategy in a loop
-# B: function to run a strategy
-# B1: inputs validity checks
-# B2: prepare inputs to be used in each strategy
-# B3: run preparations specific for the intervention strategy
-# B4: prepare transition probability matrix
-# B5: some checks
-# B6: initialize objects to store strategy outcomes
-# B7: starting state
-# B8: markov multiplication by looping over cycles
-# B9: multiply states with utility and cost estimates
-# B10: half-cycle correction
-# B11: discount QALYs and costs
-# B12: store outcomes to be wrapped up by the 'run scenario' function
+#   B: function to run a strategy
+#   B1: inputs validity checks
+#   B2: prepare inputs to be used in each strategy
+#   B3: run preparations specific for the intervention strategy
+#   B4: prepare transition probability matrix
+#   B5: some checks
+#   B6: initialize objects to store strategy outcomes
+#   B7: starting state
+#   B8: markov multiplication by looping over cycles
+#   B9: multiply states with utility and cost estimates
+#   B10: half-cycle correction to all outcomes
+#   B11: discount all outcomes
+#   B12: store outcomes to be wrapped up by the 'run scenario' function
 # A3: store strategy results
 # A4: add strategy results to scenario outcomes
 
@@ -510,7 +510,7 @@ f.run_strategy <- function(l.inputs, strat) {
     m.out[,"cost_sc"] <- m.trace %*% c(c.mci_sc, c.mci_sc, c.mil_sc, c.mil_sc, c.mod_sc, c.sev_sc, c.mci_sc_i, c.mil_sc_i, c.mod_sc_i, c.sev_sc_i, 0) # must match order of states
     m.out[,"cost_ic"] <- m.trace %*% c(c.mci_ic, c.mci_ic, c.mil_ic, c.mil_ic, c.mod_ic, c.sev_ic, c.mci_ic_i, c.mil_ic_i, c.mod_ic_i, c.sev_ic_i, 0) # must match order of states
     
-    # half-cycle correction (STEP B10: apply half-cycle correction)
+    # half-cycle correction (STEP B10: apply half-cycle correction to all outcomes)
     if(half_cycle_correction) {
       for (j in colnames(m.out)) {
         for (i in 1:(n.cycle-1)) {
@@ -526,13 +526,13 @@ f.run_strategy <- function(l.inputs, strat) {
       m.out[,"cost_dx"][1] <- m.out[,"cost_dx"][1] + c.Tx_start
     }
     
-    # define vector for discounting QALYs and costs (STEP B11: apply discounting)
+    # define vector for discounting QALYs, costs and effects (STEP B11: apply discounting to all outcomes)
     n <- ifelse(test=half_cycle_correction, yes=2, no=1)
     v.discount_EFFECT <- 1 / (( 1 + discount_EFFECT) ^ (0 : (n.cycle-n)))
     v.discount_QALY   <- 1 / (( 1 + discount_QALY)   ^ (0 : (n.cycle-n)))
     v.discount_COST   <- 1 / (( 1 + discount_COST)   ^ (0 : (n.cycle-n)))
     
-    # apply discounting
+    # apply discounting to all outcomes
     for(i in c(colnames(m.trace),"ly")) {
       m.out[,i] <- m.out[,i]*v.discount_EFFECT
     }
@@ -608,7 +608,7 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
     df.out[strat,"QALY"] <- sum(m.out[,"qaly"]) # calculate total QALYs and store them
     df.out[strat,"COST"] <- sum(m.out[,"cost"]) # calculate total costs and store them
     df.out[strat,"LY"]   <- sum(m.out[,"ly"]) # calculate total live years and store them
-    df.out[strat,"NHB"]  <- sum(m.out[,"nhb"]) # calculate total QALYs and store them
+    df.out[strat,"NHB"]  <- sum(m.out[,"nhb"]) # calculate total NHB and store them
   }
   
   # return basic result
