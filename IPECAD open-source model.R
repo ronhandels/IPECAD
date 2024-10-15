@@ -1550,7 +1550,7 @@ if(F) {
   l.inputs_eu[["u.sev_ic_i"]] <- 0
   
   # set costs to 0
-  l.inputs_eu[["c.mci_hc"]] <- 
+  l.inputs_eu[["c.mci_hc"]] <- 0
   l.inputs_eu[["c.mil_hc"]] <- 0
   l.inputs_eu[["c.mod_hc"]] <- 0
   l.inputs_eu[["c.sev_hc"]] <- 0
@@ -1974,5 +1974,33 @@ if(F) {
   l.inputs_ctad_susnowane[["tx_waning_dis"]] <- 0
   l.out_ctad_susnowane <- f.run_scenario(l.inputs = l.inputs_ctad_susnowane, detailed = TRUE)
   calculate_icers(cost = l.out_ctad_susnowane[["df.out"]][,"COST"], effect = l.out_ctad_susnowane[["df.out"]][,"QALY"], strategies = l.out_ctad_susnowane[["df.out"]][,"strategy"])
+  
+  # aggregate
+  t.names <- names(colSums(l.out_ctad$l.out$soc$m.out))
+  a.combine <- array(data = NA, dim = c(29,3,7), dimnames = list(t.names,c("soc","int","dif"),c("base","sub","pla","mci","noncarrier","suswane","susnowane")))
+  a.combine[,"soc","base"] <- colSums(l.out_ctad$l.out$soc$m.out)
+  a.combine[,"int","base"] <- colSums(l.out_ctad$l.out$int$m.out)
+  a.combine[,"soc","sub"] <- colSums(l.out_ctad_sub$l.out$soc$m.out)
+  a.combine[,"int","sub"] <- colSums(l.out_ctad_sub$l.out$int$m.out)
+  a.combine[,"soc","pla"] <- colSums(l.out_ctad_pla$l.out$soc$m.out)
+  a.combine[,"int","pla"] <- colSums(l.out_ctad_pla$l.out$int$m.out)
+  a.combine[,"soc","mci"] <- colSums(l.out_ctad_mci$l.out$soc$m.out)
+  a.combine[,"int","mci"] <- colSums(l.out_ctad_mci$l.out$int$m.out)
+  a.combine[,"soc","noncarrier"] <- colSums(l.out_ctad_noncarrier$l.out$soc$m.out)
+  a.combine[,"int","noncarrier"] <- colSums(l.out_ctad_noncarrier$l.out$int$m.out)
+  a.combine[,"soc","suswane"] <- colSums(l.out_ctad_suswane$l.out$soc$m.out)
+  a.combine[,"int","suswane"] <- colSums(l.out_ctad_suswane$l.out$int$m.out)
+  a.combine[,"soc","susnowane"] <- colSums(l.out_ctad_susnowane$l.out$soc$m.out)
+  a.combine[,"int","susnowane"] <- colSums(l.out_ctad_susnowane$l.out$int$m.out)
+  a.combine[,"dif",] <- a.combine[,"int",] - a.combine[,"soc",]
+  
+  # plot
+  barplot(height = a.combine[c("mci","mil","mod","sev"),c("int"),], col = c("green","yellow","orange","red"), density = c(NA), beside = FALSE, ylab = "person-years", main = "time in state")
+  barplot(height = tis[3,,], col = c("orange","orange"), density = c(NA, NA), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
+  barplot(height = tis[2,,], col = c("yellow","yellow"), density = c(NA, NA), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
+  barplot(height = tis[1,,], col = c("green","green")  , density = c(NA, NA), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
+  barplot(height = tis[4,,], col = c("black","black")  , density = c(0 , 30), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
+  legend(x = "bottom", legend = c("mci","mil","mod","sev"), fill = c("green","yellow","orange","red"), ncol = 4, bg="white", inset = c(0, -0.43))
+  
   
 }
