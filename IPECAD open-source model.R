@@ -1908,6 +1908,22 @@ if(F) {
   # run scenario
   l.out_ctad <- f.run_scenario(l.inputs = l.inputs_ctad, detailed = TRUE)
   
+  # headroom function
+  f.headroom <- function(x, l.inputs, parameter) {
+    l.inputs[[parameter]] <- x
+    out <- f.run_scenario(l.inputs=l.inputs, detailed=FALSE)
+    iNHB <- out[2,"NHB"] - out[1,"NHB"]
+    return(iNHB)
+  }
+  # run headroom
+  headroom_ctad <- optimize(f=function(x) abs(f.headroom(x, l.inputs=l.inputs_ctad, parameter="c.Tx")), interval=c(1,100000))[["minimum"]]; headroom_ctad
+  # temporary for testing
+  l.inputs_test <- l.inputs_ctad
+  l.inputs_test$c.Tx <- 10000
+  l.out_test <- f.run_scenario(l.inputs = l.inputs_test, detailed = TRUE)
+  l.out_test$df.out
+  calculate_icers(cost = l.out_test[["df.out"]][,"COST"], effect = l.out_test[["df.out"]][,"QALY"], strategies = l.out_test[["df.out"]][,"strategy"])
+  
   # additional results
   m.result_ctad <- matrix(data = NA, nrow = ncol(l.out_ctad$l.out$soc$m.out), ncol = 3, dimnames = list(colnames(l.out_ctad$l.out$soc$m.out), c("soc","int","dif")))
   m.result_ctad[,"soc"] <- colSums(l.out_ctad$l.out$soc$m.out)
@@ -1994,13 +2010,15 @@ if(F) {
   a.combine[,"int","susnowane"] <- colSums(l.out_ctad_susnowane$l.out$int$m.out)
   a.combine[,"dif",] <- a.combine[,"int",] - a.combine[,"soc",]
   
-  # plot
-  barplot(height = a.combine[c("mci","mil","mod","sev"),c("int"),], col = c("green","yellow","orange","red"), density = c(NA), beside = FALSE, ylab = "person-years", main = "time in state")
-  barplot(height = tis[3,,], col = c("orange","orange"), density = c(NA, NA), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
-  barplot(height = tis[2,,], col = c("yellow","yellow"), density = c(NA, NA), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
-  barplot(height = tis[1,,], col = c("green","green")  , density = c(NA, NA), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
-  barplot(height = tis[4,,], col = c("black","black")  , density = c(0 , 30), beside = TRUE, add = TRUE, xaxt = "n", yaxt = "n")
-  legend(x = "bottom", legend = c("mci","mil","mod","sev"), fill = c("green","yellow","orange","red"), ncol = 4, bg="white", inset = c(0, -0.43))
+  # plots
+  a.combine_pos <- a.combine_neg <- a.combine[c("mci","mil","mod","sev"),c("dif"),c(2,3,4,5,6,7,1)]
+  a.combine_pos[a.combine_pos<0] <- 0
+  a.combine_neg[a.combine_neg>=0] <- 0
+  par(mar=c(5, 6, 4, 1), xpd=TRUE)
+  barplot(height = a.combine_pos, col = c("green","yellow","orange","red"), density = c(NA), beside = FALSE, horiz = TRUE, main = "difference in person-years in state", xlim = c(-1,1), las=1)
+  barplot(height = a.combine_neg, col = c("green","yellow","orange","red"), density = c(NA), beside = FALSE, horiz = TRUE, ylab = "", main = "", add = TRUE, axes = FALSE, axisnames = F)
   
+  barplot(height = a.combine["qaly","dif",c(2,3,4,5,6,7,1)], col = "lightgreen", density = c(NA), beside = FALSE, horiz = TRUE, main = "difference in total QALYs", las=1)
+  barplot(height = a.combine["cost","dif",c(2,3,4,5,6,7,1)], col = "lightblue", density = c(NA), beside = FALSE, horiz = TRUE, main = "difference in total costs", las=1)
   
 }
