@@ -38,7 +38,7 @@ Citation: Handels et al. 2024 https://doi.org/10.1101/2024.04.05.24305373
 
 ## v2.4.0 (2024; released)
 
-This version is an application of v2.3.0 for additional analyses presented at Alzheimer Europe 2024 and CTAD 2024. For additional information on Alzheimer Europe 2024 see abstract [placeholder] and presentation slides [placeholder slides]. For additional information on CTAD see abstract [placeholder] and presentation slides [placeholder]. General details on the open-source framework can be found in v2.3.0 (Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373). 
+This version is an application of v2.3.0 for additional analyses presented at Alzheimer Europe 2024 and CTAD 2024. For additional information on Alzheimer Europe 2024 see abstract [folder "additional_documentation"] and presentation slides [folder "additional_documentation"]. For additional information on CTAD see abstract [folder "additional_documentation"] and presentation slides [folder "additional_documentation"]. General details on the open-source framework can be found in v2.3.0 (Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373). 
 
 Features: same as v2.3.0; with simplified flow in model functions. 
 
