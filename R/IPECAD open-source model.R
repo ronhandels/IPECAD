@@ -26,7 +26,7 @@ library(dampack) # load package
 
 # U.S. general population life table 2019 from ssa.gov
 ## import life table and select only men/women and drop age column (make sure age corresponds to row number, i.e., start with age = 1)
-m.lifetable_US_2019 <- as.matrix(read.csv(file="life_tables/lifetable_US_2019_ssa.csv", header=TRUE))[,c("male","female")]
+m.lifetable_US_2019 <- as.matrix(read.csv(file="data/lifetable_US_2019_ssa.csv", header=TRUE))[,c("male","female")]
 ## convert probability to rate
 m.mortality_rate_US_2019 <- -log(1-(m.lifetable_US_2019))
 ## weight rate for male and female
@@ -34,7 +34,7 @@ m.mortality_rate_US_2019 <- cbind(m.mortality_rate_US_2019, weighted=NA)
 m.mortality_rate_US_2019[,"weighted"] <- m.mortality_rate_US_2019[,"male"] * 0.48 + m.mortality_rate_US_2019[,"female"] * 0.52
 
 # U.S. general population life table 2016 from cdc.gov
-m.lifetable_US_2016 <- as.matrix(read.csv(file="life_tables/lifetable_US_2016.csv", header=TRUE))[,c("male","female","total")]
+m.lifetable_US_2016 <- as.matrix(read.csv(file="data/lifetable_US_2016.csv", header=TRUE))[,c("male","female","total")]
 ## convert probability to rate
 m.mortality_rate_US_2016 <- -log(1-(m.lifetable_US_2016))
 ## weight rate for male and female
@@ -1367,7 +1367,7 @@ if(F) {
 if(F) {
   
   # U.S. general population life table 2017
-  m.lifetable_US_2017 <- as.matrix(read.csv(file="life_tables/lifetable_US_2017.csv", header=TRUE))[,c("male","female","total")]
+  m.lifetable_US_2017 <- as.matrix(read.csv(file="data/lifetable_US_2017.csv", header=TRUE))[,c("male","female","total")]
   ## convert probability to rate
   m.mortality_rate_US_2017 <- -log(1-(m.lifetable_US_2017))
   ## weight rate for male and female
@@ -1579,11 +1579,11 @@ if(F) {
   
   # load life tables from selection of EU countries
   a.lifetable <- array(data=NA, dim=c(100,3,5), dimnames=list(NULL,c("male","female","weighted"),c("ES","NL","PL","SE","UK")))
-  a.lifetable[,c("male","female"),"ES"] <- as.matrix(read.csv(file="life_tables/lifetable_ES_2021.csv", header=TRUE))[,c("male","female")]
-  a.lifetable[,c("male","female"),"NL"] <- as.matrix(read.csv(file="life_tables/lifetable_NL_2021.csv", header=TRUE))[,c("male","female")]
-  a.lifetable[,c("male","female"),"PL"] <- as.matrix(read.csv(file="life_tables/lifetable_PL_2021.csv", header=TRUE))[,c("male","female")]
-  a.lifetable[,c("male","female"),"SE"] <- as.matrix(read.csv(file="life_tables/lifetable_SE_2021.csv", header=TRUE))[,c("male","female")]
-  a.lifetable[,c("male","female"),"UK"] <- as.matrix(read.csv(file="life_tables/lifetable_UK_2021.csv", header=TRUE))[,c("male","female")]
+  a.lifetable[,c("male","female"),"ES"] <- as.matrix(read.csv(file="data/lifetable_ES_2021.csv", header=TRUE))[,c("male","female")]
+  a.lifetable[,c("male","female"),"NL"] <- as.matrix(read.csv(file="data/lifetable_NL_2021.csv", header=TRUE))[,c("male","female")]
+  a.lifetable[,c("male","female"),"PL"] <- as.matrix(read.csv(file="data/lifetable_PL_2021.csv", header=TRUE))[,c("male","female")]
+  a.lifetable[,c("male","female"),"SE"] <- as.matrix(read.csv(file="data/lifetable_SE_2021.csv", header=TRUE))[,c("male","female")]
+  a.lifetable[,c("male","female"),"UK"] <- as.matrix(read.csv(file="data/lifetable_UK_2021.csv", header=TRUE))[,c("male","female")]
   matplot(x=a.lifetable[1:99,"male",], type="l", col=rainbow(5))
   legend(x="topleft", legend=c("ES","NL","PL","SE","UK"), col=rainbow(5), lty=c(1:5))
   a.lifetable[,"weighted",] <- a.lifetable[,"male",] * 0.48 + a.lifetable[,"female",] * 0.52 # weights (same as ICER replication)
