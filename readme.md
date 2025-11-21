@@ -1,22 +1,22 @@
 # Quick guide
 
-This GitHub repository provides the "IPECAD Open-Source Model v2 modeling framework" for cost-effectiveness analysis of interventions in early Alzheimer's disease. 
+This GitHub repository provides the "IPECAD Open-Source Model framework" for cost-effectiveness analysis of interventions in early Alzheimer's disease.
 
-The model is available in 3 formats:
+The following versions are hosted with some features highlighted (e.g., R/spreadsheet/Shiny, Markov/microsimulation, analyses for publication/conference; for detailed features see version history below): 
 
-| Format      | Comment                                 | Link                                                                                       |
-|:----------------|:---------------------------|:---------------------------|
-| R           | base R, `dampack` package, 1 external file | https://github.com/ronhandels/ipecad/ \> file `IPECAD open-source model.R`               |
-| spreadsheet | deterministic only (OpenDocument and Excel format) | https://github.com/ronhandels/ipecad/ \> file `IPECAD open-source model spreadsheet (open source format).ods` or `IPECAD open-source model spreadsheet (excel).xlsx` |
-| web-based   | deterministic only | https://ronhandels.shinyapps.io/ipecad/                                                  |
+- v2.4.0 (2025): Alzheimer Europe 2024 (conference), CTAD 2024 (conference). 
+- v2.3.0 (2024): Updated framework with ICER/AD-ACE cross-validation (R, shiny, spreadsheet; publication; https://ronhandels.shinyapps.io/ipecad/). 
+- v2.2.0 (2024): SveDem model replication IPECAD workshop 2023 (publication). 
+- v2.1.0 (2023): SveDem model replication ISPOR 2023 (conference). 
+- v2.0.1 (2023): SveDem model replication update. 
+- v2.0.0 (2023): SveDem model replication. 
+- v1.0.0 (2019): Markov multi-domain (spreadsheet, publication). 
 
-This readme only contains an installation guide and version history. A description of the model and its input estimates can be found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. 
+This readme contains an installation guide and version history. 
 
-The branch "main" is for development and fune tuning before release. The branch "develop" is for development, experimenting and exploring new features, it is not necessarily stable. Releases are stable versions often associated to specific applications of the model. 
+Releases contain stable versions. The branch "main" is for development and fune tuning before release. The branch "develop" is for development, experimenting and exploring new features, it is not necessarily stable. Releases are stable versions often associated to specific applications of the model. 
 
-A simplified version for education purposes is available in the 'education' branch, but is under development. 
-
-# Installation tutorial R version (for inexperienced R/github users)
+# Installation guide R version (for inexperienced R/github users)
 
 - Download files: go to https://github.com/ronhandels/IPECAD, then click "Code" (green button) and then "Download ZIP" on PC. 
 - Unzip folder. 
@@ -36,9 +36,26 @@ Citation: Handels et al. 2024 https://doi.org/10.1101/2024.04.05.24305373
 
 # Version details
 
-## v2.3.0 (currently as "main" branch beta version, release planned in 2024)
+## v2.4.0 (2024; released)
 
-This version has been developed as an open-source framework with details found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. In this manuscript we describe the new IPECAD open-source model framework (version 2) for the health-economic evaluation of early AD treatment and aim to apply it in 3 use cases for AD lecanemab treatment: 1) cross-validating an existing model with a similar structure (ICER), 2) cross-validating an existing model with a more complex structure (AD-ACE) and 3) assessing additional uncertainty scenarios. 
+This version is an application of v2.3.0 for additional analyses presented at Alzheimer Europe 2024 and CTAD 2024. For additional information on Alzheimer Europe 2024 see abstract [placeholder] and presentation slides [placeholder slides]. For additional information on CTAD see abstract [placeholder] and presentation slides [placeholder]. General details on the open-source framework can be found in v2.3.0 (Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373). 
+
+Features: same as v2.3.0; with simplified flow in model functions. 
+
+This version has been developed and/or supported by: 
+
+- Ron Handels
+- Anders Wimo
+- Bengt Winblad
+- Linus Jonsson
+- Sabine Grimm
+- Anders Skoldunger
+
+## v2.3.0 (2024; released)
+
+This version has been developed as an open-source framework with details found here: Handels et al. \[2024\] https://doi.org/10.1101/2024.04.05.24305373. In this publication we describe the new IPECAD open-source model framework (version 2) for the health-economic evaluation of early AD treatment and apply it in 3 use cases for AD lecanemab treatment: 1) cross-validating an existing model with a similar structure (ICER), 2) cross-validating an existing model with a more complex structure (AD-ACE) and 3) assessing additional uncertainty scenarios. 
+
+Features: R; shiny; spreadsheet; cycle time; calibrate time shift. 
 
 This version has been developed and/or supported by: 
 
@@ -54,12 +71,14 @@ This version has been developed and/or supported by:
 
 This version is used for the IPECAD workshop model cross-comparison 2023. Details can be found here: 
 
--  ISPOR 2023 abstract: abstract: <https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246>
+-  ISPOR 2023 abstract: <https://www.ispor.org/heor-resources/presentations-database/presentation/euro2023-3788/131246>
 -  ISPOR 2023 poster: <https://osf.io/7xbez>
 -  IPECAD workshop details: <https://ipecad.org/workshop/>
--  Manuscript: \[placeholder to manuscript to be made available in the public domain\]; title: "IPECAD Modeling Workshop 2023 Cross Comparison Challenge on Cost-Effectiveness Models in Alzheimer's Disease"
+-  Publication: Handels et al. <https://doi.org/10.1016/j.jval.2024.09.006>
 
 This version extends v2.1.0 with new features (transitions to institutionalization, table/graph outcomes), new inputs (estimate of the transition from MCI to mild dementia, estimate for state-specific costs in community and institutional setting) and fixes (half-cycle correction before discounting). 
+
+Features: R. 
 
 This version has been developed by: 
 
@@ -70,6 +89,8 @@ This version has been developed by:
 ## v2.1.0-beta (2023; released)
 
 This version was build for the abstract submitted to ISPOR Europe 2023. For additional information see [presentation slides](https://github.com/ronhandels/IPECAD/blob/main/additional_documentation/presentation_2023_11_14_IPECAD_open_source_model_ISPOR_v4.pdf) presented on ISPOR Europe 2023 and [session details](https://www.ispor.org/conferences-education/conferences/upcoming-conferences/ispor-europe-2023/program/program/session/euro2023-3781/17212). 
+
+Features: R; headroom; probabilistic. 
 
 This version has been developed and/or supported by:
 
