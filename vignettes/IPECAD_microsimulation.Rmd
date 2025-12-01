@@ -1,0 +1,631 @@
+---
+title: "IPECAD microsimulation model"
+author: Ini Umoh, Ron Handels
+date: "`r format(Sys.time(), '%d-%m-%Y')`"
+output: html_document
+---
+
+
+```{r include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Introduction
+
+We present a microsimulation modeling framework for health-economic evaluation in Alzheimer's disease. The framework is implemented in base R and developed for its transparency and computational efficiency. It builds on, and replicates, the existing IPECAD open-source Markov model for Alzheimer’s disease, while also demonstrating an approach that can be generalized to other disease areas.
+
+## The original IPECAD open-source model
+
+The International Pharmaco-Economic Collaboration on Alzheimer's Disease (IPECAD) has developed an open-source modeling framework for health technology assessment of early Alzheimer's Disease treatments (Version 1 was released in 2019 [https://doi.org/10.1016/j.jalz.2019.05.004], followed by version 2 in 2025 [https://doi.org/10.1016/j.jval.2024.07.009]). The latest version is available on GitHub [https://github.com/ronhandels/IPECAD].
+
+Version 2 of the IPECAD open-source model simulates the progression of Alzheimer's disease through the stages of mild cognitive impairment (MCI) and mild, moderate, and severe dementia. It compares the costs and quality of life utility outcomes of an intervention strategy versus standard of care strategy using a cohort-based, discrete-time state transition Markov model with a one-year cycle length. The model was deliberately designed to be transparent and credible, relying on commonly used model structure with transitions between states. Inputs and assumptions were largely drawn from a report of the Institute for Clinical and Economic Review (ICER) assessment of lecanemab treatment [https://icer.org/].
+
+## Why microsimulation?
+
+Markov models are widely used in health-economic evaluation because they are simple, efficient, and easy to implement. They consist of a set of mutually exclusive states (e.g., healthy, sick, dead) and probabilities to transition between states. However, they come with important limitations:
+
+- The memoryless assumption, which ignores past disease or treatment history. 
+- The need to categorize continuous outcomes into a limited number of states in order to preserve simplicity. 
+- The reliance on cohort averages, which may obscure the heterogeneity of individual patient trajectories.
+
+Extensions such as tunnel states or individual-based cohort runs can address some of these shortcomings, but they reduce transparency and ease of use. Discrete-event simulation (DES) offers more flexibility by allowing continuous time, explicit memory of past events, and fully individual-based modeling—at the cost of greater complexity and computational demands. Microsimulation provides a middle ground. Two main approaches exist:
+
+- Discrete-time state-transition microsimulation: runs individuals instead of cohorts, reflecting heterogeneity while retaining simplicity, but still limited by the number of states and lack of memory.
+- Discrete-time microsimulation with memory: captures both heterogeneity and history, but restricts events to discrete cycles rather than continuous time.
+
+## Aim and target audience
+
+Our aim was to develop and document a discrete-time microsimulation version of the IPECAD open-source model that is transparent, programmed in base R, computationally efficient, has the potential to reflect 'history' and a large set of states, and easy to use. We have done this by replicating the IPECAD open-source model version 2. We specifically address two groups:
+
+- Beginner modelers (e.g., master’s students in health economics with some prior exposure to model-based health-economic evaluation). For this group, we provide detailed explanations of basic model features and base R functions.
+- Advanced modelers, for whom we emphasize design choices related to computational efficiency, transparency, and flexibility.
+
+We assume readers are familiar with basic R programming (vectors, conditionals, functions, loops), and basic health-economic evaluation concepts (cost-effectiveness analysis, stochastic simulation). Inline references and external resources are suggested throughout for readers who want to deepen their understanding. 
+
+## Conceptualization of the microsimulation model
+
+Our microsimulation replicates the IPECAD open-source model version 2.3.0 [https://doi.org/10.1016/j.jval.2024.07.009]. Disease severity is represented by MCI, and mild, moderate, and severe dementia. Each disease state is duplicated by care setting (community vs. institution), and in some cases by treatment status (on/off treatment). 
+
+The starting population is defined by age, sex, and initial distribution across MCI and mild dementia. Mortality is modeled as a combination of general population mortality and the excess risk associated with Alzheimer's disease. Treatment effects are applied as relative risks on transition probabilities, with waning modeled by applying a decay factor to the relative risk over time.
+
+Utilities (for both patients and informal caregivers) and costs (health, social, and informal care) are assigned by disease severity and care setting. Treatment costs apply to all on-treatment states.
+
+Each simulated individual is characterized by the following attributes:
+
+- STRAT: strategy (standard of care or intervention; soc/int).
+- TIME: time since model start (0–50 years).
+- ALIVE: alive or not (yes/no).
+AGE: age (50–100 years).
+- SEX: sex (male/female).
+- TX: treatment status (on/off).
+- STATE: disease severity (mci/mil/mod/sev).
+- INSTIT: institutionalized (yes/no).
+- QALY: quality-adjusted life years (patient and informal caregiver continuous outcome; QALY_PT, QALY_IC).
+- COST: costs (healthcare, social care, informal care continuous outcome; COST_HC, COST_SC, COST_IC).
+The simulation begins with a population of 100,000 individuals. Random draws are used to initialize and update attributes (i.e., stochastic simulation) each cycle until the maximum number of cycles is reached, which we advise to set until the youngest individual reaches the age of 100.
+
+Attributes are updated at each annual cycle in the following order, with dependencies on prior states:
+
+- TIME: previous TIME + cycle length.
+- ALIVE: based on previous ALIVE, AGE, SEX, and STATE.
+- AGE: incremented by TIME.
+- SEX: fixed.
+- TX: dependent on TIME (maximum treatment duration), STATE (discontinuation in moderate/severe dementia), and INSTIT (discontinuation in institutions).
+- STATE: based on strategy, previous STATE, and TX (treatment reduces progression risk).
+- INSTIT: based on STATE (higher risk in more severe dementia) and prior INSTIT (once institutionalized, remain institutionalized).
+- QALY: based on TX (side effects), STATE, and INSTIT.
+- COST: based on TX, STATE, and INSTIT.
+
+Although the model does not explicitly track event history, durations can be recorded as additional attributes, making “memory” feasible if needed. We evaluated different update strategies for efficiency:
+
+- Start looping over individuals and within each individual loop over cycles: difficult to vectorize in R; slow due to double loop (100,000 individuals and ~50 annual cycles).
+- Start looping over cycles and within each cycle loop over individuals: easier to vectorize looping over individuals, requiring only loops over cycles (e.g., ~50 annual cycles), and therefore generally faster.
+
+Because loops are costly in R, the second approach was preferred. This aligns well with fixed cycle times, whereas individual-by-individual approaches tend toward discrete-event simulation. For more on vectorization, see Hadley Wickham’s Advanced R [https://adv-r.hadley.nz/subsetting.html].
+
+# Microsimulation model code and annotation
+
+The following sections provide a step-by-step walkthrough of the annotated code. Section headings align with code structure to facilitate navigation. Where relevant, we discuss design choices and provide links to external resources.
+We follow best-practice recommendations for transparent coding as outlined by Alarid-Escudero et al. "A Need for Change! A Coding Framework for Improving Transparency in Decision Modeling" [https://doi.org/10.1007/s40273-019-00837-x] and their accompanying tutorial [https://doi.dox.org/10.1177/0272989X221103163]. For running the code, we recommend using the original script files rather than this Markdown.
+
+## Coding section: Technical preparation
+
+We first set the working directory. This directory must contain the life table to be loaded into the R environment. This is the only manual adjustment or check required from the user to ensure the model runs correctly.
+
+```{r}
+setwd("~/GitHub/IPECAD_microsimulation") # if needed, change to the directory to the folder in which the R code and the life table folder is located, for example: C:/Users/John Smith/Documents/GitHub/IPECAD_microsimulation
+```
+
+Next, we clear the console and environment to avoid conflicts with previously stored objects. Garbage collection is then performed to free memory. At this stage, additional packages may be installed or loaded as needed. The model code is designed to be compatible with the dampack package for health-economic evaluation.
+
+```{r}
+cat("\014") # Clear console
+rm(list = ls()) # Clear environment
+gc() # Garbage collection
+```
+
+## Coding section: 1. Inputs
+
+The input section specifies all parameters required for the model. Inputs are collected into a list (section 1.2), but some require preprocessing before being used directly. We distinguish two types of data manipulation:
+
+- Pre-model manipulation: performed before adding parameters to the input list.
+- Within-model manipulation: applied dynamically while the simulation runs.
+
+Health-economic R packages such as dampack typically expect all pre-model manipulations to be completed before sensitivity analyses are applied.
+
+## Coding section: 1.1. Pre-model data manipulation
+
+Here, we prepare the mortality table by converting probabilities into rates and formatting the table for model use. Converting probabilities into rates ensures compatibility with hazard ratios, using the formula `rate = -ln(1-prob)`. 
+
+The original IPECAD model simulated a fixed-age population with average mortality across sexes. This microsimulation allows for individual variation in both starting age and sex.
+
+```{r}
+m.lifetable_US_2019 <- as.matrix(read.csv("life_tables/lifetable_US_2019_ssa.csv", header=TRUE))[,c("male","female")]
+m.mortality_rate_US_2019 <- -log(1-(m.lifetable_US_2019))
+m.mortality_rate_US_2019 <- cbind(m.mortality_rate_US_2019, weighted=NA)
+m.mortality_rate_US_2019[,"weighted"] <- m.mortality_rate_US_2019[,"male"] * 0.48 + m.mortality_rate_US_2019[,"female"] * 0.52
+```
+
+## Coding section: 1.2. Model inputs list
+
+All model inputs are stored in a list. Lists are chosen because they allow combining multiple object types (e.g., vectors, matrices, numerics, characters) in one container, keeping the global environment uncluttered. Randomness is incorporated to reflect stochastic processes observed in real-world outcomes (i.e., stochastic uncertainty or Monte Carlo simulation). For reproducibility, random seeds are fixed. Note that cycletime is not yet operational. Code snippets omitted for brevity are indicated by ---.
+
+```{r}
+l.inputs_icer <- list(
+  v.attr_names = c("STRAT","TIME","ALIVE","AGE","SEX","TX","WANING","STATE","INSTIT","QALY_PT","QALY_IC","COST_HC","COST_SC","COST_IC"),
+  scenario = "ipecad icer replication",
+  seed_stochastic = 12345, # seed for generating random values that drive stochastic parameters 
+  seed_pa = 12345, # seed for generating random values that drive probabilistic analysis
+  n.ind = 100000, # number of individuals
+  n.cycle = 50, # number of cycles
+  cycletime = 1, 
+  ---
+  AGE0_mean = 71, # starting population age mean
+  AGE0_sd = 0, # starting population age standard deviation
+  v.p.SEX0 = c(0.5,0.5), # starting population probability sex
+  ---
+  p.mci_mil = 0.23, 
+  p.mci_mod = 0, 
+  u.mci_pt = 0.851 - 0.17,
+  u.mil_pt = 0.851 - 0.22,
+  ---etc---
+  )
+```
+
+## Coding section: 2. Run Model
+
+This section defines the main simulation logic. It contains general functions and a function to run a scenario. 
+
+## Coding section: 2.1.1. Functions
+
+We define four (vectorized) core functions commonly used in health-economic modeling: 
+
+- Probability-to-rate conversion.
+- Rate-to-probability conversion.
+- Discounting of QALYs and costs.
+- Random number generation.
+
+The first three functions are vectorized for computational efficiency. Detailed explanations of conversion methods can be found in [https://doi.org/10.2165/00019053-200725010-00002] and [https://doi.org/10.1007/s40273-020-00937-z].
+
+```{r}
+f.pr <- function(p, t=1) { --- }
+f.rp <- function(r, t=1) { --- }
+f.discount <- function(x, discount_rate, n.cycle) { --- }
+```
+
+The fourth function generates uniform random numbers for each attribute, individual, and cycle. Using the same seed ensures identical random numbers across model runs and strategies.
+
+```{r eval=TRUE}
+f.random <- function(n.ind, n.cycle, n.attr, seed_stochastic, v.attr_names) {
+  a.out <- array(
+    data = NA,
+    dim = c(n.cycle, n.attr, n.ind),
+    dimnames = list(NULL, v.attr_names, NULL)
+  )
+  set.seed(seed_stochastic)
+  a.out[,,] <- runif(n = length(a.out))
+  return(a.out)
+}
+```
+
+## Coding section: 2.1.2. Run Scenario
+
+The main scenario function initializes inputs, generates random values, sets up storage for results, and iterates across strategies (standard of care strategy (i.e., soc) and intervention strategy (i.e., int)).
+
+The function starts by taking the input list l.inputs as an argument. 
+
+```{r}
+f.run_scenario <- function(l.inputs) { --- 
+```
+
+To simplify code readability, we wrap the inputs in `with(---)`, which allows referencing inputs directly (e.g., `AGE0_mean` instead of `l.inputs$AGE0_mean`).
+
+```{r}
+with(as.list(l.inputs), { --- 
+```
+
+Random values are generated and stored in a 3D array (cycles × attributes × individuals). Arrays allow efficient storage and manipulation across dimensions, though they only handle single data types.
+
+```{r}
+n.attr <- length(v.attr_names)
+a.rnd <- f.random(n.ind=n.ind, n.cycle=n.cycle, n.attr=n.attr, seed_stochastic=seed_stochastic, v.attr_names=v.attr_names)
+```
+
+A simplified example is shown below with 5 cycles, 3 attributes, and 2 individuals. The dimensions of the array can be referred to using `array[x,y,z]` (where x,y,z are dimension 1,2,3 respectively). 
+
+```{r eval=TRUE, echo=FALSE}
+a.rnd <- round(f.random(n.ind = 2, n.cycle = 5, n.attr = 3, seed_stochastic = 1234, v.attr_names = c("AGE","STATE","QALY")),4)
+a.rnd
+```
+
+An empty results dataframe is then initialized, aligned with dampack conventions. 
+
+```{r}
+v.names_strat <- v.strategy
+n.strat <- length(v.names_strat) # number of strategies
+df.out <- data.frame(
+  strategy = v.names_strat,
+  QALY = numeric(n.strat),
+  COST = numeric(n.strat),
+  LY = numeric(n.strat),
+  NHB = numeric(n.strat),
+  row.names = v.names_strat,
+  stringsAsFactors = FALSE
+)
+```
+
+Similarly, an empty list is initialized to hold scenario-level results. 
+
+```{r}
+l.out_scenario <- vector(mode = "list", length = 0)
+```
+
+The model loops over each strategy, performing a sequence of operations: initializing arrays, applying baseline conditions, updating attributes cycle by cycle, and storing results. This process creates an array `a.out` in which each element represents the status of a specific attribute for a specific individual at a specific cycle. In other words, `a.out` captures the simulation output in its most raw form. Note that for the 'dampack' package to function correctly, each strategy must be executed within a separate function that is to be added to this code.
+
+```{r}
+for(strategy in v.strategy) {
+  # run strategy
+  
+  # initialize: array for outcomes of each individual
+  a.out <- a.rnd
+  a.out[,,] <- NA
+  ---
+  
+```
+
+Here, we illustrate a simple example corresponding to the dimensions used for the earlier random values.
+
+```{r eval=TRUE, echo=FALSE}
+a.out <- a.rnd
+a.out[,,] <- NA
+a.out
+```
+
+After initialization, the model performs several within-model data manipulations. The key focus is on constructing three transition probability matrices for each treatment scenario. Using matrices avoids repetitive 'if' statements for individual conditions and preserves the benefits of vectorized computations:
+
+- Standard of care (soc) matrix – Represents baseline transition probabilities.
+- Treatment matrix – Represents transition probabilities when an individual is exposed to treatment.
+- Post-treatment matrix – Represents transition probabilities after treatment discontinuation, allowing a sustained treatment effect to be applied.
+
+```{r}
+# within-model data manipulation
+## transition probability matrix: soc
+m.TP <- matrix(
+  data = c(
+    NA       , p.mci_mil, p.mci_mod, p.mci_sev, 
+    p.mil_mci, NA       , p.mil_mod, p.mil_sev, 
+    p.mod_mci, p.mod_mil, NA       , p.mod_sev, 
+    p.sev_mci, p.sev_mil, p.sev_mod, NA       
+  ),
+  byrow = TRUE, 
+  nrow = 4, 
+  ncol = 4,
+  dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev")) # transitions reflect from row to column
+)
+## matrix: relative risk treatment effect
+m.RR_tx <- matrix(
+  data = c(
+    1            , rr.Tx_mci_mil, rr.Tx_mci_mod, rr.Tx_mci_sev, 
+    1            , 1            , rr.Tx_mil_mod, rr.Tx_mil_sev, 
+    1            , 1            , 1            , 1            , 
+    1            , 1            , 1            , 1
+  ),
+  byrow = TRUE, 
+  nrow = 4, 
+  ncol = 4,
+  dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev")) # transitions reflect from row to column
+)
+## matrix: relative risk treatment effect after discontinuation
+m.RR_tx_dis <- matrix(
+  data = c(
+    1            , rr.Tx_mci_mil_dis, rr.Tx_mci_mod_dis, rr.Tx_mci_sev_dis, 
+    1            , 1                , rr.Tx_mil_mod_dis, rr.Tx_mil_sev_dis, 
+    1            , 1                , 1                , 1                , 
+    1            , 1                , 1                , 1
+  ),
+  byrow = TRUE, 
+  nrow = 4, 
+  ncol = 4,
+  dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev")) # transitions reflect from row to column
+)
+```
+
+Certain attributes, such as STRAT and TIME, are fixed and do not change throughout the simulation. Their values are recorded directly in `a.out` for all cycles.
+
+```{r}
+# record strategy (all cycles simultaneously)
+a.out[,"STRAT",] <- strategy
+
+# record time (all cycles simultaneously)
+a.out[,"TIME",] <- rep(x=1:n.cycle, times=n.ind)
+```
+
+Baseline values for ALIVE are set to 1 for all individuals, reflecting that everyone is initially alive.
+
+Baseline values for SEX are determined stochastically based on predefined baseline probabilities (v.p.SEX0). The function `.bincode` converts a random value to an integer according to cumulative probability breaks. For example, the vector of sex probabilities `v.p.SEX0` was c(0.50,0.50) reflecting 50% male and 50% female. These were given the names "1" and "2" (representing male=1, female=2). By calling `.bincode`, first a random value is put in (e.g., 0.25), which is compared to the breaks being the cumulative sum of the probabilities being `c(0, 0.50, 1)` and so the value of 0.25 falls in the first break and is thus given a 1 (in case of the 2nd break a 2 etc.). 
+
+Baseline values for STATE are sampled from predefined state probabilities (`v.p.STATE0`). Unlike SEX, this does not rely on predefined random values and can differ between strategies. For illustrative purposes, this approach is used here, though applying the same method as for SEX is recommended.
+
+```{r}
+# set the baseline values for all individuals in the first cycle
+a.out[1,"ALIVE",] <- 1
+a.out[1,"AGE",] <- AGE0_mean
+a.out[1,"SEX",] <- .bincode(x=a.rnd[1,"SEX",], breaks=c(0, cumsum(v.p.SEX0)), include.lowest=TRUE)
+a.out[1,"TX",] <- ifelse(test=strategy==2, yes=1, no=0)
+  #a.out[1,"WANING",] <- ifelse(test=strategy==2, yes=0.10, no=1) # !!TO-DO
+a.out[1,"STATE",] <- sample(c(1,2,3,4), size = n.ind, replace = TRUE, prob = v.p.STATE0)
+a.out[1,"INSTIT",] <- 0
+```
+
+Baseline values for QALY and COST are initialized based on STATE using a regression dummy-variable-like vectorized approach, which allows efficient assignment without multiple 'if' statements. In `a.out[1,"STATE",]==1` the part `a.out` is the array of attributes in which the sub-selection is made `[1,"STATE",]` meaning cycle is 1 (i.e., row 1), attribute is STATE (i.e., column STATE) and individual is all (if no subset defined all elements are selected). For array sub-setting details, see here [https://adv-r.hadley.nz/subsetting.html]. Disutility related to treatment side effect `u.Tx_start` is implemented as a weighted average across individuals rather than applying it stochastically to 3.5% of individuals.  
+
+```{r}
+#Set initial values for QALY_PT, QALY_IC, COST_HC, COST_SC, COST_IC
+a.out[1,"QALY_PT",] <- 
+  (a.out[1,"STATE",]==1) * ((a.out[1,"INSTIT",]==0) * u.mci_pt + (a.out[1,"INSTIT",]==1) * u.mci_pt_i) +
+  (a.out[1,"STATE",]==2) * ((a.out[1,"INSTIT",]==0) * u.mil_pt + (a.out[1,"INSTIT",]==1) * u.mil_pt_i) +
+  (a.out[1,"STATE",]==3) * ((a.out[1,"INSTIT",]==0) * u.mod_pt + (a.out[1,"INSTIT",]==1) * u.mod_pt_i) +
+  (a.out[1,"STATE",]==4) * ((a.out[1,"INSTIT",]==0) * u.sev_pt + (a.out[1,"INSTIT",]==1) * u.sev_pt_i) +
+  u.Tx_start
+```
+
+The same approach is applied to QALY_IC, QALY_HC, COST_SC, and COST_IC (code not shown).
+
+The model then loops over cycles `i` from 2 to n.cycle to update all attributes sequentially.
+
+```{r}
+# loop over cycles
+for (i in 2:n.cycle) { ---
+```
+
+Only individuals alive in the previous cycle are considered for updates. A subset of those alive is created (`v.alive.lag`) and those who have died are marked as such in the current cycle. 
+
+```{r}        
+# select individuals: alive at previous cycle
+v.alive.lag <- a.out[i-1,"ALIVE",]==1
+
+# update: ALIVE (if dead at previous cycle)
+a.out[i,"ALIVE",a.out[i-1,"ALIVE",]==0] <- 0
+```
+
+The first step in each cycle is to update the ALIVE attribute, determining whether each individual has died since the previous cycle. This requires age- and sex-specific mortality rates from the life table, adjusted for syndrome-specific or disease severity-specific relative risks (e.g., MCI or dementia). A vectorized approach is used to improve efficiency. A matrix of coordinates is created, where each column represents an attribute (AGE and SEX) for each individual. This matrix effectively maps every individual to their corresponding mortality rate. This coordinate matrix is used for array subsetting in R (`[]` subset operator), allowing simultaneous retrieval of mortality rates for all individuals (see [https://adv-r.hadley.nz/subsetting.html] paragraph 4.2.3 subsetting > selecting multiple elements > subsetting).
+
+```{r}
+# update: ALIVE
+m.lookupcoordinates_lifetable <- matrix(data = as.character(c(a.out[i-1,"AGE",v.alive.lag], a.out[i-1,"SEX",v.alive.lag])), ncol = 2) # generate life table coordinates for looking up age- and sex-specific mortality
+v.lookupcoordinates_RR <- as.character(a.out[i-1,"STATE",v.alive.lag]) # determine relative mortality risk related to syndrome and severity
+v.p_dth <- 1 - exp(-m.lifetable[m.lookupcoordinates_lifetable] * v.hr_mort_state[v.lookupcoordinates_RR]) # probability of death (input = lifetable rate adjusted for HR dementia severity)
+a.out[i,"ALIVE",v.alive.lag] <- as.numeric(!v.p_dth > a.rnd[i,"ALIVE",v.alive.lag]) # compare probability to random value
+```
+
+A vector is created in which the elements correspond to the individuals and indicate whether the individual is alive (TRUE or FALSE). This vector is created to allow applying data manipulations to update attributes only to those alive. It allows the attributes of those who died to set at NA without the data manipulations to update attributes having to deal with this. 
+
+```{r}
+# select individuals: alive at current cycle
+v.alive <- a.out[i,"ALIVE",]==1
+```
+
+Next, all attributes are updated starting with age. We note we have not considered creating specific functions for each attribute. First, on the right side of the assignment operator (`<-`) from the array of output (`a.out`) we subset (`[]`) the previous cycle using `i-1` (`i` is the current cycle) and the attribute AGE and the individuals who are alive (`v.alive` containing TRUE or FALSE for being alive at the current cycle). This gives the ages of those alive. Second, we add the cycle time `+ cycletime` to it (1 year). Third, this is stored into the same array but at the subset of the current instead of the previous cycle at the same attribute (AGE) and alive selection (`v.alive`) (`a.out[i,"AGE",v.alive]`)
+
+```{r}
+# update: AGE
+a.out[i,"AGE",v.alive] <- a.out[i-1,"AGE",v.alive] + cycletime
+```          
+
+SEX is assumed constant throughout the simulation. Therefore, the previous cycle’s values are simply copied to the current cycle.  
+
+```{r}
+# update: SEX
+a.out[i,"SEX",v.alive] <- a.out[i-1,"SEX",v.alive]
+```
+
+Treatment status is updated differently depending on the strategy:
+
+- Strategy 1 (standard of care): No one receives treatment; TX = 0 for all alive individuals.
+- Strategy 2 (intervention): Alive individuals are assigned TX = TRUE if all of the following conditions are met:
+  - On treatment in the previous cycle (`a.out[i-1,"TX",v.alive]==1`) and not previously discontinued.
+  - Previous time is 1 (`a.out[i-1,"TIME",v.alive]==1`, i.e., first cycle) & corresponding random value (`a.rnd[i,"TX",v.alive]`) is higher than the discontinuation rate at the first discontinuation rate period (`p.tx_discontinuation1`), plus (`+`) previous time is larger than 1 (`a.out[i-1,"TIME",v.alive]>1`, i.e., after the first cycle) & corresponding random value (`a.rnd[i,"TX",v.alive]`) is higher than the discontinuation rate at the second discontinuation rate period (`p.tx_discontinuation2`). The plus (`+`) is used to for mutually exclusive conditions, in this case either at the first or after the first cycle.
+  - Not institutionalized in the previous cycle (`a.out[i-1,"INSTIT",v.alive]==0`).
+  - Previous time (`a.out[i-1,"TIME",v.alive]`) is smaller than the maximum treatment duration (`tx_duration`).
+  - Disease severity (`a.out[i-1,"STATE",v.alive]`) is MCI (1) or mild dementia (2).
+
+This ensures treatment is applied only to eligible and living individuals, accounting for discontinuation, institutionalization, duration, and disease severity.
+
+```{r}
+# update: TX
+if(strategy==1) a.out[i,"TX",v.alive] <- 0
+if(strategy==2) {
+  a.out[i,"TX",v.alive] <- 
+    a.out[i-1,"TX",v.alive]==1 & 
+    ( (a.out[i-1,"TIME",v.alive]==1 & a.rnd[i,"TX",v.alive]>p.tx_discontinuation1)*1 + (a.out[i-1,"TIME",v.alive]>1 & a.rnd[i,"TX",v.alive]>p.tx_discontinuation2)*1 ) & 
+    a.out[i-1,"INSTIT",v.alive]==0 & 
+    a.out[i-1,"TIME",v.alive]<tx_duration & 
+    (a.out[i-1,"STATE",v.alive]==1 | a.out[i-1,"STATE",v.alive]==2)
+}
+```
+
+The disease state (MCI, mild dementia, moderate dementia, severe dementia) is updated using three sets of transition probabilities:
+
+- standard of care (soc): Copy the baseline transition matrix (`m.TP`). Probabilities to remain in the same state are computed later as 1 - sum(other transitions).
+- During Treatment:
+  - Convert transition probabilities to rates.
+  - Multiply by the relative risk matrix (`m.RR_tx`) to account for treatment effect on forward transitions (1 for other transitions).
+  - Apply annual waning (`tx_waning^i`) to adjust for the effect decay over time.
+  - Convert rates back to probabilities.
+- After Treatment Discontinuation: Same steps as above, using discontinuation-specific treatment effect and waning inputs.
+
+Finally, probabilities to remain in the same state are set as the complement of the probabilities to transition to other states, and cumulative probabilities are computed for each 'from' state (e.g., stored in `m.TP_soc_breaks`) for efficient state assignment.
+
+```{r}
+# update: STATE
+## transition probability matrix
+m.TP_soc    <- m.TP # soc
+m.TP_tx     <- f.rp(f.pr(m.TP_soc) * m.RR_tx^((1-tx_waning)^(i-2))) # int: treatment
+m.TP_tx_dis <- f.rp(f.pr(m.TP_soc) * m.RR_tx_dis^((1-tx_waning_dis)^(i-2))) # int: treatment discontinued
+## remain in same state
+diag(m.TP_soc) <- 1 - rowSums(m.TP_soc, na.rm=TRUE)
+diag(m.TP_tx) <- 1 - rowSums(m.TP_tx, na.rm=TRUE)
+diag(m.TP_tx_dis) <- 1 - rowSums(m.TP_tx_dis, na.rm=TRUE)
+## cumulative probabilities from each state
+m.TP_soc_breaks    <- cbind(0, t(apply(X=m.TP_soc   , MARGIN=1, FUN=cumsum))) # cumulative probabilities for each 'from' state
+m.TP_tx_breaks     <- cbind(0, t(apply(X=m.TP_tx    , MARGIN=1, FUN=cumsum))) # cumulative probabilities for each 'from' state
+m.TP_tx_dis_breaks <- cbind(0, t(apply(X=m.TP_tx_dis, MARGIN=1, FUN=cumsum))) # cumulative probabilities for each 'from' state
+```
+
+The next disease state for all individuals is determined in a vectorized manner using the three transition probability matrices:
+
+- Standard of care (soc). 
+- Intervention during treatment. 
+- Intervention after treatment discontinuation. 
+
+For each matrix, the update is performed separately for each previous state.
+'soc' strategy: Individuals with a previous state of 1 (MCI) are selected from a.out, and their next state is assigned based on a random value using the `.bincode()` function, as previously described for SEX.
+
+```{r}
+## update state
+if(strategy==1) {
+  a.out[i,"STATE",v.alive & a.out[i-1,"STATE",]==1] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"STATE",]==1], breaks=m.TP_soc_breaks[1,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"STATE",]==2] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"STATE",]==2], breaks=m.TP_soc_breaks[2,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"STATE",]==3] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"STATE",]==3], breaks=m.TP_soc_breaks[3,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"STATE",]==4] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"STATE",]==4], breaks=m.TP_soc_breaks[4,], include.lowest=TRUE)
+}
+```
+
+For the intervention strategy the same approach is applied, with additional selection conditions to distinguish between individuals currently on treatment and those who have discontinued treatment. This vectorized approach ensures that all individuals’ next states are updated efficiently without looping over each individual. 
+
+```{r}
+} else if(strategy==2) {
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==1] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==1], breaks=m.TP_tx_breaks[1,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==2] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==2], breaks=m.TP_tx_breaks[2,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==3] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==3], breaks=m.TP_tx_breaks[3,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==4] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==1 & a.out[i-1,"STATE",]==4], breaks=m.TP_tx_breaks[4,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==1] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==1], breaks=m.TP_tx_dis_breaks[1,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==2] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==2], breaks=m.TP_tx_dis_breaks[2,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==3] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==3], breaks=m.TP_tx_dis_breaks[3,], include.lowest=TRUE)
+  a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==4] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==4], breaks=m.TP_tx_dis_breaks[4,], include.lowest=TRUE)
+}
+```
+
+Care setting (INSTIT) is updated as follows: 
+
+- Individuals who were institutionalized in the previous cycle (`a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==1]`) remain institutionalized (1). 
+- For those not previously institutionalized (`a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0`), a random value is compared to the probability of institutionalization for their current disease state 1 (MCI). If the random value is below this probability, the individual is marked as institutionalized. 
+- This process is repeated for all disease states (MCI, mild dementia, moderate dementia, severe dementia). 
+
+```{r}
+# update: INSTIT
+a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==1] <- 1
+a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==1] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==1] < p.mci_i, yes=1, no=0)
+a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==2] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==2] < p.mil_i, yes=1, no=0)
+a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==3] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==3] < p.mod_i, yes=1, no=0)
+a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==4] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==4] < p.sev_i, yes=1, no=0)
+}
+```
+
+QALY and COST values are updated using the same vectorized dummy-variable approach applied at baseline. This ensures that values are efficiently assigned based on each individual's current disease state and other attributes.
+
+```{r}
+# update: QALY_PT
+a.out[i,"QALY_PT",v.alive] <- 
+  (a.out[i,"STATE",v.alive]==1) * ((a.out[i,"INSTIT",v.alive]==0) * u.mci_pt + (a.out[i,"INSTIT",v.alive]==1) * u.mci_pt_i) +
+  (a.out[i,"STATE",v.alive]==2) * ((a.out[i,"INSTIT",v.alive]==0) * u.mil_pt + (a.out[i,"INSTIT",v.alive]==1) * u.mil_pt_i) +
+  (a.out[i,"STATE",v.alive]==3) * ((a.out[i,"INSTIT",v.alive]==0) * u.mod_pt + (a.out[i,"INSTIT",v.alive]==1) * u.mod_pt_i) +
+  (a.out[i,"STATE",v.alive]==4) * ((a.out[i,"INSTIT",v.alive]==0) * u.sev_pt + (a.out[i,"INSTIT",v.alive]==1) * u.sev_pt_i)
+
+# update: QALY_IC
+a.out[i,"QALY_IC",v.alive] <- 
+  (a.out[i,"STATE",v.alive]==1) * ((a.out[i,"INSTIT",v.alive]==0) * u.mci_ic + (a.out[i,"INSTIT",v.alive]==1) * u.mci_ic_i) +
+  (a.out[i,"STATE",v.alive]==2) * ((a.out[i,"INSTIT",v.alive]==0) * u.mil_ic + (a.out[i,"INSTIT",v.alive]==1) * u.mil_ic_i) +
+  (a.out[i,"STATE",v.alive]==3) * ((a.out[i,"INSTIT",v.alive]==0) * u.mod_ic + (a.out[i,"INSTIT",v.alive]==1) * u.mod_ic_i) +
+  (a.out[i,"STATE",v.alive]==4) * ((a.out[i,"INSTIT",v.alive]==0) * u.sev_ic + (a.out[i,"INSTIT",v.alive]==1) * u.sev_ic_i)
+
+# update: COST_HC
+a.out[i,"COST_HC",v.alive] <- 
+  (a.out[i,"STATE",v.alive]==1) * ((a.out[i,"INSTIT",v.alive]==0) * c.mci_hc + (a.out[i,"INSTIT",v.alive]==1) * c.mci_hc_i) +
+  (a.out[i,"STATE",v.alive]==2) * ((a.out[i,"INSTIT",v.alive]==0) * c.mil_hc + (a.out[i,"INSTIT",v.alive]==1) * c.mil_hc_i) +
+  (a.out[i,"STATE",v.alive]==3) * ((a.out[i,"INSTIT",v.alive]==0) * c.mod_hc + (a.out[i,"INSTIT",v.alive]==1) * c.mod_hc_i) +
+  (a.out[i,"STATE",v.alive]==4) * ((a.out[i,"INSTIT",v.alive]==0) * c.sev_hc + (a.out[i,"INSTIT",v.alive]==1) * c.sev_hc_i)
+
+# update: COST_SC
+a.out[i,"COST_SC",v.alive] <- 
+  (a.out[i,"STATE",v.alive]==1) * ((a.out[i,"INSTIT",v.alive]==0) * c.mci_sc + (a.out[i,"INSTIT",v.alive]==1) * c.mci_sc_i) +
+  (a.out[i,"STATE",v.alive]==2) * ((a.out[i,"INSTIT",v.alive]==0) * c.mil_sc + (a.out[i,"INSTIT",v.alive]==1) * c.mil_sc_i) +
+  (a.out[i,"STATE",v.alive]==3) * ((a.out[i,"INSTIT",v.alive]==0) * c.mod_sc + (a.out[i,"INSTIT",v.alive]==1) * c.mod_sc_i) +
+  (a.out[i,"STATE",v.alive]==4) * ((a.out[i,"INSTIT",v.alive]==0) * c.sev_sc + (a.out[i,"INSTIT",v.alive]==1) * c.sev_sc_i)
+
+# update: COST_IC
+a.out[i,"COST_IC",v.alive] <- 
+  (a.out[i,"STATE",v.alive]==1) * ((a.out[i,"INSTIT",v.alive]==0) * c.mci_ic + (a.out[i,"INSTIT",v.alive]==1) * c.mci_ic_i) +
+  (a.out[i,"STATE",v.alive]==2) * ((a.out[i,"INSTIT",v.alive]==0) * c.mil_ic + (a.out[i,"INSTIT",v.alive]==1) * c.mil_ic_i) +
+  (a.out[i,"STATE",v.alive]==3) * ((a.out[i,"INSTIT",v.alive]==0) * c.mod_ic + (a.out[i,"INSTIT",v.alive]==1) * c.mod_ic_i) +
+  (a.out[i,"STATE",v.alive]==4) * ((a.out[i,"INSTIT",v.alive]==0) * c.sev_ic + (a.out[i,"INSTIT",v.alive]==1) * c.sev_ic_i)
+```
+
+The loop over cycles `for (i in 2:n.cycle) {` is closed. 
+
+```{r}
+}
+```
+
+An empty list is initiated to store results. The array `a.out` containing all individual-level attributes for each cycle is saved into this list. 
+
+```{r}
+# initialize: list for strategy results
+l.out_strategy <- vector(mode = "list", length = 0)
+
+# store results strategy
+l.out_strategy[["a.out"]] <- a.out # individual patient level data
+```
+
+A trace matrix is generated to summarize combinations of attributes per cycle (e.g., number of individuals in state 1, on treatment, and not institutionalized).
+
+```{r}
+## trace
+m.trace <- matrix(data=NA, nrow=n.cycle, ncol=20, dimnames=list(NULL,c("mcion_c","mciof_c","milon_c","milof_c","mod_c","sev_c","mci_i","mil_i","mod_i","sev_i","dth","qaly_pt","qaly_ic","cost_hc","cost_sc","cost_ic","alv","instit","qaly_total","cost_total")))
+m.trace[,"mcion_c"] <- as.matrix(apply(X = a.out[,"STATE",]==1 & a.out[,"TX",]==1 & a.out[,"INSTIT",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"mciof_c"] <- as.matrix(apply(X = a.out[,"STATE",]==1 & a.out[,"TX",]==0 & a.out[,"INSTIT",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"milon_c"] <- as.matrix(apply(X = a.out[,"STATE",]==2 & a.out[,"TX",]==1 & a.out[,"INSTIT",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"milof_c"] <- as.matrix(apply(X = a.out[,"STATE",]==2 & a.out[,"TX",]==0 & a.out[,"INSTIT",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"mod_c"] <- as.matrix(apply(X = a.out[,"STATE",]==3 & a.out[,"INSTIT",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"sev_c"] <- as.matrix(apply(X = a.out[,"STATE",]==4 & a.out[,"INSTIT",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"mci_i"] <- as.matrix(apply(X = a.out[,"STATE",]==1 & a.out[,"INSTIT",]==1, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"mil_i"] <- as.matrix(apply(X = a.out[,"STATE",]==2 & a.out[,"INSTIT",]==1, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"mod_i"] <- as.matrix(apply(X = a.out[,"STATE",]==3 & a.out[,"INSTIT",]==1, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"sev_i"] <- as.matrix(apply(X = a.out[,"STATE",]==4 & a.out[,"INSTIT",]==1, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"dth"] <- as.matrix(apply(X = a.out[,"ALIVE",]==0, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"qaly_pt"] <- as.matrix(apply(X = a.out[,"QALY_PT",], MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"qaly_ic"] <- as.matrix(apply(X = a.out[,"QALY_IC",], MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"cost_hc"] <- as.matrix(apply(X = a.out[,"COST_HC",], MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"cost_sc"] <- as.matrix(apply(X = a.out[,"COST_SC",], MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"cost_ic"] <- as.matrix(apply(X = a.out[,"COST_IC",], MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"alv"] <- as.matrix(apply(X = a.out[,"ALIVE",]==1, MARGIN = 1, FUN = sum, na.rm = TRUE)/n.ind)
+m.trace[,"instit"] <- rowSums(m.trace[,c("mci_i","mil_i","mod_i","sev_i")])
+m.trace[,"qaly_total"] <- rowSums(m.trace[,c("qaly_pt","qaly_ic")])
+m.trace[,"cost_total"] <- rowSums(m.trace[,c("cost_hc","cost_sc","cost_ic")])
+l.out_strategy[["m.trace"]] <- m.trace
+```
+
+Strategy-specific results are added to a scenario results list, which ultimately contains outcomes for both soc and intervention strategies. Key health-economic outcomes, such as QALYs, costs, life years, and net health benefit, are stored in the pre-initialized summary results dataframe. 
+
+```{r}
+# store strategy-specific output
+l.out_scenario[[strategy]] <- l.out_strategy
+
+# store output
+df.out[strategy,"strategy"] <- strategy # store strategy name
+df.out[strategy,"QALY"] <- sum(m.trace[,"qaly_total"])
+df.out[strategy,"COST"] <- sum(m.trace[,"cost_total"])
+df.out[strategy,"LY"]   <- sum(m.trace[,"alv"])
+df.out[strategy,"NHB"]  <- df.out[strategy,"QALY"] - (df.out[strategy,"COST"] / wtp) # calculate total NHB and store them
+```
+
+Finally, the with (`with(as.list(l.inputs), {`) and scenario (`f.run_scenario <- function() {`) functions are closed. 
+
+```{r}
+}
+}
+```
+
+
+## Coding section: 5. Analysis
+
+The model is executed for both strategies (SOC and intervention) using the predefined input list as the primary input for the simulation function. Please note we skipped coding framework elements of model 3.Calibration and 4.Validation. 
+
+```{r}
+# run model: base case
+l.out_base <- f.run_scenario(l.inputs=l.inputs_icer)
+```
+
+## Coding section: 6. Results
+
+Simulation results are extracted from the output list, which contains all individual-level and aggregated outcomes. Specific results can be accessed through the appropriate sub-lists or sub-items within this output structure.
+
+```{r}
+#Individual level data for both strategies
+l.out_base[["l.out_scenario"]][[1]][["a.out"]] # individual level data for strategy 1
+l.out_base[["l.out_scenario"]][[2]][["a.out"]] # individual level data for strategy 2
+
+#State trace
+l.out_base[["l.out_scenario"]][[1]][["m.trace"]] # attributes trace for strategy 1
+l.out_base[["l.out_scenario"]][[2]][["m.trace"]] # attributes trace for strategy 1
+```
