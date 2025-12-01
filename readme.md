@@ -1,8 +1,10 @@
 # Quick guide
 
-This GitHub repository provides the "IPECAD Open-Source Model framework" for cost-effectiveness analysis of interventions in early Alzheimer's disease.
+This GitHub repository provides the "IPECAD Open-Source Model framework" for cost-effectiveness analysis of interventions in early Alzheimer's disease. 
 
-The following versions are hosted with some features highlighted (e.g., R/spreadsheet/Shiny, Markov/microsimulation, analyses for publication/conference; for detailed features see version history below): 
+Version v2.3.0 and v2.4.0 correspond to the latest publication by Handels et al. 2024 [https://doi.org/10.1016/j.jval.2024.07.009]. 
+
+Quick overview of versions with some features highlighted (e.g., R/spreadsheet/Shiny, Markov/microsimulation, analyses for publication/conference; for detailed features see version history below): 
 
 - v2.4.0 (2025): Alzheimer Europe 2024 (conference), CTAD 2024 (conference). 
 - v2.3.0 (2024): Updated framework with ICER/AD-ACE cross-validation (R, shiny, spreadsheet; publication; https://ronhandels.shinyapps.io/ipecad/). 
@@ -32,7 +34,7 @@ Releases contain stable versions. The branch "main" is for development and fune 
 
 Name: IPECAD open-source model <https://github.com/ronhandels/IPECAD>. 
 
-Citation: Handels et al. 2024 https://doi.org/10.1016/j.jval.2024.07.009
+Citation: Handels et al. 2024 [https://doi.org/10.1016/j.jval.2024.07.009]. 
 
 # Version details
 
