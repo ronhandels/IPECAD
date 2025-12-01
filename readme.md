@@ -35,7 +35,7 @@ Releases contain stable versions. The branch "main" is for development and fune 
 
 Name: IPECAD open-source model <https://github.com/ronhandels/IPECAD>. 
 
-Citation: Handels et al. 2024 https://doi.org/10.1016/j.jval.2024.07.009
+Citation: Handels et al. 2024 [https://doi.org/10.1016/j.jval.2024.07.009]. 
 
 # Version details
 
