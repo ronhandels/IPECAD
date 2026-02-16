@@ -70,22 +70,26 @@ l.inputs_icer <- list(
   v.p.STATE0 = c(1,0,0,0), # starting population probability STATE
   
   # transition probabilities and relative risks
-  p.mci_mil = 0.23, 
-  p.mci_mod = 0, 
-  p.mci_sev = 0, 
-  p.mil_mci = 0.03, 
-  p.mil_mod = 0.35, 
-  p.mil_sev = 0.04, 
-  p.mod_mci = 0, 
-  p.mod_mil = 0.03, 
-  p.mod_sev = 0.42, 
-  p.sev_mci = 0, 
-  p.sev_mil = 0, 
-  p.sev_mod = 0.02, 
-  p.mci_i = 0.024, 
-  p.mil_i = 0.038, 
-  p.mod_i = 0.110, 
-  p.sev_i = 0.259, 
+  # scalar (constant across ages) or named vector keyed by age for age-specific values
+  # example age-specific input: p.mci_mil = c("65"=0.18, "70"=0.21, "75"=0.25, "80"=0.30, "85"=0.35),
+  p.mci_mil = 0.23,
+  p.mci_mod = 0,
+  p.mci_sev = 0,
+  p.mil_mci = 0.03,
+  p.mil_mod = 0.35,
+  p.mil_sev = 0.04,
+  p.mod_mci = 0,
+  p.mod_mil = 0.03,
+  p.mod_sev = 0.42,
+  p.sev_mci = 0,
+  p.sev_mil = 0,
+  p.sev_mod = 0.02,
+  # institutionalization probabilities: scalar or named vector keyed by age
+  # example age-specific input: p.mci_i = c("65"=0.015, "70"=0.020, "75"=0.030, "80"=0.045, "85"=0.065),
+  p.mci_i = 0.024,
+  p.mil_i = 0.038,
+  p.mod_i = 0.110,
+  p.sev_i = 0.259,
   m.lifetable = m.mortality_rate_US_2019b,
   v.hr_mort_state = c(1.82, 2.92, 3.85, 9.52), 
   
@@ -197,6 +201,25 @@ f.discount <- function(x, discount_rate, n.cycle) {
   as.matrix(x) / (1 + discount_rate)^(0:(n.cycle - 1)) # x can be scalar, vector or matrix
 }
 
+# function: resolve an age-stratified or scalar parameter to a vector of length n.cycle
+# param: scalar or named numeric vector keyed by age (as character)
+# age_start: starting age of the cohort
+# n.cycle: number of cycles
+# returns: numeric vector of length n.cycle with values for each cycle
+f.age_lookup <- function(param, age_start, n.cycle) {
+  if (length(param) == 1 && is.null(names(param))) {
+    return(rep(param, n.cycle))
+  }
+  v.ages_cycle <- age_start:(age_start + n.cycle - 1)
+  v.ages_param <- as.numeric(names(param))
+  v.vals_param <- as.numeric(param)
+  ord <- order(v.ages_param)
+  v.ages_param <- v.ages_param[ord]
+  v.vals_param <- v.vals_param[ord]
+  v.out <- approx(x = v.ages_param, y = v.vals_param, xout = v.ages_cycle, rule = 2)$y
+  return(v.out)
+}
+
 # function: draw random values for each attribute for each cycle for each individual
 f.random <- function(n.ind, n.cycle, n.attr, seed_stochastic, v.attr_names) {
   a.out <- array(
@@ -255,42 +278,47 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
       a.out[,,] <- NA
       
       # within-model data manipulation
-      ## transition probability matrix: soc
-      m.TP <- matrix(
-        data = c(
-          NA       , p.mci_mil, p.mci_mod, p.mci_sev, 
-          p.mil_mci, NA       , p.mil_mod, p.mil_sev, 
-          p.mod_mci, p.mod_mil, NA       , p.mod_sev, 
-          p.sev_mci, p.sev_mil, p.sev_mod, NA       
-        ),
-        byrow = TRUE, 
-        nrow = 4, 
-        ncol = 4,
-        dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev")) # transitions reflect from row to column
-      )
+      ## pre-compute age-specific transition probability vectors (supports both scalar and age-keyed inputs)
+      v.p.mci_mil_age <- f.age_lookup(p.mci_mil, AGE0_mean, n.cycle)
+      v.p.mci_mod_age <- f.age_lookup(p.mci_mod, AGE0_mean, n.cycle)
+      v.p.mci_sev_age <- f.age_lookup(p.mci_sev, AGE0_mean, n.cycle)
+      v.p.mil_mci_age <- f.age_lookup(p.mil_mci, AGE0_mean, n.cycle)
+      v.p.mil_mod_age <- f.age_lookup(p.mil_mod, AGE0_mean, n.cycle)
+      v.p.mil_sev_age <- f.age_lookup(p.mil_sev, AGE0_mean, n.cycle)
+      v.p.mod_mci_age <- f.age_lookup(p.mod_mci, AGE0_mean, n.cycle)
+      v.p.mod_mil_age <- f.age_lookup(p.mod_mil, AGE0_mean, n.cycle)
+      v.p.mod_sev_age <- f.age_lookup(p.mod_sev, AGE0_mean, n.cycle)
+      v.p.sev_mci_age <- f.age_lookup(p.sev_mci, AGE0_mean, n.cycle)
+      v.p.sev_mil_age <- f.age_lookup(p.sev_mil, AGE0_mean, n.cycle)
+      v.p.sev_mod_age <- f.age_lookup(p.sev_mod, AGE0_mean, n.cycle)
+      ## pre-compute age-specific institutionalization probability vectors
+      v.p.mci_i_age <- f.age_lookup(p.mci_i, AGE0_mean, n.cycle)
+      v.p.mil_i_age <- f.age_lookup(p.mil_i, AGE0_mean, n.cycle)
+      v.p.mod_i_age <- f.age_lookup(p.mod_i, AGE0_mean, n.cycle)
+      v.p.sev_i_age <- f.age_lookup(p.sev_i, AGE0_mean, n.cycle)
       ## matrix: relative risk treatment effect
       m.RR_tx <- matrix(
         data = c(
-          1            , rr.Tx_mci_mil, rr.Tx_mci_mod, rr.Tx_mci_sev, 
-          1            , 1            , rr.Tx_mil_mod, rr.Tx_mil_sev, 
-          1            , 1            , 1            , 1            , 
+          1            , rr.Tx_mci_mil, rr.Tx_mci_mod, rr.Tx_mci_sev,
+          1            , 1            , rr.Tx_mil_mod, rr.Tx_mil_sev,
+          1            , 1            , 1            , 1            ,
           1            , 1            , 1            , 1
         ),
-        byrow = TRUE, 
-        nrow = 4, 
+        byrow = TRUE,
+        nrow = 4,
         ncol = 4,
         dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev")) # transitions reflect from row to column
       )
       ## matrix: relative risk treatment effect after discontinuation
       m.RR_tx_dis <- matrix(
         data = c(
-          1            , rr.Tx_mci_mil_dis, rr.Tx_mci_mod_dis, rr.Tx_mci_sev_dis, 
-          1            , 1                , rr.Tx_mil_mod_dis, rr.Tx_mil_sev_dis, 
-          1            , 1                , 1                , 1                , 
+          1            , rr.Tx_mci_mil_dis, rr.Tx_mci_mod_dis, rr.Tx_mci_sev_dis,
+          1            , 1                , rr.Tx_mil_mod_dis, rr.Tx_mil_sev_dis,
+          1            , 1                , 1                , 1                ,
           1            , 1                , 1                , 1
         ),
-        byrow = TRUE, 
-        nrow = 4, 
+        byrow = TRUE,
+        nrow = 4,
         ncol = 4,
         dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev")) # transitions reflect from row to column
       )
@@ -380,6 +408,19 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
         
         # update: STATE
         # alternative could be to individualize all 16 transitions and track them in separate columns as an attribute of the individual, or program this in an individual loop (rather than to vectorize this)
+        ## build age-specific transition probability matrix for this cycle
+        m.TP <- matrix(
+          data = c(
+            NA                  , v.p.mci_mil_age[i], v.p.mci_mod_age[i], v.p.mci_sev_age[i],
+            v.p.mil_mci_age[i], NA                  , v.p.mil_mod_age[i], v.p.mil_sev_age[i],
+            v.p.mod_mci_age[i], v.p.mod_mil_age[i], NA                  , v.p.mod_sev_age[i],
+            v.p.sev_mci_age[i], v.p.sev_mil_age[i], v.p.sev_mod_age[i], NA
+          ),
+          byrow = TRUE,
+          nrow = 4,
+          ncol = 4,
+          dimnames = list(c("mci","mil","mod","sev"),c("mci","mil","mod","sev"))
+        )
         ## transition probability matrix
         m.TP_soc    <- m.TP # soc
         m.TP_tx     <- f.rp(f.pr(m.TP_soc) * m.RR_tx^((1-tx_waning)^(i-2))) # int: treatment
@@ -421,12 +462,12 @@ f.run_scenario <- function(l.inputs, detailed=FALSE) {
           a.out[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==4] <- .bincode(x=a.rnd[i,"STATE",v.alive & a.out[i-1,"TX",]==0 & a.out[i-1,"STATE",]==4], breaks=m.TP_tx_dis_breaks[4,], include.lowest=TRUE)
         }
         
-        # update: INSTIT
+        # update: INSTIT (using age-specific institutionalization probabilities)
         a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==1] <- 1
-        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==1] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==1] < p.mci_i, yes=1, no=0)
-        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==2] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==2] < p.mil_i, yes=1, no=0)
-        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==3] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==3] < p.mod_i, yes=1, no=0)
-        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==4] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==4] < p.sev_i, yes=1, no=0)
+        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==1] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==1] < v.p.mci_i_age[i], yes=1, no=0)
+        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==2] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==2] < v.p.mil_i_age[i], yes=1, no=0)
+        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==3] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==3] < v.p.mod_i_age[i], yes=1, no=0)
+        a.out[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==4] <- ifelse(test = a.rnd[i,"INSTIT",v.alive & a.out[i-1,"INSTIT",]==0 & a.out[i-1,"STATE",]==4] < v.p.sev_i_age[i], yes=1, no=0)
         
         # update: QALY_PT
         a.out[i,"QALY_PT",v.alive] <- 
