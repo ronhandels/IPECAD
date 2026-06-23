@@ -158,7 +158,7 @@ l.inputs_icer <- list(
   discount_EFFECT = 0, # !!TO-DO: this feature needs to be programmed into the model function
   discount_QALY = 0, # !!TO-DO: this feature needs to be programmed into the model function
   discount_COST = 0, # !!TO-DO: this feature needs to be programmed into the model function
-  wtp = 10000
+  wtp = 100000
 )
 
 # add names to objects
@@ -546,7 +546,7 @@ l.out_base <- f.run_scenario(l.inputs=l.inputs_icer, detailed=TRUE)
 l.out_base[["df.out"]]
 str(l.out_base) # print structure of all data stored in the outputs list
 
-#Individual level data for both strategies
+# Individual level data for both strategies
 l.out_base[["l.out_scenario"]][[1]][["a.out"]] # individual level data for strategy 1
 l.out_base[["l.out_scenario"]][[2]][["a.out"]] # individual level data for strategy 2
 

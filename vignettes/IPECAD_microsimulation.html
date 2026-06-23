@@ -351,7 +351,7 @@ display: none;
 
 <h1 class="title toc-ignore">IPECAD microsimulation model</h1>
 <h4 class="author">Ini Umoh, Ron Handels</h4>
-<h4 class="date">01-12-2025</h4>
+<h4 class="date">22-06-2026</h4>
 
 </div>
 
@@ -459,7 +459,8 @@ attributes:</p>
 <ul>
 <li>STRAT: strategy (standard of care or intervention; soc/int).</li>
 <li>TIME: time since model start (0–50 years).</li>
-<li>ALIVE: alive or not (yes/no). AGE: age (50–100 years).</li>
+<li>ALIVE: alive or not (yes/no).</li>
+<li>AGE: age (50–100 years).</li>
 <li>SEX: sex (male/female).</li>
 <li>TX: treatment status (on/off).</li>
 <li>STATE: disease severity (mci/mil/mod/sev).</li>
@@ -467,12 +468,13 @@ attributes:</p>
 <li>QALY: quality-adjusted life years (patient and informal caregiver
 continuous outcome; QALY_PT, QALY_IC).</li>
 <li>COST: costs (healthcare, social care, informal care continuous
-outcome; COST_HC, COST_SC, COST_IC). The simulation begins with a
-population of 100,000 individuals. Random draws are used to initialize
-and update attributes (i.e., stochastic simulation) each cycle until the
-maximum number of cycles is reached, which we advise to set until the
-youngest individual reaches the age of 100.</li>
+outcome; COST_HC, COST_SC, COST_IC).</li>
 </ul>
+<p>The simulation begins with a population of 100,000 individuals.
+Random draws are used to initialize and update attributes (i.e.,
+stochastic simulation) each cycle until the maximum number of cycles is
+reached, which we advise to set until the youngest individual reaches
+the age of 100.</p>
 <p>Attributes are updated at each annual cycle in the following order,
 with dependencies on prior states:</p>
 <ul>
@@ -495,18 +497,18 @@ can be recorded as additional attributes, making “memory” feasible if
 needed. We evaluated different update strategies for efficiency:</p>
 <ul>
 <li>Start looping over individuals and within each individual loop over
-cycles: difficult to vectorize in R; slow due to double loop (100,000
-individuals and ~50 annual cycles).</li>
+cycles: difficult to vectorize in R; requires double loop (100,000
+individuals and ~50 annual cycles) and therefore generally slow.</li>
 <li>Start looping over cycles and within each cycle loop over
-individuals: easier to vectorize looping over individuals, requiring
-only loops over cycles (e.g., ~50 annual cycles), and therefore
-generally faster.</li>
+individuals: easy to vectorize looping over individuals; requires only
+loops over cycles (e.g., ~50 annual cycles) and therefore generally
+fast.</li>
 </ul>
-<p>Because loops are costly in R, the second approach was preferred.
-This aligns well with fixed cycle times, whereas
+<p>Because loops are time-consuming in R, the second approach was
+preferred. This aligns well with fixed cycle times, whereas
 individual-by-individual approaches tend toward discrete-event
-simulation. For more on vectorization, see Hadley Wickham’s Advanced R
-[<a href="https://adv-r.hadley.nz/subsetting.html" class="uri">https://adv-r.hadley.nz/subsetting.html</a>].</p>
+simulation. For more information on vectorization, see Hadley Wickham’s
+Advanced R [<a href="https://adv-r.hadley.nz/subsetting.html" class="uri">https://adv-r.hadley.nz/subsetting.html</a>].</p>
 </div>
 </div>
 <div id="microsimulation-model-code-and-annotation" class="section level1">
