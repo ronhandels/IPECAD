@@ -26,9 +26,10 @@ Releases contain stable versions. The branch "main" is for development and fune 
 - Move unzipped folder to desired location on PC. 
 - Make sure to have R (https://cran.r-project.org/mirrors.html) and ideally RStudio (https://www.rstudio.com) installed. 
 - Open R file named "IPECAD open-source model.R" in R (or RStudio)
-- Install `dampack` by running the code `install.packages("dampack")` in R (this code is located under the heading `# MANUAL PREPARATION #`; to activate the code remove the `#` at the beginning of the line).
-- Set the working directory to the file path where the unzipped folder is stored (this code is located under the heading `# MANUAL PREPARATION #`; change the code manually or alternatively in RStudio go to the menu "Session" then "Set Working Directory" then "To Source File Location" (or to "Choose Directory..." and choose the location of the unzipped folder)).
-- Run the code by sourcing it (in R go to the menu "File" then "Source R code..."; in RStudio go to the menu "Code" then "Source")
+  - Install `dampack` by running the code `install.packages("dampack")` in R (this code is located under the heading `# MANUAL PREPARATION #`; to activate the code remove the `#` at the beginning of the line).
+  - Set the working directory to the file path where the unzipped folder is stored (this code is located under the heading `# MANUAL PREPARATION #`; change the code manually or alternatively in RStudio go to the menu "Session" then "Set Working Directory" then "To Source File Location" (or to "Choose Directory..." and choose the location of the unzipped folder)).
+  - Under coding chapter "5. ANALYSIS" pick the preferred analysis and change `if(F) {` to `if(T) {`. 
+  - Run the code by sourcing it (in R go to the menu "File" then "Source R code..."; in RStudio go to the menu "Code" then "Source")
 - We recommend familiarizing with the description of the model using the details related to the releases described below.
 
 # Cite this work
