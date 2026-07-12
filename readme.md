@@ -7,7 +7,7 @@ Version v2.3.0 and v2.4.0 correspond to the latest publication by Handels et al.
 Quick overview of versions with some features highlighted (e.g., R/spreadsheet/Shiny, Markov/microsimulation, analyses for publication/conference; for detailed features see version history below): 
 
 - Main-branch (2025): Microsimulation. 
-- v2.4.0 (2025): Alzheimer Europe 2024 (conference), CTAD 2024 (conference). 
+- v2.4.0 (2024): Alzheimer Europe 2024 (conference), CTAD 2024 (conference). 
 - v2.3.0 (2024): Updated framework with ICER/AD-ACE cross-validation (R, shiny, spreadsheet; publication; https://ronhandels.shinyapps.io/ipecad/). 
 - v2.2.0 (2024): SveDem model replication IPECAD workshop 2023 (publication). 
 - v2.1.0 (2023): SveDem model replication ISPOR 2023 (conference). 
